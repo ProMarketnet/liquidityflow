@@ -13,7 +13,7 @@ export const CTA: React.FC = () => {
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/onboarding"
+            href="/onboarding-new"
             className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
           >
             Start Free Monitoring

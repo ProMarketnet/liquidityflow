@@ -38,7 +38,7 @@ export default function Home() {
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <a href="/demo" style={{ color: '#cbd5e1', textDecoration: 'none' }}>Demo</a>
                         <a
-              href="/onboarding"
+              href="/onboarding-new"
               style={{
                 background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
                 color: 'white',
@@ -100,7 +100,7 @@ export default function Home() {
             flexWrap: 'wrap'
           }}>
             <a
-              href="/onboarding"
+              href="/onboarding-new"
               style={{
                 background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
                 color: 'white',
@@ -372,7 +372,7 @@ export default function Home() {
             flexWrap: 'wrap'
           }}>
             <a
-              href="/onboarding"
+              href="/onboarding-new"
               style={{
                 background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
                 color: 'white',
