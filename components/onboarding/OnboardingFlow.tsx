@@ -120,51 +120,57 @@ export function OnboardingFlow() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       {/* Progress Steps */}
       <div className="flex justify-center mb-12">
-        <div className="bg-white/5 border border-white/20 rounded-xl p-6 backdrop-blur-sm">
+        <div className="bg-white/15 border-2 border-white/30 rounded-xl p-6 backdrop-blur-md shadow-2xl">
           <div className="flex items-center space-x-4">
             {[1, 2, 3, 4].map((stepNum) => (
               <div key={stepNum} className="flex items-center">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 transition-all duration-300 ${
+                <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-xl border-3 transition-all duration-300 shadow-lg ${
                   step >= stepNum 
-                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-400 shadow-lg transform scale-110' 
-                    : 'bg-gray-700/50 text-gray-300 border-gray-600'
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-300 transform scale-110 shadow-blue-500/50' 
+                    : 'bg-white/10 text-white border-white/40'
                 }`}>
                   {step > stepNum ? '✓' : stepNum}
                 </div>
                 {stepNum < 4 && (
-                  <div className={`w-20 h-2 mx-3 rounded-full transition-all duration-500 ${
-                    step > stepNum ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-600/50'
+                  <div className={`w-24 h-3 mx-4 rounded-full transition-all duration-500 ${
+                    step > stepNum ? 'bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg' : 'bg-white/20'
                   }`} />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-4 text-sm font-medium">
-            <span className={step >= 1 ? 'text-white' : 'text-gray-400'}>Connect</span>
-            <span className={step >= 2 ? 'text-white' : 'text-gray-400'}>Analyze</span>
-            <span className={step >= 3 ? 'text-white' : 'text-gray-400'}>Select</span>
-            <span className={step >= 4 ? 'text-white' : 'text-gray-400'}>Monitor</span>
+          <div className="flex justify-between mt-6 text-base font-semibold">
+            <span className={`${step >= 1 ? 'text-white' : 'text-white/60'} drop-shadow-lg`}>Connect</span>
+            <span className={`${step >= 2 ? 'text-white' : 'text-white/60'} drop-shadow-lg`}>Analyze</span>
+            <span className={`${step >= 3 ? 'text-white' : 'text-white/60'} drop-shadow-lg`}>Select</span>
+            <span className={`${step >= 4 ? 'text-white' : 'text-white/60'} drop-shadow-lg`}>Monitor</span>
           </div>
         </div>
       </div>
 
       {/* Step 1: Connect Wallet */}
       {step === 1 && (
-        <div className="bg-white/10 border-2 border-white/30 rounded-xl p-8 text-center shadow-2xl backdrop-blur-sm">
+        <div className="bg-white/20 border-2 border-white/40 rounded-xl p-10 text-center shadow-2xl backdrop-blur-md bg-gradient-to-br from-white/15 to-white/5">
           <div className="text-6xl mb-6">🚀</div>
-          <h1 className="text-4xl font-bold text-white mb-6 drop-shadow-lg">Connect Your Wallet</h1>
-          <p className="text-gray-100 mb-8 text-lg font-medium drop-shadow-md">
+          <h1 className="text-5xl font-bold text-white mb-6 drop-shadow-2xl">Connect Your Wallet</h1>
+          <p className="text-white mb-8 text-xl font-medium drop-shadow-lg max-w-2xl mx-auto leading-relaxed">
             Connect your wallet to start monitoring liquidity pools and track your DeFi positions
           </p>
           
-          <div className="flex justify-center">
+          <div className="flex justify-center mb-8">
             <WalletButton />
           </div>
           
-          <div className="mt-8 text-gray-200 text-sm">
-            <p>✨ Real-time portfolio tracking</p>
-            <p>📊 DeFi position monitoring</p>
-            <p>🔔 Automated price alerts</p>
+          <div className="mt-8 space-y-2">
+            <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+              <p className="text-white text-lg font-medium">✨ Real-time portfolio tracking</p>
+            </div>
+            <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+              <p className="text-white text-lg font-medium">📊 DeFi position monitoring</p>
+            </div>
+            <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+              <p className="text-white text-lg font-medium">🔔 Automated price alerts</p>
+            </div>
           </div>
         </div>
       )}

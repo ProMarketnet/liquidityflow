@@ -28,10 +28,14 @@ function OnboardingPageContent() {
         </div>
       </header>
 
-      <div className="min-h-screen bg-gray-900 pt-16" style={{
-        background: 'linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%)'
+      <div className="min-h-screen pt-16" style={{
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 40%, #334155 100%)',
+        backgroundAttachment: 'fixed'
       }}>
-        <OnboardingFlow />
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative z-10">
+          <OnboardingFlow />
+        </div>
       </div>
     </>
   );

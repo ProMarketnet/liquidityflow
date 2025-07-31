@@ -143,12 +143,12 @@ export function WalletButton() {
 
   return (
     <>
-      <button
-        onClick={() => setIsModalOpen(true)}
-        className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
-      >
-        Connect Wallet
-      </button>
+              <button
+          onClick={() => setIsModalOpen(true)}
+          className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-2xl transition-all font-bold text-xl border-2 border-blue-400 hover:border-blue-300 transform hover:scale-105 shadow-lg"
+        >
+          🔗 Connect Wallet
+        </button>
       
       <WalletModal 
         isOpen={isModalOpen} 
