@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  name        String?
+  password    String
+  plan        Plan     @default(BASIC)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  projects    Project[]
+  alerts      Alert[]
+  
+  @@map("users")
+}
+
+model Project {
+  id              String   @id @default(cuid())
+  name            String
+  tokenAddress    String   @unique
+  tokenSymbol     String
+  tokenName       String
+  chain           String
+  description     String?
+  website         String?
+  twitter         String?
+  telegram        String?
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  pools           Pool[]
+  alerts          Alert[]
+  healthChecks    HealthCheck[]
+  emergencyActions EmergencyAction[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("projects")
+}
+
+model Pool {
+  id              String   @id @default(cuid())
+  address         String   @unique
+  dex             String   // uniswap, sushiswap, pancakeswap, etc.
+  version         String?  // v2, v3, etc.
+  pairAddress     String
+  token0Address   String
+  token1Address   String
+  token0Symbol    String
+  token1Symbol    String
+  feePercentage   Float
+  chain           String
+  
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  liquidityData   LiquidityData[]
+  healthChecks    HealthCheck[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("pools")
+}
+
+model LiquidityData {
+  id              String   @id @default(cuid())
+  poolId          String
+  pool            Pool     @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  
+  totalLiquidity  Float
+  token0Reserve   Float
+  token1Reserve   Float
+  volume24h       Float
+  lpCount         Int
+  slippage1Percent Float
+  slippage5Percent Float
+  priceImpact     Float
+  
+  timestamp       DateTime @default(now())
+  
+  @@map("liquidity_data")
+}
+
+model HealthCheck {
+  id              String           @id @default(cuid())
+  projectId       String
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  poolId          String?
+  pool            Pool?            @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  
+  status          HealthStatus
+  liquidityScore  Float
+  slippageScore   Float
+  volumeScore     Float
+  overallScore    Float
+  
+  issues          Json[] // Array of identified issues
+  recommendations Json[] // Array of recommendations
+  
+  timestamp       DateTime @default(now())
+  
+  @@map("health_checks")
+}
+
+model Alert {
+  id              String      @id @default(cuid())
+  type            AlertType
+  severity        AlertSeverity
+  title           String
+  message         String
+  data            Json?       // Additional alert data
+  
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId       String
+  project         Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  isRead          Boolean     @default(false)
+  isResolved      Boolean     @default(false)
+  resolvedAt      DateTime?
+  
+  createdAt       DateTime    @default(now())
+  
+  @@map("alerts")
+}
+
+model EmergencyAction {
+  id               String           @id @default(cuid())
+  type             EmergencyType
+  status           ActionStatus
+  
+  projectId        String
+  project          Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  triggerReason    String
+  actionTaken      String
+  amountInjected   Float?
+  txHash           String?
+  gasUsed          Float?
+  
+  startedAt        DateTime         @default(now())
+  completedAt      DateTime?
+  
+  @@map("emergency_actions")
+}
+
+enum Plan {
+  BASIC
+  PRO
+  ENTERPRISE
+}
+
+enum HealthStatus {
+  HEALTHY
+  WARNING
+  CRITICAL
+}
+
+enum AlertType {
+  LIQUIDITY_DROP
+  HIGH_SLIPPAGE
+  LP_EXIT
+  VOLUME_SPIKE
+  PRICE_IMPACT
+  EMERGENCY_TRIGGERED
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum EmergencyType {
+  LIQUIDITY_INJECTION
+  INCENTIVE_BOOST
+  LP_PROTECTION
+}
+
+enum ActionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
