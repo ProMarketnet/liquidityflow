@@ -1,42 +1,43 @@
 import React from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
 
 export const Header: React.FC = () => {
   return (
-    <nav className="fixed top-0 w-full bg-dark-900/95 backdrop-blur-xl border-b border-white/10 z-50">
+    <header className="bg-gray-900/95 backdrop-blur-xl border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
+          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
             LiquidFlow
           </Link>
           
-          <div className="hidden md:flex items-center space-x-8">
-            <Link href="#solutions" className="text-gray-300 hover:text-primary-500 transition-colors">
-              Solutions
+          <nav className="hidden md:flex space-x-8">
+            <Link href="#features" className="text-gray-300 hover:text-white transition-colors">
+              Features
             </Link>
-            <Link href="#pricing" className="text-gray-300 hover:text-primary-500 transition-colors">
+            <Link href="#pricing" className="text-gray-300 hover:text-white transition-colors">
               Pricing
             </Link>
-            <Link href="#about" className="text-gray-300 hover:text-primary-500 transition-colors">
-              About
+            <Link href="/demo" className="text-gray-300 hover:text-white transition-colors">
+              Demo
             </Link>
-          </div>
+          </nav>
           
           <div className="flex items-center space-x-4">
-            <Link href="/demo">
-              <Button variant="outline" size="sm">
-                View Demo
-              </Button>
+            <Link
+              href="/demo"
+              className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            >
+              View Demo
             </Link>
-            <Link href="/dashboard">
-              <Button size="sm">
-                Get Started
-              </Button>
+            <Link
+              href="/dashboard"
+              className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
+            >
+              Get Started
             </Link>
           </div>
         </div>
       </div>
-    </nav>
+    </header>
   );
 };
