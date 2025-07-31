@@ -38,7 +38,7 @@ function OnboardingPageContent() {
 }
 
 export default function OnboardingPage() {
-  // Force Railway cache refresh - v2.0
+  // Force Railway cache refresh - v3.0 (clean build)
   return (
     <WalletProvider>
       <OnboardingPageContent />
