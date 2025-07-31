@@ -5,7 +5,7 @@ import { PoolsTable } from '@/components/dashboard/PoolsTable';
 import { AlertsList } from '@/components/dashboard/AlertsList';
 import { LiquidityChart } from '@/components/dashboard/LiquidityChart';
 
-// Mock data for demo
+// Mock data for demo with correct types
 const mockStats = {
   totalLiquidity: 127450,
   maxSlippage: 8.7,
@@ -23,7 +23,7 @@ const mockPools = [
     liquidity: 47230,
     liquidityChange: -15,
     volume24h: 8420,
-    health: 'critical',
+    health: 'critical' as const, // Fix: Use 'as const' for literal types
     slippage: 12.4,
     lpCount: 14
   },
@@ -35,7 +35,7 @@ const mockPools = [
     liquidity: 32180,
     liquidityChange: -8,
     volume24h: 5670,
-    health: 'warning',
+    health: 'warning' as const, // Fix: Use 'as const'
     slippage: 7.8,
     lpCount: 18
   },
@@ -47,7 +47,7 @@ const mockPools = [
     liquidity: 28940,
     liquidityChange: 5,
     volume24h: 3240,
-    health: 'healthy',
+    health: 'healthy' as const, // Fix: Use 'as const'
     slippage: 4.2,
     lpCount: 22
   }
@@ -56,21 +56,21 @@ const mockPools = [
 const mockAlerts = [
   {
     id: '1',
-    type: 'critical',
+    type: 'critical' as const, // Fix: Use 'as const'
     title: 'Critical: Liquidity dropped below emergency threshold',
     description: 'Total liquidity depth fell to $127K, triggering emergency protocols',
     time: '2 hours ago'
   },
   {
     id: '2',
-    type: 'warning',
+    type: 'warning' as const, // Fix: Use 'as const'
     title: 'Large LP withdrawal detected',
     description: 'Whale LP removed $45K in liquidity from Uniswap V3 pool',
     time: '4 hours ago'
   },
   {
     id: '3',
-    type: 'info',
+    type: 'info' as const, // Fix: Use 'as const'
     title: 'LP incentive program adjusted',
     description: 'Increased rewards by 15% to attract new liquidity providers',
     time: '6 hours ago'
@@ -99,7 +99,7 @@ export default function DemoPage() {
   return (
     <Layout title="LiquidFlow Demo Dashboard" showSidebar={true}>
       {/* Demo Banner */}
-      <div className="bg-gradient-to-r from-secondary-500 to-primary-500 p-4 mb-6 rounded-lg flex justify-between items-center">
+      <div className="bg-gradient-to-r from-purple-600 to-blue-500 p-4 mb-6 rounded-lg flex justify-between items-center">
         <div className="text-white font-semibold">
           🎯 This is a DEMO dashboard - See how LiquidFlow monitors your project
         </div>
@@ -128,7 +128,7 @@ export default function DemoPage() {
             {isLive ? 'Live Updates' : 'Paused'}
           </button>
           <button 
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg hover:shadow-lg transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
             onClick={() => alert('Emergency liquidity injection would be triggered!')}
           >
             🚨 Emergency Action
