@@ -249,6 +249,96 @@ export class MoralisService {
       return [];
     }
   }
+
+  // DeFi Balance API Integration
+  static async getWalletDeFiSummary(address: string, chain = 'eth'): Promise<any> {
+    await initMoralis();
+    
+    try {
+      const response = await Moralis.EvmApi.wallets.getDefiSummary({
+        address,
+        chain,
+      });
+      
+      return response.toJSON();
+    } catch (error) {
+      console.error('Error fetching DeFi summary:', error);
+      throw error;
+    }
+  }
+
+  static async getWalletDeFiPositions(address: string, chain = 'eth'): Promise<any[]> {
+    await initMoralis();
+    
+    try {
+      const response = await Moralis.EvmApi.wallets.getDefiPositionsSummary({
+        address,
+        chain,
+      });
+      
+      return response.toJSON();
+    } catch (error) {
+      console.error('Error fetching DeFi positions:', error);
+      return [];
+    }
+  }
+
+  static async getComprehensiveDeFiData(address: string, chain = 'eth'): Promise<any> {
+    await initMoralis();
+    
+    try {
+      console.log('Fetching comprehensive DeFi data for:', address);
+      
+      // Fetch DeFi summary and positions
+      const [defiSummary, defiPositions] = await Promise.allSettled([
+        this.getWalletDeFiSummary(address, chain),
+        this.getWalletDeFiPositions(address, chain),
+      ]);
+
+      // Try to get protocol-specific data for major DeFi protocols
+      const protocolData: Record<string, any> = {};
+      
+      // Check for specific protocols with proper types
+      const supportedProtocols = [
+        'uniswap-v3' as const,
+        'uniswap-v2' as const, 
+        'sushiswap-v2' as const,
+        'aave-v2' as const,
+        'aave-v3' as const,
+        'lido' as const
+      ];
+      
+      for (const protocol of supportedProtocols) {
+        try {
+          const response = await Moralis.EvmApi.wallets.getDefiPositionsByProtocol({
+            address,
+            protocol,
+            chain,
+          });
+          protocolData[protocol] = response.toJSON();
+        } catch (error) {
+          console.error(`Error fetching ${protocol} positions:`, error);
+          protocolData[protocol] = null;
+        }
+      }
+
+      return {
+        summary: defiSummary.status === 'fulfilled' ? defiSummary.value : null,
+        positions: defiPositions.status === 'fulfilled' ? defiPositions.value : [],
+        protocolBreakdown: protocolData,
+        lastUpdated: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error fetching comprehensive DeFi data:', error);
+      return {
+        summary: null,
+        positions: [],
+        protocolBreakdown: {},
+        lastUpdated: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
 }
 
 export default MoralisService; 

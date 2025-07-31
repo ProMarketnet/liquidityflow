@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/components/wallet/WalletProvider';
 import { WalletButton } from '@/components/wallet/WalletModal';
 import { WalletPortfolio } from '@/components/wallet/WalletPortfolio';
+import { DeFiPositions } from '@/components/wallet/DeFiPositions';
 
 interface Pool {
   address: string;
@@ -189,6 +190,9 @@ export function OnboardingFlow() {
           
           {/* Portfolio Overview */}
           <WalletPortfolio />
+          
+          {/* DeFi Positions */}
+          <DeFiPositions />
         </div>
       )}
 
