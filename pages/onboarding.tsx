@@ -176,7 +176,7 @@ export default function OnboardingPage() {
 
   return (
     <Layout title="Get Started - LiquidFlow" showSidebar={false}>
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-12">
         <div className="max-w-4xl mx-auto px-4">
           {/* Progress Steps */}
           <div className="flex justify-center mb-12">
@@ -202,15 +202,15 @@ export default function OnboardingPage() {
 
           {/* Step 1: Connect Wallet */}
           {step === 1 && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
-              <h1 className="text-3xl font-bold text-white mb-4">Connect Your Wallet</h1>
-              <p className="text-gray-400 mb-8">
+            <div className="bg-white/10 border border-white/20 rounded-xl p-8 text-center shadow-2xl">
+              <h1 className="text-4xl font-bold text-white mb-6">Connect Your Wallet</h1>
+              <p className="text-gray-200 mb-8 text-lg">
                 Connect your wallet or enter a wallet address to start monitoring liquidity pools
               </p>
 
               <div className="space-y-6">
                 {/* MetaMask Connection */}
-                <div className="border border-white/20 rounded-lg p-6">
+                <div className="border border-white/30 rounded-lg p-6 bg-white/5">
                   <h3 className="text-xl font-semibold text-white mb-4">Connect with MetaMask</h3>
                   <button
                     onClick={connectWallet}
@@ -221,19 +221,19 @@ export default function OnboardingPage() {
                   </button>
                 </div>
 
-                <div className="text-gray-400">or</div>
+                <div className="text-gray-200 text-lg font-medium">or</div>
 
                 {/* Manual Address Input */}
-                <div className="border border-white/20 rounded-lg p-6">
+                <div className="border border-white/30 rounded-lg p-6 bg-white/5">
                   <h3 className="text-xl font-semibold text-white mb-4">Enter Wallet Address</h3>
                   <div className="space-y-4">
-                    <input
-                      type="text"
-                      placeholder="0x..."
-                      value={walletInput}
-                      onChange={(e) => setWalletInput(e.target.value)}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                                          <input
+                        type="text"
+                        placeholder="0x1234567890123456789012345678901234567890"
+                        value={walletInput}
+                        onChange={(e) => setWalletInput(e.target.value)}
+                        className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                      />
                     <button
                       onClick={connectWithAddress}
                       disabled={isConnecting || !walletInput}
@@ -249,8 +249,8 @@ export default function OnboardingPage() {
 
           {/* Step 2: Wallet Connected */}
           {step === 2 && walletInfo && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-8">
-              <h1 className="text-3xl font-bold text-white mb-4">Wallet Connected!</h1>
+            <div className="bg-white/10 border border-white/20 rounded-xl p-8 shadow-2xl">
+              <h1 className="text-4xl font-bold text-white mb-6">Wallet Connected!</h1>
               
               <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-6 mb-6">
                 <div className="flex items-center space-x-3 mb-3">
@@ -270,9 +270,9 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
-              <p className="text-gray-400 mb-6">
-                Now let's discover the liquidity pools associated with your wallet
-              </p>
+                             <p className="text-gray-200 mb-6 text-lg">
+                 Now let's discover the liquidity pools associated with your wallet
+               </p>
 
               <button
                 onClick={discoverPools}
@@ -286,9 +286,9 @@ export default function OnboardingPage() {
 
           {/* Step 3: Pool Selection */}
           {step === 3 && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-8">
-              <h1 className="text-3xl font-bold text-white mb-4">Select Pools to Monitor</h1>
-              <p className="text-gray-400 mb-6">
+            <div className="bg-white/10 border border-white/20 rounded-xl p-8 shadow-2xl">
+              <h1 className="text-4xl font-bold text-white mb-6">Select Pools to Monitor</h1>
+              <p className="text-gray-200 mb-6 text-lg">
                 We found {discoveredPools.length} pools associated with your wallet. Select which ones you'd like to monitor.
               </p>
 
@@ -358,9 +358,9 @@ export default function OnboardingPage() {
 
           {/* Step 4: Setup Complete */}
           {step === 4 && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-8 text-center">
-              <h1 className="text-3xl font-bold text-white mb-4">Setup Your Monitoring</h1>
-              <p className="text-gray-400 mb-6">
+            <div className="bg-white/10 border border-white/20 rounded-xl p-8 text-center shadow-2xl">
+              <h1 className="text-4xl font-bold text-white mb-6">Setup Your Monitoring</h1>
+              <p className="text-gray-200 mb-6 text-lg">
                 You've selected {selectedPools.length} pools to monitor. We'll start tracking their liquidity, slippage, and volume in real-time.
               </p>
 
