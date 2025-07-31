@@ -3,6 +3,7 @@ import { useWallet } from '@/components/wallet/WalletProvider';
 import { WalletButton } from '@/components/wallet/WalletModal';
 import { WalletPortfolio } from '@/components/wallet/WalletPortfolio';
 import { DeFiPositions } from '@/components/wallet/DeFiPositions';
+import { TransactionHistory } from '@/components/wallet/TransactionHistory';
 
 interface Pool {
   address: string;
@@ -119,80 +120,114 @@ export function OnboardingFlow() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       {/* Progress Steps */}
       <div className="flex justify-center mb-12">
-        <div className="flex items-center space-x-4">
-          {[1, 2, 3, 4].map((stepNum) => (
-            <div key={stepNum} className="flex items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
-                step >= stepNum 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-gray-700 text-gray-400'
-              }`}>
-                {stepNum}
+        <div className="bg-white/5 border border-white/20 rounded-xl p-6 backdrop-blur-sm">
+          <div className="flex items-center space-x-4">
+            {[1, 2, 3, 4].map((stepNum) => (
+              <div key={stepNum} className="flex items-center">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 transition-all duration-300 ${
+                  step >= stepNum 
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-400 shadow-lg transform scale-110' 
+                    : 'bg-gray-700/50 text-gray-300 border-gray-600'
+                }`}>
+                  {step > stepNum ? '✓' : stepNum}
+                </div>
+                {stepNum < 4 && (
+                  <div className={`w-20 h-2 mx-3 rounded-full transition-all duration-500 ${
+                    step > stepNum ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-600/50'
+                  }`} />
+                )}
               </div>
-              {stepNum < 4 && (
-                <div className={`w-16 h-1 mx-2 ${
-                  step > stepNum ? 'bg-blue-500' : 'bg-gray-700'
-                }`} />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
+          <div className="flex justify-between mt-4 text-sm font-medium">
+            <span className={step >= 1 ? 'text-white' : 'text-gray-400'}>Connect</span>
+            <span className={step >= 2 ? 'text-white' : 'text-gray-400'}>Analyze</span>
+            <span className={step >= 3 ? 'text-white' : 'text-gray-400'}>Select</span>
+            <span className={step >= 4 ? 'text-white' : 'text-gray-400'}>Monitor</span>
+          </div>
         </div>
       </div>
 
       {/* Step 1: Connect Wallet */}
       {step === 1 && (
-        <div className="bg-white/10 border border-white/20 rounded-xl p-8 text-center shadow-2xl">
-          <h1 className="text-4xl font-bold text-white mb-6">Connect Your Wallet</h1>
-          <p className="text-gray-200 mb-8 text-lg">
-            Connect your wallet to start monitoring liquidity pools
+        <div className="bg-white/10 border-2 border-white/30 rounded-xl p-8 text-center shadow-2xl backdrop-blur-sm">
+          <div className="text-6xl mb-6">🚀</div>
+          <h1 className="text-4xl font-bold text-white mb-6 drop-shadow-lg">Connect Your Wallet</h1>
+          <p className="text-gray-100 mb-8 text-lg font-medium drop-shadow-md">
+            Connect your wallet to start monitoring liquidity pools and track your DeFi positions
           </p>
           
           <div className="flex justify-center">
             <WalletButton />
+          </div>
+          
+          <div className="mt-8 text-gray-200 text-sm">
+            <p>✨ Real-time portfolio tracking</p>
+            <p>📊 DeFi position monitoring</p>
+            <p>🔔 Automated price alerts</p>
           </div>
         </div>
       )}
 
       {/* Step 2: Wallet Connected */}
       {step === 2 && wallet && (
-        <div className="bg-white/10 border border-white/20 rounded-xl p-8 shadow-2xl">
-          <h1 className="text-4xl font-bold text-white mb-6">Wallet Connected!</h1>
+        <div className="bg-white/10 border-2 border-white/30 rounded-xl p-8 shadow-2xl backdrop-blur-sm">
+          <div className="text-center mb-6">
+            <div className="text-6xl mb-4">✅</div>
+            <h1 className="text-4xl font-bold text-white drop-shadow-lg">Wallet Connected!</h1>
+          </div>
           
-          <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-6 mb-6">
+          <div className="bg-green-500/20 border-2 border-green-500/40 rounded-lg p-6 mb-6 backdrop-blur-sm">
             <div className="flex items-center space-x-3 mb-3">
-              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-              <span className="text-green-300 font-medium">Connected</span>
+              <div className="w-4 h-4 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-green-200 font-semibold text-lg">Successfully Connected</span>
             </div>
             <div className="space-y-2 text-sm">
-              <div className="text-gray-300">
-                <span className="text-gray-400">Address:</span> {wallet.address}
+              <div className="text-gray-100">
+                <span className="text-gray-300 font-medium">Address:</span> <span className="font-mono">{wallet.address}</span>
               </div>
-              <div className="text-gray-300">
-                <span className="text-gray-400">Balance:</span> {parseFloat(wallet.balance).toFixed(4)} ETH
+              <div className="text-gray-100">
+                <span className="text-gray-300 font-medium">Balance:</span> <span className="text-green-300 font-semibold">{parseFloat(wallet.balance).toFixed(4)} ETH</span>
               </div>
-              <div className="text-gray-300">
-                <span className="text-gray-400">Network:</span> {wallet.network}
+              <div className="text-gray-100">
+                <span className="text-gray-300 font-medium">Network:</span> <span className="text-blue-300 font-semibold">{wallet.network}</span>
               </div>
             </div>
           </div>
 
-          <p className="text-gray-200 mb-6 text-lg">
-            Now let's discover the liquidity pools associated with your wallet
-          </p>
+          <div className="text-center mb-6">
+            <p className="text-gray-100 text-lg font-medium drop-shadow-md">
+              🔍 Ready to analyze your DeFi portfolio and discover liquidity opportunities
+            </p>
+          </div>
 
-          <button
-            onClick={discoverPools}
-            disabled={isDiscovering}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50"
-          >
-            {isDiscovering ? 'Discovering Pools...' : 'Discover My Pools'}
-          </button>
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={discoverPools}
+              disabled={isDiscovering}
+              className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all font-semibold text-lg shadow-lg transform hover:scale-105 disabled:opacity-50 disabled:transform-none"
+            >
+              {isDiscovering ? (
+                <span className="flex items-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                  Discovering Pools...
+                </span>
+              ) : (
+                <span className="flex items-center">
+                  🚀 Discover My Pools
+                </span>
+              )}
+            </button>
+          </div>
           
           {/* Portfolio Overview */}
           <WalletPortfolio />
           
           {/* DeFi Positions */}
           <DeFiPositions />
+          
+          {/* Transaction History */}
+          <TransactionHistory />
         </div>
       )}
 

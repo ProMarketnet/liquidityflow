@@ -283,6 +283,148 @@ export class MoralisService {
     }
   }
 
+  // Transaction History API Integration
+  static async getWalletTransactions(address: string, chain = 'eth', limit = 20): Promise<any[]> {
+    await initMoralis();
+    
+    try {
+      const response = await Moralis.EvmApi.transaction.getWalletTransactions({
+        address,
+        chain,
+        limit,
+      });
+      
+      return response.toJSON().result || [];
+    } catch (error) {
+      console.error('Error fetching wallet transactions:', error);
+      return [];
+    }
+  }
+
+  static async getERC20Transfers(address: string, chain = 'eth', limit = 50): Promise<any[]> {
+    await initMoralis();
+    
+    try {
+      const response = await Moralis.EvmApi.token.getWalletTokenTransfers({
+        address,
+        chain,
+        limit,
+      });
+      
+      return response.toJSON().result || [];
+    } catch (error) {
+      console.error('Error fetching ERC20 transfers:', error);
+      return [];
+    }
+  }
+
+  static async getWalletTransactionHistory(address: string, chain = 'eth'): Promise<any> {
+    await initMoralis();
+    
+    try {
+      console.log('Fetching transaction history for:', address);
+      
+      // Get transactions and token transfers in parallel
+      const [transactions, tokenTransfers] = await Promise.allSettled([
+        this.getWalletTransactions(address, chain, 25),
+        this.getERC20Transfers(address, chain, 50),
+      ]);
+
+      const txData = transactions.status === 'fulfilled' ? transactions.value : [];
+      const transferData = tokenTransfers.status === 'fulfilled' ? tokenTransfers.value : [];
+
+      // Categorize transactions
+      const categorizedTx = {
+        defiSwaps: [] as any[],
+        liquidityActions: [] as any[],
+        lendingActions: [] as any[],
+        transfers: [] as any[],
+        other: [] as any[]
+      };
+
+      // Process ERC20 transfers for DeFi detection
+      transferData.forEach((transfer: any) => {
+        const isDefiRelated = this.isDeFiTransaction(transfer);
+        if (isDefiRelated.type === 'swap') {
+          categorizedTx.defiSwaps.push({...transfer, category: 'swap'});
+        } else if (isDefiRelated.type === 'liquidity') {
+          categorizedTx.liquidityActions.push({...transfer, category: 'liquidity'});
+        } else if (isDefiRelated.type === 'lending') {
+          categorizedTx.lendingActions.push({...transfer, category: 'lending'});
+        } else {
+          categorizedTx.transfers.push({...transfer, category: 'transfer'});
+        }
+      });
+
+      // Process regular transactions
+      txData.forEach((tx: any) => {
+        if (!categorizedTx.defiSwaps.find((t: any) => t.transaction_hash === tx.hash) &&
+            !categorizedTx.liquidityActions.find((t: any) => t.transaction_hash === tx.hash) &&
+            !categorizedTx.lendingActions.find((t: any) => t.transaction_hash === tx.hash)) {
+          categorizedTx.other.push({...tx, category: 'transaction'});
+        }
+      });
+
+      return {
+        summary: {
+          totalTransactions: txData.length,
+          totalTransfers: transferData.length,
+          defiSwaps: categorizedTx.defiSwaps.length,
+          liquidityActions: categorizedTx.liquidityActions.length,
+          lendingActions: categorizedTx.lendingActions.length,
+          regularTransfers: categorizedTx.transfers.length
+        },
+        categorized: categorizedTx,
+        lastUpdated: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error fetching transaction history:', error);
+      return {
+        summary: {},
+        categorized: { defiSwaps: [], liquidityActions: [], lendingActions: [], transfers: [], other: [] },
+        lastUpdated: new Date().toISOString(),
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  static isDeFiTransaction(transfer: any): { type: string; confidence: number } {
+    const toAddress = transfer.to_address?.toLowerCase() || '';
+    const fromAddress = transfer.from_address?.toLowerCase() || '';
+    
+    // Known DeFi protocol addresses (partial list)
+    const defiAddresses = {
+      // Uniswap V2/V3 Routers
+      '0x7a250d5630b4cf539739df2c5dacb4c659f2488d': 'swap', // Uniswap V2 Router
+      '0xe592427a0aece92de3edee1f18e0157c05861564': 'swap', // Uniswap V3 Router
+      '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45': 'swap', // Uniswap V3 Router 2
+      
+      // SushiSwap
+      '0xd9e1ce17f2641f24ae83637ab66a2cca9c378b9f': 'swap', // SushiSwap Router
+      
+      // Aave
+      '0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9': 'lending', // Aave V2 Pool
+      '0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2': 'lending', // Aave V3 Pool
+      
+      // Lido
+      '0xae7ab96520de3a18e5e111b5eaab095312d7fe84': 'staking', // Lido stETH
+    };
+
+    const toType = defiAddresses[toAddress as keyof typeof defiAddresses];
+    const fromType = defiAddresses[fromAddress as keyof typeof defiAddresses];
+    
+    if (toType || fromType) {
+      return { type: toType || fromType, confidence: 0.9 };
+    }
+
+    // Heuristic detection
+    if (transfer.value && parseFloat(transfer.value) === 0 && transfer.transaction_hash) {
+      return { type: 'swap', confidence: 0.6 }; // Likely a token swap
+    }
+
+    return { type: 'transfer', confidence: 0.3 };
+  }
+
   static async getComprehensiveDeFiData(address: string, chain = 'eth'): Promise<any> {
     await initMoralis();
     
