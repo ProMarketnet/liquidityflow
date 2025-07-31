@@ -40,41 +40,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [availableWallets, setAvailableWallets] = useState<WalletOption[]>([]);
 
-  useEffect(() => {
-    // Check for available wallets
-    const wallets: WalletOption[] = [
-      {
-        id: 'metamask',
-        name: 'MetaMask',
-        icon: '🦊',
-        installed: !!window.ethereum?.isMetaMask,
-        downloadUrl: 'https://metamask.io/download/'
-      },
-      {
-        id: 'coinbase',
-        name: 'Coinbase Wallet',
-        icon: '🔵',
-        installed: !!window.coinbaseWalletExtension,
-        downloadUrl: 'https://www.coinbase.com/wallet'
-      },
-      {
-        id: 'trust',
-        name: 'Trust Wallet',
-        icon: '🛡️',
-        installed: !!window.trustWallet,
-        downloadUrl: 'https://trustwallet.com/'
-      }
-    ];
-
-    setAvailableWallets(wallets);
-
-    // Check if already connected
-    if (window.ethereum && window.ethereum.selectedAddress) {
-      // Auto-reconnect if previously connected
-      connectWallet('metamask').catch(console.error);
-    }
-  }, []);
-
   const connectWallet = async (walletType: string) => {
     setIsConnecting(true);
     
@@ -139,6 +104,44 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     setWallet(null);
     localStorage.removeItem('lastConnectedWallet');
   };
+
+  useEffect(() => {
+    // Check for available wallets
+    const wallets: WalletOption[] = [
+      {
+        id: 'metamask',
+        name: 'MetaMask',
+        icon: '🦊',
+        installed: !!window.ethereum?.isMetaMask,
+        downloadUrl: 'https://metamask.io/download/'
+      },
+      {
+        id: 'coinbase',
+        name: 'Coinbase Wallet',
+        icon: '🔵',
+        installed: !!window.coinbaseWalletExtension,
+        downloadUrl: 'https://www.coinbase.com/wallet'
+      },
+      {
+        id: 'trust',
+        name: 'Trust Wallet',
+        icon: '🛡️',
+        installed: !!window.trustWallet,
+        downloadUrl: 'https://trustwallet.com/'
+      }
+    ];
+
+    setAvailableWallets(wallets);
+
+    // Check if already connected
+    if (window.ethereum && window.ethereum.selectedAddress) {
+      // Auto-reconnect if previously connected
+      const lastWallet = localStorage.getItem('lastConnectedWallet');
+      if (lastWallet) {
+        connectWallet(lastWallet).catch(console.error);
+      }
+    }
+  }, []);
 
   const value: WalletContextType = {
     wallet,
