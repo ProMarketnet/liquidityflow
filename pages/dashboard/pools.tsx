@@ -1,29 +1,14 @@
-// pages/dashboard/pools.tsx
-export default function Pools() {
-  return (
-    <div>
-      <h1>Liquidity Pools</h1>
-      <p>Pools dashboard coming soon...</p>
-    </div>
-  );
-}
+import React from 'react';
 
-// pages/dashboard/settings.tsx  
-export default function Settings() {
+const Pools = () => {
   return (
-    <div>
-      <h1>Settings</h1>
-      <p>Settings dashboard coming soon...</p>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Liquidity Pools</h1>
+      <div className="bg-gray-100 p-4 rounded">
+        <p>Pools dashboard coming soon...</p>
+      </div>
     </div>
   );
-}
+};
 
-// pages/dashboard/alerts.tsx
-export default function Alerts() {
-  return (
-    <div>
-      <h1>Alerts</h1>
-      <p>Alerts dashboard coming soon...</p>
-    </div>
-  );
-}
+export default Pools;
