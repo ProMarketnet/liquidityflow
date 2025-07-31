@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { ethers } from 'ethers';
 import axios from 'axios';
+import { MoralisService } from '@/lib/moralis';
 
 interface Pool {
   address: string;
@@ -29,12 +30,67 @@ export default async function handler(
     // Discover pools from multiple DEXs
     const pools: Pool[] = [];
 
-    // Uniswap V3 Discovery
+    // Enhanced Discovery with Moralis + Uniswap
     try {
+      console.log('Starting enhanced pool discovery with Moralis for:', walletAddress);
+      
+      // Get wallet token balances using Moralis
+      const tokenBalances = await MoralisService.getWalletTokenBalances(walletAddress);
+      console.log(`Found ${tokenBalances.length} tokens in wallet`);
+      
+      // Filter for significant token holdings (non-spam, verified contracts)
+      const significantTokens = tokenBalances.filter(token => 
+        !token.possible_spam && 
+        token.verified_contract &&
+        parseFloat(token.balance) > 0
+      );
+      
+      console.log(`Found ${significantTokens.length} significant tokens`);
+      
+      // Discover pools from Uniswap for these tokens
       const uniswapPools = await discoverUniswapPools(walletAddress);
       pools.push(...uniswapPools);
-    } catch (error) {
-      console.error('Error discovering Uniswap pools:', error);
+      
+      // Enhanced pool data with Moralis token information
+      for (const pool of pools) {
+        try {
+          // Try to get additional token metadata for better display
+          const token0Info = significantTokens.find(t => 
+            t.symbol.toLowerCase() === pool.token0Symbol.toLowerCase()
+          );
+          const token1Info = significantTokens.find(t => 
+            t.symbol.toLowerCase() === pool.token1Symbol.toLowerCase()
+          );
+          
+          // Add token logos and additional metadata if available
+          if (token0Info?.logo || token1Info?.logo) {
+            (pool as any).tokenLogos = {
+              token0: token0Info?.logo,
+              token1: token1Info?.logo
+            };
+          }
+          
+          // Add verified status
+          (pool as any).verified = {
+            token0: token0Info?.verified_contract || false,
+            token1: token1Info?.verified_contract || false
+          };
+          
+        } catch (error) {
+          console.error('Error enhancing pool data:', error);
+        }
+      }
+      
+    } catch (moralisError) {
+      console.error('Error with Moralis discovery, falling back to Uniswap only:', moralisError);
+      
+      // Fallback to original Uniswap discovery
+      try {
+        const uniswapPools = await discoverUniswapPools(walletAddress);
+        pools.push(...uniswapPools);
+      } catch (fallbackError) {
+        console.error('Error with fallback Uniswap discovery:', fallbackError);
+      }
     }
 
     // SushiSwap Discovery (if needed)

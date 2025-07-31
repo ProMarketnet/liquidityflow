@@ -28,6 +28,7 @@
     "ethers": "6.7.1",
     "jsonwebtoken": "9.0.2",
     "lucide-react": "0.287.0",
+    "moralis": "^2.27.2",
     "next": "14.0.0",
     "postcss": "8.4.31",
     "prisma": "5.5.0",

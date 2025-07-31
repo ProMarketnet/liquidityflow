@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '@/components/wallet/WalletProvider';
 import { WalletButton } from '@/components/wallet/WalletModal';
+import { WalletPortfolio } from '@/components/wallet/WalletPortfolio';
 
 interface Pool {
   address: string;
@@ -185,6 +186,9 @@ export function OnboardingFlow() {
           >
             {isDiscovering ? 'Discovering Pools...' : 'Discover My Pools'}
           </button>
+          
+          {/* Portfolio Overview */}
+          <WalletPortfolio />
         </div>
       )}
 
