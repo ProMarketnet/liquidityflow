@@ -19,19 +19,39 @@ export default async function handler(
 
     console.log('Fetching portfolio for wallet:', walletAddress);
 
-    // Get wallet portfolio using Moralis
-    const portfolio = await MoralisService.getWalletPortfolio(walletAddress);
+    // Get wallet portfolio with USD prices using Moralis
+    const [portfolio, tokensWithPrices, ethPrice] = await Promise.all([
+      MoralisService.getWalletPortfolio(walletAddress),
+      MoralisService.getWalletTokenBalancesWithPrices(walletAddress),
+      MoralisService.getEthPrice()
+    ]);
 
-    // Enhanced response with additional metadata
+    // Calculate total portfolio value
+    const ethBalance = parseFloat(portfolio.nativeBalance) / 1e18;
+    const ethValue = ethBalance * ethPrice;
+    const tokenValue = tokensWithPrices.reduce((sum, token) => sum + (token.usd_value || 0), 0);
+    const totalPortfolioValue = ethValue + tokenValue;
+
+    // Enhanced response with USD values
     const enhancedPortfolio = {
       ...portfolio,
+      tokenBalances: tokensWithPrices,
       address: walletAddress,
       lastUpdated: new Date().toISOString(),
+      prices: {
+        ethPrice,
+        ethValue,
+        tokenValue,
+        totalValue: totalPortfolioValue
+      },
       summary: {
-        totalTokens: portfolio.tokenBalances.length,
-        verifiedTokens: portfolio.tokenBalances.filter(t => t.verified_contract).length,
-        spamTokens: portfolio.tokenBalances.filter(t => t.possible_spam).length,
-        ethBalance: (parseFloat(portfolio.nativeBalance) / 1e18).toFixed(4),
+        totalTokens: tokensWithPrices.length,
+        verifiedTokens: tokensWithPrices.filter(t => t.verified_contract).length,
+        tokensWithValue: tokensWithPrices.filter(t => t.usd_value > 0).length,
+        ethBalance: ethBalance.toFixed(4),
+        ethValueUsd: ethValue.toFixed(2),
+        tokenValueUsd: tokenValue.toFixed(2),
+        totalValueUsd: totalPortfolioValue.toFixed(2)
       }
     };
 

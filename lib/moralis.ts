@@ -116,6 +116,102 @@ export class MoralisService {
     }
   }
 
+  static async getMultipleTokenPrices(tokenAddresses: string[], chain = 'eth'): Promise<any[]> {
+    await initMoralis();
+    
+    try {
+      const pricePromises = tokenAddresses.map(address => 
+        this.getTokenPrice(address, chain).catch(error => {
+          console.error(`Error fetching price for ${address}:`, error);
+          return null;
+        })
+      );
+      
+      const prices = await Promise.all(pricePromises);
+      return prices.filter(price => price !== null);
+    } catch (error) {
+      console.error('Error fetching multiple token prices:', error);
+      return [];
+    }
+  }
+
+  static async getWalletTokenBalancesWithPrices(address: string, chain = 'eth'): Promise<any[]> {
+    await initMoralis();
+    
+    try {
+      // Get wallet token balances
+      const balances = await this.getWalletTokenBalances(address, chain);
+      
+      // Filter for verified, non-spam tokens with balance > 0
+      const validTokens = balances.filter(token => 
+        !token.possible_spam && 
+        token.verified_contract &&
+        parseFloat(token.balance) > 0
+      );
+
+      // Get prices for valid tokens (limit to first 10 to avoid rate limits)
+      const tokensToPrice = validTokens.slice(0, 10);
+      const pricePromises = tokensToPrice.map(async (token) => {
+        try {
+          const price = await this.getTokenPrice(token.token_address, chain);
+          const balance = parseFloat(token.balance) / Math.pow(10, token.decimals);
+          const usdValue = price?.usdPrice ? balance * price.usdPrice : 0;
+          
+          return {
+            ...token,
+            price: price?.usdPrice || 0,
+            balance_formatted: balance,
+            usd_value: usdValue,
+            price_24h_change: price?.['24hrPercentChange'] || 0
+          };
+        } catch (error) {
+          console.error(`Error getting price for ${token.symbol}:`, error);
+          const balance = parseFloat(token.balance) / Math.pow(10, token.decimals);
+          return {
+            ...token,
+            price: 0,
+            balance_formatted: balance,
+            usd_value: 0,
+            price_24h_change: 0
+          };
+        }
+      });
+
+      const tokensWithPrices = await Promise.all(pricePromises);
+      
+      // Add remaining tokens without prices
+      const remainingTokens = validTokens.slice(10).map(token => {
+        const balance = parseFloat(token.balance) / Math.pow(10, token.decimals);
+        return {
+          ...token,
+          price: 0,
+          balance_formatted: balance,
+          usd_value: 0,
+          price_24h_change: 0
+        };
+      });
+
+      return [...tokensWithPrices, ...remainingTokens];
+    } catch (error) {
+      console.error('Error fetching wallet balances with prices:', error);
+      throw error;
+    }
+  }
+
+  static async getEthPrice(chain = 'eth'): Promise<number> {
+    await initMoralis();
+    
+    try {
+      // Use WETH address for ETH price
+      const wethAddress = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2';
+      const price = await this.getTokenPrice(wethAddress, chain);
+      return price?.usdPrice || 0;
+    } catch (error) {
+      console.error('Error fetching ETH price:', error);
+      return 0;
+    }
+  }
+
   static async getWalletPortfolio(address: string, chain = 'eth'): Promise<WalletPortfolio> {
     await initMoralis();
     
