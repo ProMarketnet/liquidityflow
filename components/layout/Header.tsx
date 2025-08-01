@@ -30,7 +30,7 @@ export const Header: React.FC = () => {
               View Demo
             </Link>
             <Link
-              href="/onboarding-new"
+              href="/onboarding-simple"
               className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all"
             >
               Get Started
