@@ -32,10 +32,11 @@ interface LiquidityPoolsData {
 
 const Pools = () => {
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [poolsData, setPoolsData] = useState<LiquidityPoolsData>({
     summary: null,
     protocolPositions: {},
-    isLoading: true,
+    isLoading: false,
     error: null
   });
 
@@ -145,16 +146,14 @@ const Pools = () => {
       const wallet = localStorage.getItem('connectedWallet');
       setWalletAddress(wallet);
       
-      if (wallet) {
-        loadDeFiPositions(wallet);
-      } else {
-        setPoolsData(prev => ({ ...prev, isLoading: false }));
-      }
+      // Don't auto-load data anymore - this is now a pair lookup tool
+      setPoolsData(prev => ({ ...prev, isLoading: false }));
     }
   }, []);
 
   const loadDeFiPositions = async (address: string) => {
     setPoolsData(prev => ({ ...prev, isLoading: true, error: null }));
+    setHasSearched(true);
     
     try {
       console.log('🔍 Loading data for address:', address);
@@ -519,7 +518,15 @@ const Pools = () => {
           </div>
           
           <button
-            onClick={() => loadDeFiPositions(walletAddress)}
+            onClick={() => {
+              const input = document.getElementById('walletAddressInput') as HTMLInputElement;
+              const address = input.value.trim();
+              if (address) {
+                loadDeFiPositions(address);
+              } else {
+                alert('Please enter a pair address first');
+              }
+            }}
             style={styles.connectButton}
             disabled={poolsData.isLoading}
           >
@@ -573,6 +580,23 @@ const Pools = () => {
 
               {/* Protocol Positions */}
               <div style={styles.protocolGrid}>
+                {!hasSearched && Object.keys(poolsData.protocolPositions).length === 0 && !poolsData.isLoading && (
+                  <div style={styles.protocolCard}>
+                    <h3 style={{ color: '#000000', marginBottom: '1rem' }}>🔍 Ready to Analyze</h3>
+                    <p style={{ color: '#666' }}>
+                      Enter a DEX pair address above to view comprehensive liquidity pool information, trading data, and protocol details.
+                    </p>
+                    <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
+                      <strong>Supported Chains & Protocols:</strong><br />
+                      <strong>Ethereum:</strong> Uniswap V2/V3, Aave V2/V3, Compound, Curve, Yearn, Lido, SushiSwap<br />
+                      <strong>Arbitrum:</strong> Uniswap V3, SushiSwap, Aave V3, Curve<br />
+                      <strong>Base:</strong> Uniswap V3, SushiSwap, Compound V3<br />
+                      <strong>Optimism:</strong> Uniswap V3, SushiSwap, Aave V3<br />
+                      <strong>Solana:</strong> Raydium, Orca, Serum, Marinade, Lido
+                    </div>
+                  </div>
+                )}
+
                 {Object.entries(poolsData.protocolPositions).map(([protocol, positions]) => (
                   <div key={protocol} style={styles.protocolCard}>
                     <h3 style={{ color: '#000000', marginBottom: '1rem', fontSize: '1.5rem' }}>
@@ -614,11 +638,11 @@ const Pools = () => {
                   </div>
                 ))}
 
-                {Object.keys(poolsData.protocolPositions).length === 0 && !poolsData.isLoading && (
+                {Object.keys(poolsData.protocolPositions).length === 0 && !poolsData.isLoading && hasSearched && (
                   <div style={styles.protocolCard}>
                     <h3 style={{ color: '#000000', marginBottom: '1rem' }}>📭 No DeFi Positions Found</h3>
                     <p style={{ color: '#666' }}>
-                      This wallet doesn't have any active DeFi positions across the supported protocols.
+                      This address doesn't have any active DeFi positions or pair data across the supported protocols.
                     </p>
                     <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
                       <strong>Supported Protocols:</strong><br />
