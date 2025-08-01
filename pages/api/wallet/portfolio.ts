@@ -6,12 +6,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { walletAddress } = req.body;
+    const { address } = req.query;
+    const walletAddress = Array.isArray(address) ? address[0] : address;
 
     if (!walletAddress || !ethers.isAddress(walletAddress)) {
       return res.status(400).json({ error: 'Invalid wallet address' });
@@ -32,8 +33,19 @@ export default async function handler(
     const tokenValue = tokensWithPrices.reduce((sum, token) => sum + (token.usd_value || 0), 0);
     const totalPortfolioValue = ethValue + tokenValue;
 
-    // Enhanced response with USD values
-    const enhancedPortfolio = {
+    // Format data for frontend
+    const response = {
+      totalUsd: totalPortfolioValue,
+      ethBalance: ethBalance,
+      ethUsd: ethValue,
+      tokens: tokensWithPrices.map(token => ({
+        name: token.name || token.symbol,
+        symbol: token.symbol,
+        balance: parseFloat(token.balance) / Math.pow(10, token.decimals || 18),
+        usdValue: token.usd_value || 0,
+        logo: token.logo
+      })),
+      // Also include enhanced data for other uses
       ...portfolio,
       tokenBalances: tokensWithPrices,
       address: walletAddress,
@@ -55,7 +67,7 @@ export default async function handler(
       }
     };
 
-    res.status(200).json(enhancedPortfolio);
+    res.status(200).json(response);
   } catch (error) {
     console.error('Error fetching wallet portfolio:', error);
     res.status(500).json({ error: 'Failed to fetch portfolio data' });
