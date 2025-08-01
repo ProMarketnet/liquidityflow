@@ -46,9 +46,13 @@ export default function DashboardClean() {
   const loadDashboardData = async (address: string) => {
     setIsLoading(true);
     try {
-      const [portfolioRes, defiRes] = await Promise.all([
+      // 🚀 ENHANCED EVM DATA LOADING - Using comprehensive Moralis Web3 Data API
+      const [portfolioRes, defiRes, analyticsRes, transactionsRes, nftRes] = await Promise.all([
         fetch(`/api/wallet/portfolio?address=${address}`),
-        fetch(`/api/wallet/defi?address=${address}`)
+        fetch(`/api/wallet/defi?address=${address}`),
+        fetch(`/api/wallet/analytics?address=${address}`),
+        fetch(`/api/wallet/transaction-analysis?address=${address}&days=30`),
+        fetch(`/api/wallet/nft-collections?address=${address}`)
       ]);
 
       if (portfolioRes.ok) {
@@ -59,6 +63,22 @@ export default function DashboardClean() {
       if (defiRes.ok) {
         const defiData = await defiRes.json();
         setDefiData(defiData);
+      }
+
+      // Store additional analytics for enhanced dashboard
+      if (analyticsRes.ok) {
+        const analyticsData = await analyticsRes.json();
+        console.log('📊 Enhanced Analytics:', analyticsData);
+      }
+
+      if (transactionsRes.ok) {
+        const transactionData = await transactionsRes.json();
+        console.log('💳 Transaction Analysis:', transactionData);
+      }
+
+      if (nftRes.ok) {
+        const nftData = await nftRes.json();
+        console.log('🖼️ NFT Collections:', nftData);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);

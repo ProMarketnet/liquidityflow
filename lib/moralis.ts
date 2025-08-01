@@ -483,4 +483,215 @@ export class MoralisService {
   }
 }
 
-export default MoralisService; 
+export default MoralisService;
+
+// 🚀 ENHANCED EVM API FUNCTIONS - Full Moralis Web3 Data API Integration
+
+/**
+ * Get detailed wallet analytics with USD values
+ */
+export async function getWalletAnalytics(address: string) {
+  await initMoralis();
+  
+  try {
+    const [nativeBalance, tokenBalances, nftBalances] = await Promise.all([
+      Moralis.EvmApi.balance.getNativeBalance({
+        address,
+        chain: "0x1"
+      }),
+      Moralis.EvmApi.token.getWalletTokenBalances({
+        address,
+        chain: "0x1"
+      }),
+      Moralis.EvmApi.nft.getWalletNFTs({
+        address,
+        chain: "0x1",
+        limit: 10
+      })
+    ]);
+
+    return {
+      nativeBalance: nativeBalance.toJSON(),
+      tokenBalances: tokenBalances.toJSON(),
+      nftBalances: nftBalances.toJSON(),
+      analytics: {
+        totalTokens: tokenBalances.result.length,
+        totalNFTs: nftBalances.result.length,
+        verifiedTokens: tokenBalances.result.filter(t => (t as any).verified_contract).length,
+        possibleSpamTokens: tokenBalances.result.filter(t => (t as any).possible_spam).length
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching wallet analytics:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get real-time token prices for multiple tokens
+ */
+export async function getMultipleTokenPrices(addresses: string[]) {
+  await initMoralis();
+  
+  try {
+    const pricePromises = addresses.map(address => 
+      Moralis.EvmApi.token.getTokenPrice({
+        address,
+        chain: "0x1"
+      })
+    );
+
+    const prices = await Promise.all(pricePromises);
+    return prices.map(price => price.toJSON());
+  } catch (error) {
+    console.error('Error fetching token prices:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get detailed token information
+ */
+export async function getTokenDetails(address: string) {
+  await initMoralis();
+  
+  try {
+    const [metadata, price, transfers] = await Promise.all([
+      Moralis.EvmApi.token.getTokenMetadata({
+        addresses: [address],
+        chain: "0x1"
+      }),
+      Moralis.EvmApi.token.getTokenPrice({
+        address,
+        chain: "0x1"
+      }),
+      Moralis.EvmApi.token.getTokenTransfers({
+        address,
+        chain: "0x1",
+        limit: 10
+      })
+    ]);
+
+    return {
+      metadata: metadata.toJSON(),
+      price: price.toJSON(),
+      recentTransfers: transfers.toJSON()
+    };
+  } catch (error) {
+    console.error('Error fetching token details:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get comprehensive transaction analysis
+ */
+export async function getTransactionAnalysis(address: string, days: number = 30) {
+  await initMoralis();
+  
+  try {
+    const transactions = await Moralis.EvmApi.transaction.getWalletTransactions({
+      address,
+      chain: "0x1",
+      limit: 100
+    });
+
+    const txData = transactions.toJSON();
+    const recentTxs = txData.result || [];
+
+    // Analyze transaction patterns
+    const analysis = {
+      totalTransactions: recentTxs.length,
+      totalGasUsed: recentTxs.reduce((sum, tx) => sum + (parseInt((tx as any).gas_used || '0')), 0),
+      averageGasPrice: recentTxs.length > 0 ? 
+        recentTxs.reduce((sum, tx) => sum + (parseInt((tx as any).gas_price || '0')), 0) / recentTxs.length : 0,
+      uniqueContracts: Array.from(new Set(recentTxs.filter(tx => tx.to_address).map(tx => tx.to_address))).length,
+      transactionTypes: {
+        sent: recentTxs.filter(tx => tx.from_address.toLowerCase() === address.toLowerCase()).length,
+        received: recentTxs.filter(tx => tx.to_address?.toLowerCase() === address.toLowerCase()).length
+      }
+    };
+
+    return {
+      transactions: txData,
+      analysis
+    };
+  } catch (error) {
+    console.error('Error analyzing transactions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get wallet's NFT collection with detailed metadata
+ */
+export async function getNFTCollectionDetails(address: string) {
+  await initMoralis();
+  
+  try {
+    const nfts = await Moralis.EvmApi.nft.getWalletNFTs({
+      address,
+      chain: "0x1",
+      format: "decimal",
+      normalizeMetadata: true,
+      limit: 50
+    });
+
+    const nftData = nfts.toJSON();
+    const nftList = nftData.result || [];
+
+    // Group by collection
+    const collections = nftList.reduce((acc, nft) => {
+      const collection = nft.token_address;
+      if (!acc[collection]) {
+        acc[collection] = {
+          address: collection,
+          name: nft.name,
+          symbol: nft.symbol,
+          contract_type: nft.contract_type,
+          items: [],
+          verified: nft.verified_collection
+        };
+      }
+      acc[collection].items.push(nft);
+      return acc;
+    }, {} as any);
+
+    return {
+      nfts: nftData,
+      collections: Object.values(collections),
+      analytics: {
+        totalNFTs: nftList.length,
+        totalCollections: Object.keys(collections).length,
+        verifiedCollections: Object.values(collections).filter((c: any) => c.verified).length
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching NFT collection details:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get real-time blockchain stats
+ */
+export async function getBlockchainStats() {
+  await initMoralis();
+  
+  try {
+    // Get latest block information
+    const blockNumber = await Moralis.EvmApi.block.getDateToBlock({
+      date: new Date().toISOString(),
+      chain: "0x1"
+    });
+
+    return {
+      latestBlock: blockNumber.toJSON(),
+      timestamp: new Date().toISOString(),
+      chain: "Ethereum Mainnet"
+    };
+  } catch (error) {
+    console.error('Error fetching blockchain stats:', error);
+    throw error;
+  }
+} 
