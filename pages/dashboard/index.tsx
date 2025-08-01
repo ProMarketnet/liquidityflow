@@ -165,6 +165,9 @@ export default function DashboardPage() {
             <a href="/dashboard/pools" style={{ color: '#000000', textDecoration: 'none' }}>💧 Liquidity Pools</a> {/* 🚨 EMERGENCY BLACK TEXT */}
             <a href="/dashboard/alerts" style={{ color: '#000000', textDecoration: 'none' }}>🚨 Alerts & Monitoring</a> {/* 🚨 EMERGENCY BLACK TEXT */}
             <a href="/dashboard/settings" style={{ color: '#000000', textDecoration: 'none' }}>⚙️ Settings</a> {/* 🚨 EMERGENCY BLACK TEXT */}
+            <div style={{ borderLeft: '2px solid #000000', height: '20px', margin: '0 1rem' }}></div>
+            <a href="/admin/portfolios" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
+            <a href="/admin/analytics" style={{ color: '#dc2626', textDecoration: 'none' }}>📊 Analytics</a>
           </div>
         </div>
       </nav>
@@ -180,6 +183,59 @@ export default function DashboardPage() {
             <p style={{ color: '#000000' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
               Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
             </p>
+            
+            {/* 🏢 ADMIN QUICK ACCESS PANEL */}
+            <div style={{ 
+              background: '#fef2f2', 
+              border: '3px solid #dc2626', 
+              borderRadius: '1rem', 
+              padding: '1.5rem', 
+              margin: '1.5rem 0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <h3 style={{ color: '#dc2626', fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1.25rem' }}>
+                  🏢 Admin Portfolio Management
+                </h3>
+                <p style={{ color: '#000000', fontSize: '0.875rem' }}>
+                  Manage all 50+ client portfolios and view platform-wide analytics
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <a 
+                  href="/admin/portfolios"
+                  style={{
+                    background: '#dc2626',
+                    color: '#ffffff',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '0.5rem',
+                    textDecoration: 'none',
+                    fontWeight: 'bold',
+                    fontSize: '1rem'
+                  }}
+                >
+                  💼 Manage Portfolios
+                </a>
+                <a 
+                  href="/admin/analytics"
+                  style={{
+                    background: '#ffffff',
+                    color: '#dc2626',
+                    border: '2px solid #dc2626',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '0.5rem',
+                    textDecoration: 'none',
+                    fontWeight: 'bold',
+                    fontSize: '1rem'
+                  }}
+                >
+                  📊 View Analytics
+                </a>
+              </div>
+            </div>
+
             <button
               onClick={() => loadDashboardData(walletAddress)}
               style={{
