@@ -1,13 +1,42 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  env: {
-    DATABASE_URL: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/liquidflow_dev',
-    JWT_SECRET: process.env.JWT_SECRET || 'mock-jwt-secret-for-development-only',
-    ETHEREUM_RPC_URL: process.env.ETHEREUM_RPC_URL || 'https://eth-mainnet.g.alchemy.com/v2/demo',
-    POLYGON_RPC_URL: process.env.POLYGON_RPC_URL || 'https://polygon-mainnet.g.alchemy.com/v2/demo',
+  reactStrictMode: true,
+  swcMinify: true,
+  
+  // Force cache busting for CSS and static assets
+  generateBuildId: async () => {
+    return `build-${Date.now()}`
   },
-  // Removed experimental.appDir as it's deprecated
+  
+  // Add cache-busting headers
+  async headers() {
+    return [
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+    ]
+  },
+  
+  // Force new CSS compilation
+  experimental: {
+    forceSwcTransforms: true,
+  },
 }
 
-// Cache bust: 1754019060980
+// Cache bust: ${Date.now()}
 module.exports = nextConfig
