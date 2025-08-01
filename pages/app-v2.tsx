@@ -88,12 +88,12 @@ export default function AppV2() {
       margin: 0,
       padding: 0,
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #1e3a8a 100%)', // Updated to Green/Blue theme
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      color: '#ffffff'
+      background: '#ffffff', // 🚨 EMERGENCY WHITE BACKGROUND FOR VISIBILITY
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        color: '#000000' // 🚨 EMERGENCY BLACK TEXT FOR VISIBILITY
     },
     nav: {
-      background: 'rgba(0, 0, 0, 0.8)',
+              background: '#ffffff', // 🚨 EMERGENCY WHITE NAV BACKGROUND
       backdropFilter: 'blur(20px)',
       borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
       padding: '1rem 0',
@@ -112,7 +112,7 @@ export default function AppV2() {
     logo: {
       fontSize: '1.5rem',
       fontWeight: 'bold',
-             background: 'linear-gradient(135deg, #10b981, #3b82f6)', // Updated to Green/Blue theme
+                           background: '#000000', // 🚨 EMERGENCY BLACK LOGO TEXT
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text'

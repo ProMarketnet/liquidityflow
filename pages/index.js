@@ -1,35 +1,35 @@
 export default function Home() {
-  // 🎨 EASY COLOR CUSTOMIZATION - Modern Green/Blue Theme
+  // 🚨 EMERGENCY VISIBILITY FIX - HIGH CONTRAST
   const colors = {
-    // Background gradients
-    mainBg: 'linear-gradient(135deg, #0f172a, #064e3b, #1e3a8a)', // Green/Blue theme
-    navBg: 'rgba(0,0,0,0.8)',
-    sectionBg: 'rgba(255,255,255,0.02)',
-    cardBg: 'rgba(255,255,255,0.05)',
+    // Background gradients - SIMPLIFIED FOR VISIBILITY
+    mainBg: '#ffffff', // WHITE background for maximum contrast
+    navBg: '#ffffff',
+    sectionBg: '#ffffff',
+    cardBg: '#ffffff',
     
-    // Primary colors
-    primary: '#10b981',      // Green
-    secondary: '#3b82f6',    // Blue  
-    accent: '#06b6d4',       // Cyan
+    // Primary colors - HIGH CONTRAST
+    primary: '#000000',      // BLACK
+    secondary: '#000000',    // BLACK  
+    accent: '#000000',       // BLACK
     
-    // Button gradients
-    primaryBtn: 'linear-gradient(135deg, #10b981, #3b82f6)',
-    secondaryBtn: 'transparent',
+    // Button gradients - VISIBLE
+    primaryBtn: '#000000',   // BLACK buttons
+    secondaryBtn: '#ffffff', // WHITE buttons
     
-    // Text gradients
-    titleGradient: 'linear-gradient(135deg, #10b981, #06b6d4)',
-    logoGradient: 'linear-gradient(135deg, #10b981, #3b82f6)',
+    // Text gradients - HIGH CONTRAST
+    titleGradient: '#000000', // BLACK text
+    logoGradient: '#000000',  // BLACK text
     
-    // Text colors
-    textPrimary: 'white',
-    textSecondary: '#cbd5e1',
-    textMuted: '#94a3b8',
+    // Text colors - MAXIMUM CONTRAST
+    textPrimary: '#000000',   // BLACK text
+    textSecondary: '#333333', // DARK GRAY text
+    textMuted: '#666666',     // MEDIUM GRAY text
     
-    // Status colors
-    success: '#22c55e',
-    warning: '#f59e0b', 
-    danger: '#ef4444',
-    info: '#3b82f6'
+    // Status colors - VISIBLE
+    success: '#008000',   // GREEN
+    warning: '#FF8000',   // ORANGE
+    danger: '#FF0000',    // RED
+    info: '#0000FF'       // BLUE
   };
 
   return (

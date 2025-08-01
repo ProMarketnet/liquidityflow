@@ -32,8 +32,9 @@ export default function OnboardingNew() {
 
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0f172a, #1e1b4b, #581c87)',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        background: '#ffffff', // 🚨 EMERGENCY WHITE BACKGROUND FOR VISIBILITY
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        color: '#000000' // 🚨 EMERGENCY BLACK TEXT FOR VISIBILITY
       }}>
         
         {/* Navigation */}
@@ -41,7 +42,7 @@ export default function OnboardingNew() {
           position: 'fixed',
           top: 0,
           width: '100%',
-          background: 'rgba(0,0,0,0.8)',
+          background: '#ffffff', // 🚨 EMERGENCY WHITE NAV
           backdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(255,255,255,0.1)',
           zIndex: 1000,
