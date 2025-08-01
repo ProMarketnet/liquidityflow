@@ -267,15 +267,34 @@ const Pools = () => {
         </Head>
         
         <div style={styles.page}>
-          <nav style={styles.nav}>
-            <div style={styles.navContainer}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
-              <div>
-                <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
-                <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
-              </div>
+                  <nav style={styles.nav}>
+          <div style={styles.navContainer}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
+              <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('connectedWallet');
+                  localStorage.removeItem('walletType');
+                  window.location.href = '/';
+                }}
+                style={{
+                  background: '#dc2626',
+                  color: '#ffffff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                🚪 Disconnect Wallet
+              </button>
             </div>
-          </nav>
+          </div>
+        </nav>
 
           <div style={styles.connectCard}>
             <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🏊‍♂️</div>
@@ -305,11 +324,30 @@ const Pools = () => {
         <nav style={styles.nav}>
           <div style={styles.navContainer}>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
-            <div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
               <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
               <a href="/dashboard/alerts" style={styles.navLink}>Alerts</a>
               <a href="/dashboard/settings" style={styles.navLink}>Settings</a>
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('connectedWallet');
+                  localStorage.removeItem('walletType');
+                  window.location.href = '/';
+                }}
+                style={{
+                  background: '#dc2626',
+                  color: '#ffffff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                🚪 Disconnect Wallet
+              </button>
             </div>
           </div>
         </nav>
@@ -319,6 +357,68 @@ const Pools = () => {
           <p style={styles.subtitle}>
             Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
           </p>
+          
+          {/* Manual Wallet Address Input */}
+          <div style={{
+            background: 'rgba(0,0,0,0.05)',
+            border: '2px solid #e5e7eb',
+            borderRadius: '1rem',
+            padding: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <h3 style={{ color: '#000000', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold' }}>
+              🔍 Look up any wallet address
+            </h3>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <input
+                type="text"
+                placeholder="Enter wallet address (0x... or Solana address)"
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  color: '#000000'
+                }}
+                id="walletAddressInput"
+              />
+              <button
+                onClick={() => {
+                  const input = document.getElementById('walletAddressInput') as HTMLInputElement;
+                  const address = input.value.trim();
+                  if (address) {
+                    // Validate address format
+                    const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
+                    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+                    
+                    if (isEVMAddress || isSolanaAddress) {
+                      setWalletAddress(address);
+                      loadDeFiPositions(address);
+                    } else {
+                      alert('Invalid wallet address format. Please enter a valid Ethereum (0x...) or Solana address.');
+                    }
+                  }
+                }}
+                style={{
+                  background: '#3b82f6',
+                  color: '#ffffff',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                🔍 Look Up
+              </button>
+            </div>
+            <p style={{ color: '#666666', fontSize: '0.75rem', margin: 0 }}>
+              Enter any wallet address to view their DeFi positions across all supported chains
+            </p>
+          </div>
+          
           <button
             onClick={() => loadDeFiPositions(walletAddress)}
             style={styles.connectButton}
