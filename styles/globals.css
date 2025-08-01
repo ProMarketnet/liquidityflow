@@ -203,6 +203,53 @@ h1, h2, h3, h4, h5, h6 {
   color: #ffffff !important;
 }
 
+/* Fix for Pools page - gray background with dark text */
+.bg-gray-100 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.bg-gray-100 p {
+  color: #ffffff !important;
+}
+
+/* Form elements visibility fixes */
+input[type="password"], input[type="url"], input[type="number"], select {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+input[type="password"]::placeholder, 
+input[type="url"]::placeholder, 
+input[type="number"]::placeholder {
+  color: #9ca3af !important;
+}
+
+select option {
+  background-color: #1f2937 !important;
+  color: #ffffff !important;
+}
+
+/* Label text fixes */
+label {
+  color: #d1d5db !important;
+}
+
+/* Toggle switch fixes */
+.peer-checked\:bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+/* Ensure all text in settings cards is visible */
+.space-y-4 div {
+  color: #ffffff !important;
+}
+
+.space-y-4 .text-gray-400 {
+  color: #9ca3af !important;
+}
+
 /* Loading states */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
