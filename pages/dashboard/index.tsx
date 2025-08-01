@@ -72,26 +72,17 @@ export default function DashboardPage() {
 
   return (
     <Layout title="Dashboard" showSidebar={true}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.5rem' }}>Dashboard</h1>
-            <p style={{ color: '#9ca3af', fontSize: '0.9rem' }}>
+            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+            <p className="text-gray-400 mt-1">
               Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
             </p>
           </div>
           <button
             onClick={() => loadWalletData(walletAddress)}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
-              borderRadius: '0.5rem',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '0.9rem',
-              fontWeight: '500'
-            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             disabled={isLoading}
           >
             {isLoading ? '🔄 Loading...' : '🔄 Refresh'}
@@ -99,87 +90,57 @@ export default function DashboardPage() {
         </div>
 
         {isLoading ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '1rem',
-                padding: '1.5rem'
-              }}>
-                <div style={{ height: '2rem', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', marginBottom: '1rem' }}></div>
-                <div style={{ height: '1.5rem', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem', marginBottom: '0.5rem' }}></div>
-                <div style={{ height: '1rem', backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: '0.5rem' }}></div>
+              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse">
+                <div className="h-8 bg-white/10 rounded mb-4"></div>
+                <div className="h-6 bg-white/10 rounded mb-2"></div>
+                <div className="h-4 bg-white/10 rounded"></div>
               </div>
             ))}
           </div>
         ) : (
           <>
-                         {/* Portfolio Stats */}
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-               <div style={{
-                 background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%)',
-                 border: '1px solid rgba(34, 197, 94, 0.3)',
-                 borderRadius: '1rem',
-                 padding: '1.5rem'
-               }}>
-                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💰</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.25rem' }}>
+                                      {/* Portfolio Stats */}
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+               <div className="bg-gradient-to-br from-green-900/20 to-green-600/10 border border-green-500/20 rounded-xl p-6">
+                 <div className="text-2xl mb-2">💰</div>
+                 <div className="text-2xl font-bold text-white">
                    ${portfolioData?.totalUsdValue?.toFixed(2) || '0.00'}
                  </div>
-                 <div style={{ color: '#4ade80', fontSize: '0.875rem' }}>Portfolio Value</div>
+                 <div className="text-green-400 text-sm">Portfolio Value</div>
                </div>
                
-               <div style={{
-                 background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
-                 border: '1px solid rgba(59, 130, 246, 0.3)',
-                 borderRadius: '1rem',
-                 padding: '1.5rem'
-               }}>
-                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.25rem' }}>
+               <div className="bg-gradient-to-br from-blue-900/20 to-blue-600/10 border border-blue-500/20 rounded-xl p-6">
+                 <div className="text-2xl mb-2">⚡</div>
+                 <div className="text-2xl font-bold text-white">
                    {portfolioData?.ethBalance?.toFixed(4) || '0.0000'} ETH
                  </div>
-                 <div style={{ color: '#60a5fa', fontSize: '0.875rem' }}>ETH Balance</div>
+                 <div className="text-blue-400 text-sm">ETH Balance</div>
                </div>
                
-               <div style={{
-                 background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(147, 51, 234, 0.1) 100%)',
-                 border: '1px solid rgba(147, 51, 234, 0.3)',
-                 borderRadius: '1rem',
-                 padding: '1.5rem'
-               }}>
-                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🪙</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.25rem' }}>
+               <div className="bg-gradient-to-br from-purple-900/20 to-purple-600/10 border border-purple-500/20 rounded-xl p-6">
+                 <div className="text-2xl mb-2">🪙</div>
+                 <div className="text-2xl font-bold text-white">
                    {portfolioData?.tokens?.length || 0}
                  </div>
-                 <div style={{ color: '#a855f7', fontSize: '0.875rem' }}>Token Holdings</div>
+                 <div className="text-purple-400 text-sm">Token Holdings</div>
                </div>
                
-               <div style={{
-                 background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.1) 100%)',
-                 border: '1px solid rgba(249, 115, 22, 0.3)',
-                 borderRadius: '1rem',
-                 padding: '1.5rem'
-               }}>
-                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🏛️</div>
-                 <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '0.25rem' }}>
+               <div className="bg-gradient-to-br from-orange-900/20 to-orange-600/10 border border-orange-500/20 rounded-xl p-6">
+                 <div className="text-2xl mb-2">🏛️</div>
+                 <div className="text-2xl font-bold text-white">
                    {defiData?.protocolCount || 0}
                  </div>
-                 <div style={{ color: '#fb923c', fontSize: '0.875rem' }}>DeFi Protocols</div>
+                 <div className="text-orange-400 text-sm">DeFi Protocols</div>
                </div>
              </div>
 
-                         {/* Portfolio Overview */}
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+                                      {/* Portfolio Overview */}
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                {/* Token Holdings */}
-               <div style={{
-                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                 borderRadius: '1rem',
-                 padding: '1.5rem'
-               }}>
-                 <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#ffffff', marginBottom: '1rem' }}>Top Token Holdings</h3>
+               <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                 <h3 className="text-xl font-semibold text-white mb-4">Top Token Holdings</h3>
                 <div className="space-y-3">
                   {portfolioData?.tokens?.slice(0, 5).map((token: any, index: number) => (
                     <div key={index} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
