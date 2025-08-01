@@ -408,6 +408,19 @@ export default function AdminPortfoliosPage() {
     );
   };
 
+  const getTokenAddress = (tokenSymbol: string) => {
+    // Token contract addresses for trading links
+    const tokenAddresses: { [key: string]: string } = {
+      'ETH': 'ETH',
+      'WETH': '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+      'USDC': '0xA0b86a33E6441C8C673E4C0b8E0A3D8f6b1c8A8c',
+      'USDT': '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+      'DAI': '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+      'WBTC': '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599'
+    };
+    return tokenAddresses[tokenSymbol.trim()] || tokenSymbol;
+  };
+
   return (
     <>
       <Head>
@@ -554,6 +567,7 @@ export default function AdminPortfoliosPage() {
                         <th style={styles.th}>Value</th>
                         <th style={styles.th}>APR</th>
                         <th style={styles.th}>Status</th>
+                        <th style={styles.th}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -572,6 +586,65 @@ export default function AdminPortfoliosPage() {
                             <span style={getStatusBadge(position.status)}>
                               {position.status.toUpperCase()}
                             </span>
+                          </td>
+                          <td style={styles.td}>
+                            {position.protocol === 'Uniswap V3' && (
+                              <a
+                                href={`https://app.uniswap.org/#/swap?inputCurrency=${getTokenAddress(position.tokens.split('/')[0])}&outputCurrency=${getTokenAddress(position.tokens.split('/')[1])}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  background: '#FF007A',
+                                  color: '#ffffff',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.25rem',
+                                  textDecoration: 'none',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold',
+                                  marginRight: '0.25rem'
+                                }}
+                              >
+                                🦄 Trade
+                              </a>
+                            )}
+                            {position.protocol === 'Aave V3' && (
+                              <a
+                                href="https://app.aave.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  background: '#B6509E',
+                                  color: '#ffffff',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.25rem',
+                                  textDecoration: 'none',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold',
+                                  marginRight: '0.25rem'
+                                }}
+                              >
+                                💰 Manage
+                              </a>
+                            )}
+                            {position.protocol === 'Compound' && (
+                              <a
+                                href="https://app.compound.finance/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  background: '#00D395',
+                                  color: '#ffffff',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '0.25rem',
+                                  textDecoration: 'none',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold',
+                                  marginRight: '0.25rem'
+                                }}
+                              >
+                                🏦 Lend
+                              </a>
+                            )}
                           </td>
                         </tr>
                       ))}

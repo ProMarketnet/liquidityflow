@@ -169,6 +169,25 @@ export default function DashboardPage() {
             <div style={{ borderLeft: '2px solid #000000', height: '20px', margin: '0 1rem' }}></div>
             <a href="/admin/portfolios" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
             <a href="/admin/analytics" style={{ color: '#dc2626', textDecoration: 'none' }}>📊 Analytics</a>
+            <div style={{ borderLeft: '2px solid #000000', height: '20px', margin: '0 1rem' }}></div>
+            <button 
+              onClick={() => {
+                localStorage.removeItem('connectedWallet');
+                window.location.href = '/';
+              }}
+              style={{
+                background: '#dc2626',
+                color: '#ffffff',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '0.875rem'
+              }}
+            >
+              🚪 Logout
+            </button>
           </div>
         </div>
       </nav>
