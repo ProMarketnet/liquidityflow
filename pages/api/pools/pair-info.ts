@@ -275,44 +275,99 @@ export default async function handler(
       const targetChain = Array.isArray(chain) ? chain[0] : chain || 'eth';
       console.log(`📱 Processing EVM address on ${targetChain}`);
       
-      // For Ethereum, try Uniswap subgraph first (most reliable)
-      if (targetChain === 'eth' || targetChain === 'ethereum') {
-        try {
-          console.log('🦄 Trying Uniswap subgraph...');
-          const uniswapResponse = await fetch(
-            `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/pools/uniswap-subgraph?address=${pairAddress}`,
-            {
-              headers: {
-                'accept': 'application/json'
-              }
-            }
-          );
-
-          if (uniswapResponse.ok) {
-            const uniswapData = await uniswapResponse.json();
-            if (uniswapData.success && uniswapData.pairInfo) {
-              result = {
-                success: true,
-                pairInfo: uniswapData.pairInfo
-              };
+      // For EVM chains, use Moralis EVM API (supports Uniswap on multiple chains)
+      try {
+        console.log('🔗 Trying Moralis EVM API...');
+        const moralisResponse = await fetch(
+          `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/pools/moralis-evm?address=${pairAddress}&chain=${targetChain}`,
+          {
+            headers: {
+              'accept': 'application/json'
             }
           }
-        } catch (error) {
-          console.warn('⚠️ Uniswap subgraph lookup failed:', error);
+        );
+
+        if (moralisResponse.ok) {
+          const moralisData = await moralisResponse.json();
+          if (moralisData.success && moralisData.pairInfo) {
+            result = {
+              success: true,
+              pairInfo: moralisData.pairInfo
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Moralis EVM API failed:', error);
+      }
+      
+      // If Moralis EVM API failed, try Uniswap subgraph (Ethereum only)
+      if (!result || !result.success) {
+        if (targetChain === 'eth' || targetChain === 'ethereum') {
+          try {
+            console.log('🦄 Falling back to Uniswap subgraph...');
+            const uniswapResponse = await fetch(
+              `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/pools/uniswap-subgraph?address=${pairAddress}`,
+              {
+                headers: {
+                  'accept': 'application/json'
+                }
+              }
+            );
+
+            if (uniswapResponse.ok) {
+              const uniswapData = await uniswapResponse.json();
+              if (uniswapData.success && uniswapData.pairInfo) {
+                result = {
+                  success: true,
+                  pairInfo: uniswapData.pairInfo
+                };
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Uniswap subgraph lookup failed:', error);
+          }
         }
       }
       
-      // If Uniswap subgraph failed, try DexScreener
+      // Final fallback to DexScreener
       if (!result || !result.success) {
-        console.log('🔄 Falling back to DexScreener...');
+        console.log('🔄 Final fallback to DexScreener...');
         result = await fetchDexScreenerData(pairAddress, targetChain);
       }
       
     } else if (isSolanaAddress) {
       console.log('🟣 Processing Solana address');
       
-      // For Solana, use DexScreener (most comprehensive for Solana)
-      result = await fetchDexScreenerData(pairAddress, 'solana');
+      // For Solana, use Moralis API (supports Raydium & Orca)
+      try {
+        console.log('🌊 Trying Moralis Solana API...');
+        const moralisResponse = await fetch(
+          `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/pools/moralis-solana?address=${pairAddress}`,
+          {
+            headers: {
+              'accept': 'application/json'
+            }
+          }
+        );
+
+        if (moralisResponse.ok) {
+          const moralisData = await moralisResponse.json();
+          if (moralisData.success && moralisData.pairInfo) {
+            result = {
+              success: true,
+              pairInfo: moralisData.pairInfo
+            };
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Moralis Solana API failed:', error);
+      }
+      
+      // If Moralis Solana API failed, fallback to DexScreener
+      if (!result || !result.success) {
+        console.log('🔄 Falling back to DexScreener for Solana...');
+        result = await fetchDexScreenerData(pairAddress, 'solana');
+      }
     }
 
     if (result && result.success) {
