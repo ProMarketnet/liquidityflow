@@ -157,23 +157,91 @@ const Pools = () => {
     setPoolsData(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      console.log('🔍 Loading DeFi positions for:', address);
+      console.log('🔍 Loading data for address:', address);
       
-      // Use the updated multi-chain DeFi API
-      const response = await fetch(`/api/wallet/defi?address=${address}`);
+      // Determine if this is a wallet address or a pair/pool address
+      const isEVMWallet = /^0x[a-fA-F0-9]{40}$/.test(address);
+      const isSolanaWallet = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+      const isSolanaPair = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address); // Same format as wallet, need to detect by context
       
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      let response;
+      let data;
+      
+      if (isEVMWallet) {
+        console.log('📱 Detected EVM wallet address, fetching DeFi positions...');
+        response = await fetch(`/api/wallet/defi?address=${address}`);
+      } else if (isSolanaWallet || isSolanaPair) {
+        console.log('🟣 Detected Solana address, attempting both wallet and pair lookup...');
+        
+        // First try as wallet address
+        const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
+        if (walletResponse.ok) {
+          const walletData = await walletResponse.json();
+          if (walletData.totalPositions > 0) {
+            response = walletResponse;
+          }
+        }
+        
+        // If no wallet positions found, try as pair address
+        if (!response || !response.ok) {
+          console.log('🔍 No wallet positions found, trying as pair/pool address...');
+          response = await fetch(`/api/pools/pair-info?address=${address}`);
+        }
+      } else {
+        throw new Error('Invalid address format. Please enter a valid wallet address or pair/pool address.');
       }
       
-      const data = await response.json();
-      console.log('📊 Multi-chain DeFi data received:', data);
+      if (!response || !response.ok) {
+        throw new Error(`API returned ${response?.status}: ${response?.statusText || 'Unknown error'}`);
+      }
       
-      // Process the new data format
+      data = await response.json();
+      console.log('📊 Data received:', data);
+      
+      // Process the data based on type
       const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
       
+      // Check if this is pair/pool data
+      if (data.pairInfo || data.poolInfo || data.pair || data.pool) {
+        console.log('🏊‍♂️ Processing pair/pool data...');
+        
+        const pairData = data.pairInfo || data.poolInfo || data.pair || data.pool || data;
+        const protocol = pairData.dex || pairData.protocol || 'Unknown DEX';
+        const chain = pairData.chain || (address.startsWith('0x') ? 'Ethereum' : 'Solana');
+        
+        const protocolName = `${protocol} (${chain})`;
+        protocolPositions[protocolName] = [{
+          position_type: 'liquidity_pool',
+          position_id: address,
+          position_token_data: [
+            { symbol: pairData.token0?.symbol || pairData.baseToken?.symbol || 'TOKEN0' },
+            { symbol: pairData.token1?.symbol || pairData.quoteToken?.symbol || 'TOKEN1' }
+          ],
+          total_usd_value: parseFloat(pairData.liquidity || pairData.liquidityUSD || pairData.tvl || '0'),
+          apr: pairData.apr || pairData.apy,
+          rawData: pairData
+        }];
+        
+        setPoolsData({
+          summary: {
+            total_usd_value: parseFloat(pairData.liquidity || pairData.liquidityUSD || pairData.tvl || '0'),
+            active_protocols: [{
+              protocol_name: protocolName,
+              protocol_id: protocol.toLowerCase(),
+              total_usd_value: parseFloat(pairData.liquidity || pairData.liquidityUSD || pairData.tvl || '0'),
+              relative_portfolio_percentage: 100
+            }]
+          },
+          protocolPositions,
+          isLoading: false,
+          error: null
+        });
+        
+        return;
+      }
+      
+      // Process as wallet DeFi positions (existing logic)
       if (data.positions && Array.isArray(data.positions)) {
-        // Group positions by protocol and chain
         data.positions.forEach((pos: any) => {
           const protocolName = `${pos.protocol} (${pos.chain})`;
           
@@ -181,21 +249,19 @@ const Pools = () => {
             protocolPositions[protocolName] = [];
           }
           
-          // Convert to the expected format
           protocolPositions[protocolName].push({
             position_type: 'defi_position',
             position_id: `${pos.protocol}_${pos.chain}`,
-            position_token_data: [], // Will be populated from the raw data
-            total_usd_value: 0, // Will be calculated from the raw data
+            position_token_data: [],
+            total_usd_value: 0,
             apr: undefined,
             apy: undefined,
             rewards: undefined,
-            rawData: pos.data // Store original data for detailed display
+            rawData: pos.data
           });
         });
       }
       
-      // Also handle direct protocol breakdown
       if (data.protocolBreakdown && Object.keys(data.protocolBreakdown).length > 0) {
         Object.entries(data.protocolBreakdown).forEach(([protocolChain, protocolData]: [string, any]) => {
           const [protocol, chain] = protocolChain.split('_');
@@ -206,7 +272,6 @@ const Pools = () => {
           }
           
           if (Array.isArray(protocolData)) {
-            // Handle array data (typical for Solana)
             protocolData.forEach((position: any, index: number) => {
               protocolPositions[displayName].push({
                 position_type: position.position_type || 'liquidity_pool',
@@ -220,7 +285,6 @@ const Pools = () => {
               });
             });
           } else if (protocolData && typeof protocolData === 'object') {
-            // Handle object data (typical for EVM chains)
             if (protocolData.positions && Array.isArray(protocolData.positions)) {
               protocolData.positions.forEach((position: any, index: number) => {
                 protocolPositions[displayName].push({
@@ -235,7 +299,6 @@ const Pools = () => {
                 });
               });
             } else {
-              // Single position object
               protocolPositions[displayName].push({
                 position_type: 'defi_position',
                 position_id: protocolChain,
@@ -260,7 +323,7 @@ const Pools = () => {
             protocol_name: name,
             protocol_id: name.toLowerCase().replace(/\s+/g, '_'),
             total_usd_value: protocolPositions[name].reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0),
-            relative_portfolio_percentage: 0 // Will be calculated if needed
+            relative_portfolio_percentage: 0
           }))
         },
         protocolPositions,
@@ -269,11 +332,11 @@ const Pools = () => {
       });
 
     } catch (error) {
-      console.error('❌ Error loading DeFi positions:', error);
+      console.error('❌ Error loading data:', error);
       setPoolsData(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Failed to load DeFi positions'
+        error: error instanceof Error ? error.message : 'Failed to load data'
       }));
     }
   };
@@ -391,7 +454,7 @@ const Pools = () => {
         <div style={styles.container}>
           <h1 style={styles.title}>🏊‍♂️ DeFi Pools & Positions</h1>
           <p style={styles.subtitle}>
-            Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+            Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)} | Analyze DEX pairs and liquidity pools across all chains
           </p>
           
           {/* Manual Wallet Address Input */}
@@ -403,12 +466,12 @@ const Pools = () => {
             marginBottom: '1rem'
           }}>
             <h3 style={{ color: '#000000', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold' }}>
-              🔍 Look up any wallet address
+              🔍 Look up any DEX Pair on any DeFi protocol
             </h3>
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <input
                 type="text"
-                placeholder="Enter wallet address (0x... or Solana address)"
+                placeholder="Enter pair address (e.g., 6WB2jVdBxJk7UtNsvnhNfU374usXsLGmTDLzFHg3cq7)"
                 style={{
                   flex: 1,
                   padding: '0.75rem',
@@ -424,7 +487,7 @@ const Pools = () => {
                   const input = document.getElementById('walletAddressInput') as HTMLInputElement;
                   const address = input.value.trim();
                   if (address) {
-                    // Validate address format
+                    // Validate address format (both EVM and Solana pairs)
                     const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
                     const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
                     
@@ -432,7 +495,7 @@ const Pools = () => {
                       setWalletAddress(address);
                       loadDeFiPositions(address);
                     } else {
-                      alert('Invalid wallet address format. Please enter a valid Ethereum (0x...) or Solana address.');
+                      alert('Invalid pair address format. Please enter a valid Ethereum (0x...) or Solana pair address.');
                     }
                   }
                 }}
@@ -451,7 +514,7 @@ const Pools = () => {
               </button>
             </div>
             <p style={{ color: '#666666', fontSize: '0.75rem', margin: 0 }}>
-              Enter any wallet address to view their DeFi positions across all supported chains
+              Enter any DEX pair address to view liquidity pool information across Ethereum, Arbitrum, Base, Optimism, and Solana
             </p>
           </div>
           
@@ -460,14 +523,14 @@ const Pools = () => {
             style={styles.connectButton}
             disabled={poolsData.isLoading}
           >
-            {poolsData.isLoading ? '🔄 Loading...' : '🔄 Refresh Positions'}
+            {poolsData.isLoading ? '🔄 Analyzing...' : '🔄 Analyze Pair/Pool'}
           </button>
 
           {poolsData.isLoading && (
             <div style={styles.loadingCard}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-              <h3 style={{ color: '#000000' }}>Loading DeFi Positions...</h3>
-              <p style={{ color: '#666' }}>Fetching data from 16+ protocols</p>
+              <h3 style={{ color: '#000000' }}>Analyzing DEX Pair...</h3>
+              <p style={{ color: '#666' }}>Fetching pair data from multiple DEX APIs</p>
             </div>
           )}
 
