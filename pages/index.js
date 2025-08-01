@@ -70,7 +70,8 @@ export default function Home() {
           
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <a href="/dashboard" style={{ color: colors.textSecondary, textDecoration: 'none' }}>Dashboard</a>
-                        <a
+            <a href="/admin/portfolios" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
+            <a
               href="/onboarding-new"
               style={{
                 background: colors.primaryBtn, // 🎨 Easy to change

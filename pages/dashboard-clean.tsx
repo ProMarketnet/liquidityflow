@@ -349,6 +349,9 @@ export default function DashboardClean() {
               <a href="/dashboard/pools" style={styles.navLink}>💧 Pools</a>
               <a href="/dashboard/alerts" style={styles.navLink}>🚨 Alerts</a>
               <a href="/dashboard/settings" style={styles.navLink}>⚙️ Settings</a>
+              <div style={{ borderLeft: '2px solid #000000', height: '20px', margin: '0 1rem' }}></div>
+              <a href="/admin/portfolios" style={{ ...styles.navLink, fontWeight: 'bold', color: '#dc2626' }}>🏢 Admin</a>
+              <a href="/admin/analytics" style={{ ...styles.navLink, color: '#dc2626' }}>📊 Analytics</a>
             </div>
           </div>
         </nav>
@@ -360,6 +363,59 @@ export default function DashboardClean() {
               <p style={styles.subtitle}>
                 Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
               </p>
+              
+              {/* Admin Quick Access */}
+              <div style={{ 
+                background: '#fef2f2', 
+                border: '3px solid #dc2626', 
+                borderRadius: '1rem', 
+                padding: '1rem', 
+                marginBottom: '1.5rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <div>
+                  <h3 style={{ color: '#dc2626', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+                    🏢 Admin Functions
+                  </h3>
+                  <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                    Manage all client portfolios and platform analytics
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <a 
+                    href="/admin/portfolios"
+                    style={{
+                      background: '#dc2626',
+                      color: '#ffffff',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '0.5rem',
+                      textDecoration: 'none',
+                      fontWeight: 'bold',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    💼 Manage Portfolios
+                  </a>
+                  <a 
+                    href="/admin/analytics"
+                    style={{
+                      background: '#ffffff',
+                      color: '#dc2626',
+                      border: '2px solid #dc2626',
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '0.5rem',
+                      textDecoration: 'none',
+                      fontWeight: 'bold',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    📊 View Analytics
+                  </a>
+                </div>
+              </div>
+
               <button
                 onClick={() => loadDashboardData(walletAddress)}
                 style={styles.connectButton}
