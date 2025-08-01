@@ -27,76 +27,241 @@ body {
     rgb(var(--background-start-rgb));
 }
 
-/* EMERGENCY VISIBILITY FIX - BLACK TEXT ON WHITE BACKGROUNDS */
-/* Override EVERYTHING for maximum visibility */
+/* OPENAI/ANTHROPIC DESIGN SYSTEM */
+/* Professional, clean, modern aesthetic */
 
-/* Force all dashboard pages to have white backgrounds */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Base styling - clean and professional */
+* {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
 body {
-  background-color: #ffffff !important;
-  color: #000000 !important;
+  background-color: #fafafa !important;
+  color: #111827 !important;
+  line-height: 1.6;
 }
 
-/* Force all containers to white background */
-.min-h-screen, .space-y-6, .space-y-4, .space-y-3 {
-  background-color: #ffffff !important;
-  color: #000000 !important;
+/* Typography Hierarchy */
+h1 {
+  color: #111827 !important;
+  font-weight: 700 !important;
+  font-size: 2.25rem !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.025em !important;
 }
 
-/* Force all cards and containers */
+h2 {
+  color: #111827 !important;
+  font-weight: 600 !important;
+  font-size: 1.875rem !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.025em !important;
+}
+
+h3 {
+  color: #111827 !important;
+  font-weight: 600 !important;
+  font-size: 1.5rem !important;
+  line-height: 1.4 !important;
+}
+
+p {
+  color: #6b7280 !important;
+  font-weight: 400 !important;
+  line-height: 1.6 !important;
+}
+
+/* Professional Card System */
 .bg-white\/5, .bg-white\/10, .bg-white\/20,
 .bg-gray-900, .bg-gray-800, .bg-gray-700,
 .rounded-xl, .rounded-lg, .rounded-md {
   background-color: #ffffff !important;
-  border: 1px solid #cccccc !important;
-  color: #000000 !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+  color: #111827 !important;
 }
 
-/* Force all text to black */
-h1, h2, h3, h4, h5, h6, p, div, span, label {
-  color: #000000 !important;
-  text-shadow: none !important;
+/* Container layouts */
+.min-h-screen, .space-y-6, .space-y-4, .space-y-3 {
+  background-color: #fafafa !important;
 }
 
-/* Specific overrides for colored text */
-.text-white, .text-gray-400, .text-gray-300 {
-  color: #000000 !important;
+/* Text color system */
+.text-white {
+  color: #111827 !important;
 }
 
-.text-blue-400, .text-green-400, .text-purple-400, .text-orange-400 {
-  color: #000000 !important;
+.text-gray-400 {
+  color: #6b7280 !important;
 }
 
-/* Form elements */
+.text-gray-300 {
+  color: #9ca3af !important;
+}
+
+.text-blue-400 {
+  color: #3b82f6 !important;
+}
+
+.text-green-400 {
+  color: #10b981 !important;
+}
+
+.text-purple-400 {
+  color: #8b5cf6 !important;
+}
+
+.text-orange-400 {
+  color: #f59e0b !important;
+}
+
+/* Professional Form Elements */
 input, select, textarea {
   background-color: #ffffff !important;
-  border: 1px solid #cccccc !important;
-  color: #000000 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.5rem !important;
+  color: #111827 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  outline: none !important;
 }
 
 input::placeholder {
-  color: #666666 !important;
+  color: #9ca3af !important;
 }
 
-/* Buttons - keep some color but ensure visibility */
+/* Professional Button System */
 .bg-blue-600, .bg-blue-700 {
-  background-color: #2563eb !important;
+  background-color: #3b82f6 !important;
   color: #ffffff !important;
+  font-weight: 500 !important;
+  border-radius: 0.5rem !important;
+  transition: all 0.2s ease !important;
+  border: none !important;
 }
 
-/* Navigation and sidebar */
-nav, .sidebar {
-  background-color: #f8f9fa !important;
-  color: #000000 !important;
+.bg-blue-600:hover, .bg-blue-700:hover {
+  background-color: #2563eb !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
 }
 
-/* Override any gradient backgrounds */
-.bg-gradient-to-br, .bg-gradient-to-r {
-  background: #ffffff !important;
+/* Navigation - Clean and minimal */
+nav {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Make sure ALL elements are visible */
-* {
-  color: #000000 !important;
+/* Sidebar */
+.sidebar {
+  background-color: #ffffff !important;
+  border-right: 1px solid #e5e7eb !important;
+}
+
+/* Stats cards - Professional styling */
+.bg-gradient-to-br {
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%) !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Colored accent cards */
+.from-green-900\/20 {
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+  border-left: 4px solid #10b981 !important;
+}
+
+.from-blue-900\/20 {
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%) !important;
+  border-left: 4px solid #3b82f6 !important;
+}
+
+.from-purple-900\/20 {
+  background: linear-gradient(135deg, #f3e8ff 0%, #ffffff 100%) !important;
+  border-left: 4px solid #8b5cf6 !important;
+}
+
+.from-orange-900\/20 {
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 100%) !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+/* Professional borders */
+.border-white\/10, .border-white\/20, .border-white\/40 {
+  border-color: #e5e7eb !important;
+}
+
+.border-green-500\/20 {
+  border-color: #a7f3d0 !important;
+}
+
+.border-blue-500\/20 {
+  border-color: #bfdbfe !important;
+}
+
+.border-purple-500\/20 {
+  border-color: #ddd6fe !important;
+}
+
+.border-orange-500\/20 {
+  border-color: #fed7aa !important;
+}
+
+/* Professional spacing and layout */
+.space-y-6 > * + * {
+  margin-top: 1.5rem !important;
+}
+
+.space-y-4 > * + * {
+  margin-top: 1rem !important;
+}
+
+.space-y-3 > * + * {
+  margin-top: 0.75rem !important;
+}
+
+/* Professional shadows */
+.drop-shadow-lg {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.07)) !important;
+}
+
+.drop-shadow-2xl {
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.1)) !important;
+}
+
+/* Clean loading states */
+.animate-pulse div {
+  background-color: #f3f4f6 !important;
+}
+
+/* Professional hover states */
+.rounded-xl:hover, .rounded-lg:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Clean table/list styling */
+.bg-gray-100 {
+  background-color: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* Professional toggle switches */
+.peer-checked\:bg-blue-600 {
+  background-color: #3b82f6 !important;
+}
+
+/* Ensure professional consistency */
+div, span, label {
+  color: inherit !important;
 }
 
 /* Loading states */
