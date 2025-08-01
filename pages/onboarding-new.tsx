@@ -1,86 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { WalletProvider, useWallet } from '@/components/wallet/WalletProvider';
-import { WalletButton } from '@/components/wallet/WalletModal';
 
-function OnboardingContent() {
-  const { wallet } = useWallet();
+export default function OnboardingNew() {
   const [step, setStep] = useState(1);
-  const [portfolioData, setPortfolioData] = useState<any>(null);
-  const [defiData, setDefiData] = useState<any>(null);
-  const [transactionData, setTransactionData] = useState<any>(null);
-  const [selectedPools, setSelectedPools] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
 
-  useEffect(() => {
-    if (wallet && step === 1) {
-      setStep(2);
-      loadWalletData();
-    }
-  }, [wallet]);
-
-  const loadWalletData = async () => {
-    if (!wallet) return;
-    
-    setIsLoading(true);
-    try {
-      // Load portfolio data
-      const portfolioRes = await fetch(`/api/wallet/portfolio?address=${wallet.address}`);
-      if (portfolioRes.ok) {
-        const portfolio = await portfolioRes.json();
-        setPortfolioData(portfolio);
+  const connectWallet = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setWalletAddress(accounts[0]);
+        setStep(2);
+      } catch (error) {
+        console.error('Error connecting wallet:', error);
       }
-
-      // Load DeFi data
-      const defiRes = await fetch(`/api/wallet/defi?address=${wallet.address}`);
-      if (defiRes.ok) {
-        const defi = await defiRes.json();
-        setDefiData(defi);
-      }
-
-      // Load transaction data
-      const txRes = await fetch(`/api/wallet/transactions?address=${wallet.address}`);
-      if (txRes.ok) {
-        const transactions = await txRes.json();
-        setTransactionData(transactions);
-      }
-
-      // Discover pools
-      const poolsRes = await fetch(`/api/pools/discover?address=${wallet.address}`);
-      if (poolsRes.ok) {
-        const pools = await poolsRes.json();
-        setSelectedPools(pools.slice(0, 5)); // Pre-select top 5 pools
-      }
-    } catch (error) {
-      console.error('Error loading wallet data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const setupProject = async () => {
-    if (!wallet || selectedPools.length === 0) return;
-
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/projects/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          walletAddress: wallet.address,
-          pools: selectedPools,
-          projectName: `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)} Portfolio`
-        })
-      });
-
-      if (response.ok) {
-        setStep(4);
-      }
-    } catch (error) {
-      console.error('Error setting up project:', error);
-    } finally {
-      setIsLoading(false);
+    } else {
+      alert('Please install MetaMask to continue');
     }
   };
 
@@ -88,212 +24,276 @@ function OnboardingContent() {
     <>
       <Head>
         <title>Get Started - LiquidFlow</title>
-        <meta name="description" content="Connect your wallet and start monitoring liquidity pools" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Connect your wallet and start monitoring" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Fixed Header */}
-      <header className="fixed top-0 w-full z-50 bg-slate-900/95 backdrop-blur-xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0f172a, #1e1b4b, #581c87)',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        
+        {/* Navigation */}
+        <nav style={{
+          position: 'fixed',
+          top: 0,
+          width: '100%',
+          background: 'rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          zIndex: 1000,
+          padding: '1rem 0'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <Link href="/" style={{
+              fontSize: '1.5rem',
+              fontWeight: 'bold',
+              background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              textDecoration: 'none'
+            }}>
               LiquidFlow
             </Link>
-            <Link href="/" className="text-white hover:text-blue-400 transition-colors font-medium">
+            
+            <Link href="/" style={{ 
+              color: '#cbd5e1', 
+              textDecoration: 'none',
+              fontSize: '0.9rem'
+            }}>
               ← Back to Home
             </Link>
           </div>
-        </div>
-      </header>
+        </nav>
 
-      {/* Main Content */}
-      <div className="min-h-screen pt-20" style={{
-        background: 'linear-gradient(135deg, #000000 0%, #111111 50%, #222222 100%)'
-      }}>
-        {/* Progress Indicator */}
-        <div className="max-w-4xl mx-auto px-6 py-8">
-          <div className="bg-white/20 border-2 border-white/40 rounded-2xl p-8 backdrop-blur-md shadow-2xl mb-8" style={{backgroundColor: 'rgba(255,255,255,0.4)', border: '3px solid #ffffff'}}>
-            <div className="flex items-center justify-center space-x-6">
-              {[1, 2, 3, 4].map((stepNum) => (
-                <div key={stepNum} className="flex items-center">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center font-bold text-2xl border-4 transition-all duration-300 shadow-xl ${
-                    step >= stepNum 
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white border-blue-300 scale-110 shadow-blue-500/50' 
-                      : 'bg-white/10 text-white border-white/40'
-                  }`}>
-                    {step > stepNum ? '✓' : stepNum}
-                  </div>
-                  {stepNum < 4 && (
-                    <div className={`w-24 h-4 mx-6 rounded-full transition-all duration-500 ${
-                      step > stepNum ? 'bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg' : 'bg-white/20'
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-6 text-lg font-bold">
-              <span className={`${step >= 1 ? 'text-white' : 'text-white/60'} drop-shadow-lg`} style={{color: step >= 1 ? '#ffffff' : '#ffffff99', fontSize: '1.125rem', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Connect</span>
-              <span className={`${step >= 2 ? 'text-white' : 'text-white/60'} drop-shadow-lg`} style={{color: step >= 2 ? '#ffffff' : '#ffffff99', fontSize: '1.125rem', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Analyze</span>
-              <span className={`${step >= 3 ? 'text-white' : 'text-white/60'} drop-shadow-lg`} style={{color: step >= 3 ? '#ffffff' : '#ffffff99', fontSize: '1.125rem', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Select</span>
-              <span className={`${step >= 4 ? 'text-white' : 'text-white/60'} drop-shadow-lg`} style={{color: step >= 4 ? '#ffffff' : '#ffffff99', fontSize: '1.125rem', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Monitor</span>
-            </div>
+        {/* Main Content */}
+        <div style={{
+          paddingTop: '120px',
+          paddingBottom: '60px',
+          maxWidth: '800px',
+          margin: '0 auto',
+          padding: '120px 2rem 60px'
+        }}>
+
+          {/* Progress Indicator */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '3rem',
+            gap: '1rem'
+          }}>
+            {[1, 2, 3].map((num) => (
+              <div key={num} style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: step >= num ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.2)',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                fontSize: '1rem'
+              }}>
+                {step > num ? '✓' : num}
+              </div>
+            ))}
           </div>
 
           {/* Step Content */}
-          <div className="bg-white/20 border-2 border-white/40 rounded-2xl p-12 backdrop-blur-md shadow-2xl" style={{backgroundColor: 'rgba(255,255,255,0.4)', border: '3px solid #ffffff'}}>
-            
+          <div style={{
+            background: 'rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(20px)',
+            borderRadius: '20px',
+            padding: '3rem 2rem',
+            border: '1px solid rgba(255,255,255,0.2)',
+            textAlign: 'center'
+          }}>
+
             {/* Step 1: Connect Wallet */}
             {step === 1 && (
-              <div className="text-center">
-                <div className="text-8xl mb-8">🚀</div>
-                <h1 className="text-6xl font-bold text-white mb-8 drop-shadow-2xl" style={{color: '#ffffff', fontSize: '5rem', fontWeight: '900', textShadow: '4px 4px 8px rgba(0,0,0,1), 0 0 20px rgba(255,255,255,0.5)'}}>
+              <>
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🚀</div>
+                <h1 style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  marginBottom: '1rem',
+                  lineHeight: '1.2'
+                }}>
                   Connect Your Wallet
                 </h1>
-                <p className="text-white text-2xl mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg" style={{color: '#ffffff', fontSize: '1.75rem', textShadow: '2px 2px 4px rgba(0,0,0,1), 0 0 10px rgba(255,255,255,0.3)', fontWeight: '600'}}>
+                <p style={{
+                  fontSize: '1.2rem',
+                  color: '#cbd5e1',
+                  marginBottom: '2rem',
+                  lineHeight: '1.6'
+                }}>
                   Connect your wallet to start monitoring liquidity pools and track your DeFi positions
                 </p>
                 
-                <div className="mb-12">
-                  <WalletButton />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm" style={{backgroundColor: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.4)'}}>
-                    <div className="text-4xl mb-4">✨</div>
-                    <h3 className="text-white text-xl font-bold mb-2" style={{color: '#ffffff', fontSize: '1.5rem', fontWeight: '800', textShadow: '2px 2px 4px rgba(0,0,0,1)'}}>Real-time Portfolio</h3>
-                    <p className="text-white/90" style={{color: '#ffffff', fontSize: '1.125rem', fontWeight: '500', textShadow: '1px 1px 2px rgba(0,0,0,1)'}}>Track your wallet balance and token holdings</p>
-                  </div>
-                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm" style={{backgroundColor: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.4)'}}>
-                    <div className="text-4xl mb-4">📊</div>
-                    <h3 className="text-white text-xl font-bold mb-2" style={{color: '#ffffff', fontSize: '1.5rem', fontWeight: '800', textShadow: '2px 2px 4px rgba(0,0,0,1)'}}>DeFi Positions</h3>
-                    <p className="text-white/90" style={{color: '#ffffff', fontSize: '1.125rem', fontWeight: '500', textShadow: '1px 1px 2px rgba(0,0,0,1)'}}>Monitor your DeFi protocol interactions</p>
-                  </div>
-                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm" style={{backgroundColor: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.4)'}}>
-                    <div className="text-4xl mb-4">🔔</div>
-                    <h3 className="text-white text-xl font-bold mb-2" style={{color: '#ffffff', fontSize: '1.5rem', fontWeight: '800', textShadow: '2px 2px 4px rgba(0,0,0,1)'}}>Smart Alerts</h3>
-                    <p className="text-white/90" style={{color: '#ffffff', fontSize: '1.125rem', fontWeight: '500', textShadow: '1px 1px 2px rgba(0,0,0,1)'}}>Get notified of important changes</p>
-                  </div>
-                </div>
-              </div>
-            )}
+                <button
+                  onClick={connectWallet}
+                  style={{
+                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    padding: '1rem 2rem',
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseOver={(e) => {
+                    (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
+                    (e.target as HTMLButtonElement).style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.6)';
+                  }}
+                  onMouseOut={(e) => {
+                    (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
+                    (e.target as HTMLButtonElement).style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.4)';
+                  }}
+                >
+                  🔗 Connect Wallet
+                </button>
 
-            {/* Step 2: Analyze */}
-            {step === 2 && (
-              <div className="text-center">
-                <div className="text-8xl mb-8">📊</div>
-                <h1 className="text-6xl font-bold text-white mb-8 drop-shadow-2xl">
-                  Analyzing Your Wallet
-                </h1>
-                {isLoading ? (
-                  <div>
-                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-4 border-white mb-8"></div>
-                    <p className="text-white text-2xl">Loading your portfolio data...</p>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                      {portfolioData && (
-                        <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 border-2 border-green-400/40 rounded-xl p-6">
-                          <h3 className="text-white text-2xl font-bold mb-4">Portfolio Value</h3>
-                          <p className="text-green-300 text-4xl font-bold">${portfolioData.totalUsdValue?.toFixed(2) || '0.00'}</p>
-                          <p className="text-white mt-2">{portfolioData.tokens?.length || 0} tokens</p>
-                        </div>
-                      )}
-                      {defiData && (
-                        <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 border-2 border-blue-400/40 rounded-xl p-6">
-                          <h3 className="text-white text-2xl font-bold mb-4">DeFi Activity</h3>
-                          <p className="text-blue-300 text-4xl font-bold">{defiData.protocolCount || 0}</p>
-                          <p className="text-white mt-2">protocols used</p>
-                        </div>
-                      )}
-                      {transactionData && (
-                        <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 border-2 border-purple-400/40 rounded-xl p-6">
-                          <h3 className="text-white text-2xl font-bold mb-4">Transactions</h3>
-                          <p className="text-purple-300 text-4xl font-bold">{transactionData.totalTransactions || 0}</p>
-                          <p className="text-white mt-2">total transactions</p>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setStep(3)}
-                      className="px-12 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl text-2xl font-bold border-2 border-blue-400 hover:scale-105 transition-all shadow-xl"
-                    >
-                      Continue to Pool Selection →
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Step 3: Select Pools */}
-            {step === 3 && (
-              <div className="text-center">
-                <div className="text-8xl mb-8">🎯</div>
-                <h1 className="text-6xl font-bold text-white mb-8 drop-shadow-2xl">
-                  Select Pools to Monitor
-                </h1>
-                <p className="text-white text-2xl mb-8">We've found {selectedPools.length} pools related to your activity</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-4xl mx-auto">
-                  {selectedPools.slice(0, 4).map((pool, index) => (
-                    <div key={index} className="bg-white/15 border border-white/30 rounded-xl p-6 text-left">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-white text-xl font-bold">{pool.token0?.symbol || 'TOKEN'}/{pool.token1?.symbol || 'ETH'}</h3>
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                          <span className="text-white text-sm">✓</span>
-                        </div>
-                      </div>
-                      <p className="text-white/80">Pool Address: {pool.address?.slice(0, 10) || 'Loading...'}...</p>
-                      <p className="text-white/80">Protocol: {pool.protocol || 'Uniswap V3'}</p>
+                <div style={{
+                  marginTop: '2rem',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem'
+                }}>
+                  {[
+                    { icon: '✨', title: 'Real-time Portfolio', desc: 'Track your wallet balance' },
+                    { icon: '📊', title: 'DeFi Positions', desc: 'Monitor protocol interactions' },
+                    { icon: '🔔', title: 'Smart Alerts', desc: 'Get notified of changes' }
+                  ].map((feature, i) => (
+                    <div key={i} style={{
+                      background: 'rgba(255,255,255,0.05)',
+                      padding: '1.5rem 1rem',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                      <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{feature.icon}</div>
+                      <h3 style={{ color: 'white', fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                        {feature.title}
+                      </h3>
+                      <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>{feature.desc}</p>
                     </div>
                   ))}
                 </div>
-                
-                <button
-                  onClick={setupProject}
-                  disabled={isLoading}
-                  className="px-12 py-4 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl text-2xl font-bold border-2 border-green-400 hover:scale-105 transition-all shadow-xl disabled:opacity-50"
-                >
-                  {isLoading ? 'Setting up...' : 'Start Monitoring →'}
-                </button>
-              </div>
+              </>
             )}
 
-            {/* Step 4: Complete */}
-            {step === 4 && (
-              <div className="text-center">
-                <div className="text-8xl mb-8">🎉</div>
-                <h1 className="text-6xl font-bold text-white mb-8 drop-shadow-2xl">
+            {/* Step 2: Wallet Connected */}
+            {step === 2 && (
+              <>
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✅</div>
+                <h1 style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  marginBottom: '1rem'
+                }}>
+                  Wallet Connected!
+                </h1>
+                <p style={{
+                  fontSize: '1.2rem',
+                  color: '#cbd5e1',
+                  marginBottom: '1rem'
+                }}>
+                  Successfully connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                </p>
+                <p style={{
+                  fontSize: '1rem',
+                  color: '#94a3b8',
+                  marginBottom: '2rem'
+                }}>
+                  Now we'll analyze your wallet and find relevant liquidity pools to monitor.
+                </p>
+                
+                <button
+                  onClick={() => setStep(3)}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    padding: '1rem 2rem',
+                    borderRadius: '12px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
+                  }}
+                >
+                  🔍 Analyze My Wallet →
+                </button>
+              </>
+            )}
+
+            {/* Step 3: Setup Complete */}
+            {step === 3 && (
+              <>
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
+                <h1 style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 'bold',
+                  color: 'white',
+                  marginBottom: '1rem'
+                }}>
                   You're All Set!
                 </h1>
-                <p className="text-white text-2xl mb-8">Your liquidity monitoring is now active</p>
+                <p style={{
+                  fontSize: '1.2rem',
+                  color: '#cbd5e1',
+                  marginBottom: '2rem'
+                }}>
+                  Your liquidity monitoring is now active. Start exploring your dashboard!
+                </p>
                 
-                <div className="space-y-4 mb-8">
-                  <Link href="/dashboard" className="block">
-                    <button className="w-full px-12 py-4 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl text-2xl font-bold border-2 border-green-400 hover:scale-105 transition-all shadow-xl">
-                      Go to Dashboard →
-                    </button>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <Link href="/dashboard" style={{
+                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    padding: '1rem 2rem',
+                    borderRadius: '12px',
+                    textDecoration: 'none',
+                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+                  }}>
+                    📊 Go to Dashboard
                   </Link>
-                  <Link href="/dashboard/pools" className="block">
-                    <button className="w-full px-12 py-4 bg-white/20 text-white rounded-xl text-xl font-bold border-2 border-white/40 hover:scale-105 transition-all">
-                      View Pool Details
-                    </button>
+                  
+                  <Link href="/dashboard/pools" style={{
+                    background: 'rgba(255,255,255,0.1)',
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    fontWeight: '600',
+                    padding: '1rem 2rem',
+                    borderRadius: '12px',
+                    textDecoration: 'none',
+                    border: '1px solid rgba(255,255,255,0.2)'
+                  }}>
+                    🏊 View Pools
                   </Link>
                 </div>
-              </div>
+              </>
             )}
+
           </div>
         </div>
       </div>
     </>
-  );
-}
-
-export default function OnboardingNewPage() {
-  return (
-    <WalletProvider>
-      <OnboardingContent />
-    </WalletProvider>
   );
 } 
