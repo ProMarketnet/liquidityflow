@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import WalletBalance from '../../components/WalletBalance';
 
 interface ClientWallet {
   id: string;
@@ -558,6 +559,9 @@ export default function AdminPortfoliosPage() {
                   <h2 style={styles.cardTitle}>
                     📊 {walletDetails.clientName} Portfolio
                   </h2>
+                  
+                  {/* Real-time Wallet Balance */}
+                  <WalletBalance walletAddress={walletDetails.address} showChains={true} />
                   
                   <div style={styles.detailsGrid}>
                     <div style={styles.statCard}>
