@@ -694,4 +694,298 @@ export async function getBlockchainStats() {
     console.error('Error fetching blockchain stats:', error);
     throw error;
   }
+}
+
+// 🏦 COMPREHENSIVE DEFI API INTEGRATION - Full Moralis DeFi API Reference
+
+/**
+ * Get comprehensive DeFi protocol positions for a wallet
+ * Based on: https://docs.moralis.com/web3-data-api/evm/reference/defi-api
+ */
+export async function getAdvancedDeFiProtocolPositions(address: string) {
+  await initMoralis();
+  
+  try {
+    // Get positions across all supported protocols
+    const protocols = [
+      'uniswap-v2', 'uniswap-v3', 'sushiswap', 'pancakeswap-v2', 'pancakeswap-v3',
+      'aave-v2', 'aave-v3', 'compound', 'makerdao', 'curve', 'balancer-v2',
+      'convex', 'yearn', 'lido', '1inch', 'dydx'
+    ];
+
+    const protocolPromises = protocols.map(async (protocol) => {
+      try {
+        const positions = await Moralis.EvmApi.wallets.getDefiPositionsByProtocol({
+          address,
+          protocol: protocol as any,
+          chain: "0x1"
+        });
+        return {
+          protocol,
+          data: positions.toJSON(),
+          success: true
+        };
+      } catch (error) {
+        console.error(`Error fetching ${protocol} positions:`, error);
+        return {
+          protocol,
+          data: null,
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+      }
+    });
+
+    const results = await Promise.all(protocolPromises);
+    
+    // Process and categorize results
+    const successfulProtocols = results.filter(r => r.success && r.data);
+    const failedProtocols = results.filter(r => !r.success);
+
+    return {
+      address,
+      totalProtocolsChecked: protocols.length,
+      successfulProtocols: successfulProtocols.length,
+      failedProtocols: failedProtocols.length,
+      protocols: successfulProtocols,
+      errors: failedProtocols,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error fetching advanced DeFi protocol positions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get DeFi summary with yield farming and staking information
+ */
+export async function getAdvancedDeFiSummary(address: string) {
+  await initMoralis();
+  
+  try {
+    const [defiSummary, defiPositions] = await Promise.all([
+      Moralis.EvmApi.wallets.getDefiSummary({
+        address,
+        chain: "0x1"
+      }),
+      Moralis.EvmApi.wallets.getDefiPositionsSummary({
+        address,
+        chain: "0x1"
+      })
+    ]);
+
+    const summaryData = defiSummary.toJSON();
+    const positionsData = defiPositions.toJSON();
+
+    // Calculate comprehensive DeFi metrics
+    const totalValue = (summaryData as any).total_usd_value || 0;
+    const positions = (positionsData as any).active_protocols || [];
+
+    return {
+      address,
+      summary: {
+        totalUsdValue: totalValue,
+        activeProtocols: positions.length,
+        protocolBreakdown: positions.map((protocol: any) => ({
+          name: protocol.protocol_name,
+          totalValue: protocol.total_usd_value,
+          positionCount: protocol.position_count,
+          categories: protocol.categories || []
+        }))
+      },
+      detailedPositions: positionsData,
+      rawSummary: summaryData,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error fetching advanced DeFi summary:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get specific protocol liquidity positions (Uniswap, SushiSwap, etc.)
+ */
+export async function getLiquidityPoolPositions(address: string, protocol: string = 'uniswap-v3') {
+  await initMoralis();
+  
+  try {
+    const positions = await Moralis.EvmApi.wallets.getDefiPositionsByProtocol({
+      address,
+      protocol: protocol as any,
+      chain: "0x1"
+    });
+
+    const positionsData = positions.toJSON();
+    const liquidityPositions = (positionsData as any).result || [];
+
+    // Extract liquidity pool specific data
+    const poolPositions = liquidityPositions
+      .filter((pos: any) => pos.position_type === 'liquidity_pool' || pos.position_type === 'lp')
+      .map((pos: any) => ({
+        pool: pos.pair || pos.pool_address,
+        tokens: pos.position_tokens || [],
+        liquidity: pos.liquidity_usd || pos.total_usd_value,
+        fees24h: pos.fees_24h_usd || 0,
+        apr: pos.apr || 0,
+        protocolName: pos.protocol_name
+      }));
+
+    return {
+      address,
+      protocol,
+      totalPools: poolPositions.length,
+      totalLiquidity: poolPositions.reduce((sum: number, pos: any) => sum + (pos.liquidity || 0), 0),
+      totalFees24h: poolPositions.reduce((sum: number, pos: any) => sum + (pos.fees24h || 0), 0),
+      positions: poolPositions,
+      rawData: positionsData,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error(`Error fetching ${protocol} liquidity positions:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Get lending and borrowing positions across protocols
+ */
+export async function getLendingBorrowingPositions(address: string) {
+  await initMoralis();
+  
+  try {
+    const lendingProtocols = ['aave-v2', 'aave-v3', 'compound'];
+    
+    const lendingPromises = lendingProtocols.map(async (protocol) => {
+      try {
+        const positions = await Moralis.EvmApi.wallets.getDefiPositionsByProtocol({
+          address,
+          protocol: protocol as any,
+          chain: "0x1"
+        });
+        return {
+          protocol,
+          data: positions.toJSON()
+        };
+      } catch (error) {
+        console.error(`Error fetching ${protocol} positions:`, error);
+        return { protocol, data: null };
+      }
+    });
+
+    const results = await Promise.all(lendingPromises);
+    
+    // Process lending/borrowing data
+    const lendingPositions: any[] = [];
+    const borrowingPositions: any[] = [];
+
+    results.forEach(result => {
+      if (result.data) {
+        const positions = (result.data as any).result || [];
+        positions.forEach((pos: any) => {
+          if (pos.position_type === 'lending' || pos.position_type === 'supply') {
+            lendingPositions.push({
+              ...pos,
+              protocol: result.protocol
+            });
+          } else if (pos.position_type === 'borrowing' || pos.position_type === 'debt') {
+            borrowingPositions.push({
+              ...pos,
+              protocol: result.protocol
+            });
+          }
+        });
+      }
+    });
+
+    return {
+      address,
+      lending: {
+        totalValue: lendingPositions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0),
+        positions: lendingPositions
+      },
+      borrowing: {
+        totalValue: borrowingPositions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0),
+        positions: borrowingPositions
+      },
+      healthFactor: lendingPositions.length > 0 && borrowingPositions.length > 0 
+        ? (lendingPositions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0) / 
+           borrowingPositions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0))
+        : null,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error fetching lending/borrowing positions:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get yield farming and staking rewards
+ */
+export async function getYieldFarmingPositions(address: string) {
+  await initMoralis();
+  
+  try {
+    const yieldProtocols = ['curve', 'convex', 'yearn', 'lido'];
+    
+    const yieldPromises = yieldProtocols.map(async (protocol) => {
+      try {
+        const positions = await Moralis.EvmApi.wallets.getDefiPositionsByProtocol({
+          address,
+          protocol: protocol as any,
+          chain: "0x1"
+        });
+        return {
+          protocol,
+          data: positions.toJSON()
+        };
+      } catch (error) {
+        console.error(`Error fetching ${protocol} yield positions:`, error);
+        return { protocol, data: null };
+      }
+    });
+
+    const results = await Promise.all(yieldPromises);
+    
+    // Process yield farming data
+    const yieldPositions: any[] = [];
+    let totalStaked = 0;
+    let totalRewards = 0;
+
+    results.forEach(result => {
+      if (result.data) {
+        const positions = (result.data as any).result || [];
+        positions.forEach((pos: any) => {
+          if (pos.position_type === 'yield_farming' || pos.position_type === 'staking') {
+            const position = {
+              ...pos,
+              protocol: result.protocol,
+              apy: pos.apy || pos.apr || 0,
+              rewards: pos.unclaimed_rewards_usd || 0
+            };
+            yieldPositions.push(position);
+            totalStaked += pos.total_usd_value || 0;
+            totalRewards += pos.unclaimed_rewards_usd || 0;
+          }
+        });
+      }
+    });
+
+    return {
+      address,
+      totalStaked,
+      totalRewards,
+      averageApy: yieldPositions.length > 0 
+        ? yieldPositions.reduce((sum, pos) => sum + (pos.apy || 0), 0) / yieldPositions.length 
+        : 0,
+      positions: yieldPositions,
+      protocolCount: yieldPositions.length,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('Error fetching yield farming positions:', error);
+    throw error;
+  }
 } 

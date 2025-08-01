@@ -24,11 +24,71 @@ interface DeFiData {
   }>;
 }
 
+// 🚀 NEW INTERFACES FOR ENHANCED EVM DATA
+interface AnalyticsData {
+  analytics: {
+    ethBalance: number;
+    totalTokens: number;
+    verifiedTokens: number;
+    possibleSpamTokens: number;
+    totalNFTs: number;
+    tokens: Array<{
+      symbol: string;
+      name: string;
+      balance: number;
+      verified: boolean;
+      possibleSpam: boolean;
+    }>;
+  };
+}
+
+interface TransactionData {
+  analytics: {
+    totalTransactions: number;
+    totalGasUsed: number;
+    averageGasPrice: number;
+    uniqueContracts: number;
+    transactionTypes: {
+      sent: number;
+      received: number;
+    };
+  };
+  recentTransactions: Array<{
+    hash: string;
+    from: string;
+    to: string;
+    value: string;
+    gasUsed: string;
+    gasPrice: string;
+    timestamp: string;
+    status: string;
+  }>;
+}
+
+interface NFTData {
+  analytics: {
+    totalNFTs: number;
+    totalCollections: number;
+    verifiedCollections: number;
+  };
+  collections: Array<{
+    name: string;
+    symbol: string;
+    itemCount: number;
+    verified: boolean;
+  }>;
+}
+
 export default function DashboardClean() {
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
   const [defiData, setDefiData] = useState<DeFiData | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // 🚀 NEW STATE FOR ENHANCED EVM DATA
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+  const [transactionData, setTransactionData] = useState<TransactionData | null>(null);
+  const [nftData, setNftData] = useState<NFTData | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -47,12 +107,15 @@ export default function DashboardClean() {
     setIsLoading(true);
     try {
       // 🚀 ENHANCED EVM DATA LOADING - Using comprehensive Moralis Web3 Data API
-      const [portfolioRes, defiRes, analyticsRes, transactionsRes, nftRes] = await Promise.all([
+      const [portfolioRes, defiRes, analyticsRes, transactionsRes, nftRes, advancedDefiRes, liquidityRes, yieldRes] = await Promise.all([
         fetch(`/api/wallet/portfolio?address=${address}`),
         fetch(`/api/wallet/defi?address=${address}`),
         fetch(`/api/wallet/analytics?address=${address}`),
         fetch(`/api/wallet/transaction-analysis?address=${address}&days=30`),
-        fetch(`/api/wallet/nft-collections?address=${address}`)
+        fetch(`/api/wallet/nft-collections?address=${address}`),
+        fetch(`/api/defi/advanced-positions?address=${address}`),
+        fetch(`/api/defi/liquidity-pools?address=${address}&protocol=uniswap-v3`),
+        fetch(`/api/defi/yield-farming?address=${address}`)
       ]);
 
       if (portfolioRes.ok) {
@@ -65,20 +128,39 @@ export default function DashboardClean() {
         setDefiData(defiData);
       }
 
-      // Store additional analytics for enhanced dashboard
+      // 🚀 STORE ENHANCED EVM DATA FOR DASHBOARD DISPLAY
       if (analyticsRes.ok) {
-        const analyticsData = await analyticsRes.json();
-        console.log('📊 Enhanced Analytics:', analyticsData);
+        const analyticsResult = await analyticsRes.json();
+        setAnalyticsData(analyticsResult);
+        console.log('📊 Enhanced Analytics:', analyticsResult);
       }
 
       if (transactionsRes.ok) {
-        const transactionData = await transactionsRes.json();
-        console.log('💳 Transaction Analysis:', transactionData);
+        const transactionResult = await transactionsRes.json();
+        setTransactionData(transactionResult);
+        console.log('💳 Transaction Analysis:', transactionResult);
       }
 
       if (nftRes.ok) {
-        const nftData = await nftRes.json();
-        console.log('🖼️ NFT Collections:', nftData);
+        const nftResult = await nftRes.json();
+        setNftData(nftResult);
+        console.log('🖼️ NFT Collections:', nftResult);
+      }
+
+      // 🏦 ADVANCED DEFI API DATA LOGGING
+      if (advancedDefiRes.ok) {
+        const advancedDefiResult = await advancedDefiRes.json();
+        console.log('🏦 Advanced DeFi Positions:', advancedDefiResult);
+      }
+
+      if (liquidityRes.ok) {
+        const liquidityResult = await liquidityRes.json();
+        console.log('🌊 Liquidity Pool Positions:', liquidityResult);
+      }
+
+      if (yieldRes.ok) {
+        const yieldResult = await yieldRes.json();
+        console.log('🌾 Yield Farming & Lending:', yieldResult);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -197,7 +279,7 @@ export default function DashboardClean() {
     },
     contentGrid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
       gap: '1.5rem'
     },
     contentCard: {
@@ -287,7 +369,7 @@ export default function DashboardClean() {
               </button>
             </div>
 
-            {/* Stats Grid */}
+            {/* 🚀 ENHANCED STATS GRID - Live EVM Data Feed */}
             <div style={styles.statsGrid}>
               <div style={styles.statCard}>
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💰</div>
@@ -300,7 +382,7 @@ export default function DashboardClean() {
               <div style={styles.statCard}>
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
                 <div style={styles.statValue}>
-                  {portfolioData?.ethBalance.toFixed(4) || '0.0000'} ETH
+                  {analyticsData?.analytics.ethBalance.toFixed(4) || portfolioData?.ethBalance.toFixed(4) || '0.0000'} ETH
                 </div>
                 <div style={styles.statLabel}>ETH Balance</div>
               </div>
@@ -308,18 +390,101 @@ export default function DashboardClean() {
               <div style={styles.statCard}>
                 <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🪙</div>
                 <div style={styles.statValue}>
-                  {portfolioData?.tokens.length || 0}
+                  {analyticsData?.analytics.totalTokens || portfolioData?.tokens.length || 0}
                 </div>
-                <div style={styles.statLabel}>Token Holdings</div>
+                <div style={styles.statLabel}>
+                  Token Holdings
+                  {analyticsData?.analytics.verifiedTokens && (
+                    <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                      {analyticsData.analytics.verifiedTokens} verified
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 🆕 NEW STATS FROM ENHANCED EVM API */}
+              <div style={styles.statCard}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🖼️</div>
+                <div style={styles.statValue}>
+                  {nftData?.analytics.totalNFTs || 0}
+                </div>
+                <div style={styles.statLabel}>
+                  NFT Collection
+                  {nftData?.analytics.totalCollections && (
+                    <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                      {nftData.analytics.totalCollections} collections
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={styles.statCard}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💳</div>
+                <div style={styles.statValue}>
+                  {transactionData?.analytics.totalTransactions || 0}
+                </div>
+                <div style={styles.statLabel}>
+                  Transactions (30d)
+                  {transactionData?.analytics.averageGasPrice && (
+                    <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                      ~{transactionData.analytics.averageGasPrice} Gwei avg
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={styles.statCard}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔗</div>
+                <div style={styles.statValue}>
+                  {transactionData?.analytics.uniqueContracts || 0}
+                </div>
+                <div style={styles.statLabel}>Unique Contracts</div>
               </div>
             </div>
 
             {/* Content Grid */}
             <div style={styles.contentGrid}>
               <div style={styles.contentCard}>
-                <h3 style={styles.sectionTitle}>Top Token Holdings</h3>
+                <h3 style={styles.sectionTitle}>🪙 Enhanced Token Holdings</h3>
                 {isLoading ? (
                   <div style={{ color: '#000000' }}>Loading tokens...</div>
+                ) : analyticsData?.analytics.tokens.length ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {analyticsData.analytics.tokens.slice(0, 8).map((token, i) => (
+                      <div key={i} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.75rem',
+                        background: token.verified ? '#f0fdf4' : (token.possibleSpam ? '#fef2f2' : '#f5f5f5'),
+                        borderRadius: '0.5rem',
+                        border: `1px solid ${token.verified ? '#22c55e' : (token.possibleSpam ? '#ef4444' : '#000000')}`
+                      }}>
+                        <div>
+                          <div style={{ 
+                            fontWeight: 'bold', 
+                            color: '#000000',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            {token.symbol}
+                            {token.verified && <span style={{ fontSize: '0.75rem', color: '#22c55e' }}>✓</span>}
+                            {token.possibleSpam && <span style={{ fontSize: '0.75rem', color: '#ef4444' }}>⚠️</span>}
+                          </div>
+                          <div style={{ fontSize: '0.875rem', color: '#000000' }}>{token.name}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontWeight: 'bold', color: '#000000' }}>
+                            {token.balance.toFixed(4)}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#666' }}>
+                            {token.verified ? 'Verified' : token.possibleSpam ? 'Possible Spam' : 'Unknown'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 ) : portfolioData?.tokens.length ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     {portfolioData.tokens.slice(0, 5).map((token, i) => (
@@ -353,7 +518,89 @@ export default function DashboardClean() {
               </div>
 
               <div style={styles.contentCard}>
-                <h3 style={styles.sectionTitle}>DeFi Positions</h3>
+                <h3 style={styles.sectionTitle}>💳 Recent Transactions</h3>
+                {isLoading ? (
+                  <div style={{ color: '#000000' }}>Loading transaction data...</div>
+                ) : transactionData?.recentTransactions.length ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {transactionData.recentTransactions.slice(0, 5).map((tx, i) => (
+                      <div key={i} style={{
+                        padding: '0.75rem',
+                        background: tx.status === 'Success' ? '#f0fdf4' : '#fef2f2',
+                        borderRadius: '0.5rem',
+                        border: `1px solid ${tx.status === 'Success' ? '#22c55e' : '#ef4444'}`
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '0.75rem', color: '#666' }}>
+                              {tx.hash.slice(0, 8)}...{tx.hash.slice(-6)}
+                            </div>
+                            <div style={{ fontSize: '0.875rem', color: '#000000', fontWeight: 'bold' }}>
+                              {tx.value}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.75rem', color: '#666' }}>
+                              {tx.gasPrice}
+                            </div>
+                            <div style={{ 
+                              fontSize: '0.75rem', 
+                              color: tx.status === 'Success' ? '#22c55e' : '#ef4444',
+                              fontWeight: 'bold'
+                            }}>
+                              {tx.status}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: '#000000' }}>No recent transactions found or still loading...</div>
+                )}
+              </div>
+
+              {/* 🆕 NEW NFT COLLECTIONS SECTION */}
+              <div style={styles.contentCard}>
+                <h3 style={styles.sectionTitle}>🖼️ NFT Collections</h3>
+                {isLoading ? (
+                  <div style={{ color: '#000000' }}>Loading NFT data...</div>
+                ) : nftData?.collections.length ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {nftData.collections.slice(0, 5).map((collection, i) => (
+                      <div key={i} style={{
+                        padding: '1rem',
+                        background: collection.verified ? '#f0fdf4' : '#f5f5f5',
+                        borderRadius: '0.5rem',
+                        border: `1px solid ${collection.verified ? '#22c55e' : '#000000'}`
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <h4 style={{ color: '#000000', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              {collection.name || collection.symbol}
+                              {collection.verified && <span style={{ fontSize: '0.75rem', color: '#22c55e' }}>✓ Verified</span>}
+                            </h4>
+                            <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                              {collection.symbol}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontWeight: 'bold', color: '#000000' }}>
+                              {collection.itemCount} items
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ color: '#000000' }}>No NFT collections found or still loading...</div>
+                )}
+              </div>
+
+              {/* DEFI POSITIONS - MOVED TO THIRD COLUMN */}
+              <div style={styles.contentCard}>
+                <h3 style={styles.sectionTitle}>🏦 DeFi Positions</h3>
                 {isLoading ? (
                   <div style={{ color: '#000000' }}>Loading DeFi data...</div>
                 ) : defiData?.protocols.length ? (
