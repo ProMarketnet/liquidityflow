@@ -87,32 +87,32 @@ export default function DashboardPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #0f172a, #1e1b4b, #581c87)',
+        background: '#ffffff', // 🚨 EMERGENCY WHITE BACKGROUND FOR VISIBILITY
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
         <div style={{
-          background: 'rgba(255,255,255,0.05)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
+          border: '2px solid #000000', // 🚨 EMERGENCY BLACK BORDER
           borderRadius: '1rem',
           padding: '3rem',
           textAlign: 'center',
           maxWidth: '500px'
         }}>
           <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔗</div>
-          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#000000', marginBottom: '1rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
             Connect Your Wallet
           </h2>
-          <p style={{ color: '#cbd5e1', marginBottom: '2rem' }}>
+          <p style={{ color: '#000000', marginBottom: '2rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
             Connect your wallet to view your dashboard and portfolio data
           </p>
           <button
             onClick={connectWallet}
             style={{
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              color: 'white',
+              background: '#000000', // 🚨 EMERGENCY BLACK BUTTON
+              color: '#ffffff', // 🚨 EMERGENCY WHITE TEXT
               padding: '1rem 2rem',
               borderRadius: '0.5rem',
               border: 'none',
@@ -131,12 +131,12 @@ export default function DashboardPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a, #1e1b4b, #581c87)',
+      background: '#ffffff', // 🚨 EMERGENCY WHITE BACKGROUND FOR VISIBILITY
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
       {/* Navigation */}
       <nav style={{
-        background: 'rgba(0,0,0,0.8)',
+        background: '#ffffff', // 🚨 EMERGENCY WHITE NAV
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255,255,255,0.1)',
         padding: '1rem 0'
@@ -152,7 +152,7 @@ export default function DashboardPage() {
           <div style={{
             fontSize: '1.5rem',
             fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+            background: '#000000', // 🚨 EMERGENCY BLACK LOGO
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
@@ -161,10 +161,10 @@ export default function DashboardPage() {
           </div>
           
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <a href="/dashboard" style={{ color: '#cbd5e1', textDecoration: 'none' }}>📊 Overview</a>
-            <a href="/dashboard/pools" style={{ color: '#cbd5e1', textDecoration: 'none' }}>💧 Liquidity Pools</a>
-            <a href="/dashboard/alerts" style={{ color: '#cbd5e1', textDecoration: 'none' }}>🚨 Alerts & Monitoring</a>
-            <a href="/dashboard/settings" style={{ color: '#cbd5e1', textDecoration: 'none' }}>⚙️ Settings</a>
+            <a href="/dashboard" style={{ color: '#000000', textDecoration: 'none' }}>📊 Overview</a> {/* 🚨 EMERGENCY BLACK TEXT */}
+            <a href="/dashboard/pools" style={{ color: '#000000', textDecoration: 'none' }}>💧 Liquidity Pools</a> {/* 🚨 EMERGENCY BLACK TEXT */}
+            <a href="/dashboard/alerts" style={{ color: '#000000', textDecoration: 'none' }}>🚨 Alerts & Monitoring</a> {/* 🚨 EMERGENCY BLACK TEXT */}
+            <a href="/dashboard/settings" style={{ color: '#000000', textDecoration: 'none' }}>⚙️ Settings</a> {/* 🚨 EMERGENCY BLACK TEXT */}
           </div>
         </div>
       </nav>
@@ -174,17 +174,17 @@ export default function DashboardPage() {
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           {/* Header */}
           <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#000000', marginBottom: '0.5rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
               Dashboard
             </h1>
-            <p style={{ color: '#cbd5e1' }}>
+            <p style={{ color: '#000000' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
               Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
             </p>
             <button
               onClick={() => loadDashboardData(walletAddress)}
               style={{
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                color: 'white',
+                background: '#000000', // 🚨 EMERGENCY BLACK BUTTON
+                color: '#ffffff', // 🚨 EMERGENCY WHITE TEXT
                 padding: '0.5rem 1rem',
                 borderRadius: '0.5rem',
                 border: 'none',
@@ -207,14 +207,14 @@ export default function DashboardPage() {
           }}>
             {/* Portfolio Value */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(255,255,255,0.05))',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
+              border: '2px solid #10b981', // 🚨 EMERGENCY VISIBLE BORDER
               borderLeft: '4px solid #10b981',
               borderRadius: '1rem',
               padding: '1.5rem'
             }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💰</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#000000', marginBottom: '0.5rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
                 ${portfolioData?.totalUsd.toFixed(2) || '0.00'}
               </div>
               <div style={{ color: '#10b981' }}>Portfolio Value</div>
@@ -222,14 +222,14 @@ export default function DashboardPage() {
 
             {/* ETH Balance */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(255,255,255,0.05))',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
+              background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
+              border: '2px solid #3b82f6', // 🚨 EMERGENCY VISIBLE BORDER
               borderLeft: '4px solid #3b82f6',
               borderRadius: '1rem',
               padding: '1.5rem'
             }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#000000', marginBottom: '0.5rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
                 {portfolioData?.ethBalance.toFixed(4) || '0.0000'} ETH
               </div>
               <div style={{ color: '#3b82f6' }}>ETH Balance</div>
@@ -237,14 +237,14 @@ export default function DashboardPage() {
 
             {/* Token Holdings */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(255,255,255,0.05))',
-              border: '1px solid rgba(139, 92, 246, 0.3)',
+              background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
+              border: '2px solid #8b5cf6', // 🚨 EMERGENCY VISIBLE BORDER
               borderLeft: '4px solid #8b5cf6',
               borderRadius: '1rem',
               padding: '1.5rem'
             }}>
               <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🪙</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#000000', marginBottom: '0.5rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
                 {portfolioData?.tokens.length || 0}
               </div>
               <div style={{ color: '#8b5cf6' }}>Token Holdings</div>
@@ -259,12 +259,12 @@ export default function DashboardPage() {
           }}>
             {/* Top Token Holdings */}
             <div style={{
-              background: 'rgba(255,255,255,0.05)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
+              border: '2px solid #000000', // 🚨 EMERGENCY BLACK BORDER
               borderRadius: '1rem',
               padding: '1.5rem'
             }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#000000', marginBottom: '1rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
                 Top Token Holdings
               </h3>
               {isLoading ? (
