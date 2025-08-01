@@ -411,42 +411,94 @@ export default function SettingsPage() {
             )}
           </div>
 
-          {/* API Configuration */}
-          <div style={styles.card}>
-            <h2 style={styles.cardTitle}>🔌 API Configuration</h2>
+          {/* Platform Integration Notice */}
+          <div style={{
+            ...styles.card,
+            background: '#f0f9ff',
+            border: '3px solid #0ea5e9'
+          }}>
+            <h2 style={{
+              ...styles.cardTitle,
+              color: '#0ea5e9',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              🔗 Platform Integration
+            </h2>
             
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label style={styles.label}>Moralis API Key</label>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <input
-                  type="password"
-                  value={settings.moralisApiKey}
-                  onChange={(e) => handleInputChange('moralisApiKey', e.target.value)}
-                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                  style={styles.input}
-                />
-                <button onClick={testMoralisConnection} style={styles.button}>
-                  Test Connection
-                </button>
-                {getStatusBadge(apiTestStatus)}
+            <div style={{
+              padding: '1.5rem',
+              background: '#ffffff',
+              borderRadius: '0.5rem',
+              border: '2px solid #e0f2fe'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                marginBottom: '1rem'
+              }}>
+                <span style={{
+                  background: '#16a34a',
+                  color: '#ffffff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '2rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 'bold'
+                }}>
+                  ✅ Connected
+                </span>
+                <div>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#000000' }}>
+                    LiquidFlow API Services
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#666666' }}>
+                    Multi-chain data, DeFi analytics, and real-time monitoring
+                  </div>
+                </div>
               </div>
-              <p style={{ color: '#666', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                Your Moralis Web3 API key for fetching DeFi positions and analytics
-              </p>
-            </div>
+              
+              <div style={{
+                background: '#f8fafc',
+                padding: '1rem',
+                borderRadius: '0.375rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <p style={{
+                  color: '#374151',
+                  fontSize: '0.875rem',
+                  lineHeight: '1.6',
+                  margin: 0
+                }}>
+                  🎯 <strong>All API integrations are managed by LiquidFlow.</strong> No need to configure your own API keys or webhooks. 
+                  We handle Moralis, DeFi protocols, and multi-chain connectivity so you can focus on your portfolio.
+                </p>
+              </div>
 
-            <div>
-              <label style={styles.label}>Webhook URL (Optional)</label>
-              <input
-                type="url"
-                value={settings.webhookUrl}
-                onChange={(e) => handleInputChange('webhookUrl', e.target.value)}
-                placeholder="https://your-app.com/webhook"
-                style={styles.input}
-              />
-              <p style={{ color: '#666', fontSize: '0.875rem' }}>
-                Receive real-time alerts via webhook notifications
-              </p>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                gap: '1rem',
+                marginTop: '1rem'
+              }}>
+                <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>🔗</div>
+                  <div style={{ fontSize: '0.75rem', color: '#666666' }}>Moralis API</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>🌐</div>
+                  <div style={{ fontSize: '0.75rem', color: '#666666' }}>Multi-Chain</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>⚡</div>
+                  <div style={{ fontSize: '0.75rem', color: '#666666' }}>Real-Time</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>🔐</div>
+                  <div style={{ fontSize: '0.75rem', color: '#666666' }}>Secure</div>
+                </div>
+              </div>
             </div>
           </div>
 
