@@ -198,9 +198,36 @@ export default function Home() {
             <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
               Choose Your Access Level
             </h2>
-            <p style={{ fontSize: '1.25rem', color: '#cbd5e1' }}>
+            <p style={{ fontSize: '1.25rem', color: '#cbd5e1', marginBottom: '1rem' }}>
               Two distinct ways to use LiquidFlow based on your needs
             </p>
+            
+            {/* Multi-Chain Support Banner */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '1rem',
+              background: 'rgba(255,255,255,0.1)',
+              border: '2px solid rgba(255,255,255,0.2)',
+              borderRadius: '1rem',
+              padding: '1rem 2rem',
+              marginBottom: '2rem'
+            }}>
+              <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1rem' }}>
+                🌐 Multi-Chain Support:
+              </span>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Ethereum">⟠</span>
+                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Arbitrum">🔵</span>
+                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Base">🔷</span>
+                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Optimism">🔴</span>
+                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Solana">◉</span>
+              </div>
+              <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>
+                View portfolios across all major chains
+              </span>
+            </div>
           </div>
           
           <div style={{

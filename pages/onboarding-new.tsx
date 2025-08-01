@@ -225,6 +225,58 @@ export default function OnboardingNew() {
                   Now we'll analyze your wallet and find relevant liquidity pools to monitor.
                 </p>
                 
+                {/* Multi-Chain Selection */}
+                <div style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '2px solid rgba(255,255,255,0.2)',
+                  borderRadius: '1rem',
+                  padding: '1.5rem',
+                  marginBottom: '2rem'
+                }}>
+                  <h3 style={{ color: 'white', marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
+                    🌐 Select Chains to Monitor
+                  </h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gap: '0.75rem'
+                  }}>
+                    {[
+                      { name: 'Ethereum', logo: '⟠', color: '#627EEA' },
+                      { name: 'Arbitrum', logo: '🔵', color: '#28A0F0' },
+                      { name: 'Base', logo: '🔷', color: '#0052FF' },
+                      { name: 'Optimism', logo: '🔴', color: '#FF0420' },
+                      { name: 'Solana', logo: '◉', color: '#9945FF' }
+                    ].map((chain) => (
+                      <label
+                        key={chain.name}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.75rem',
+                          background: 'rgba(255,255,255,0.1)',
+                          borderRadius: '0.5rem',
+                          cursor: 'pointer',
+                          border: '2px solid transparent',
+                          color: 'white'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          defaultChecked={true}
+                          style={{
+                            marginRight: '0.5rem',
+                            transform: 'scale(1.2)'
+                          }}
+                        />
+                        <span style={{ fontSize: '1.5rem' }}>{chain.logo}</span>
+                        <span style={{ fontWeight: 'bold' }}>{chain.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
                 <button
                   onClick={() => setStep(3)}
                   style={{
@@ -239,7 +291,7 @@ export default function OnboardingNew() {
                     boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
                   }}
                 >
-                  🔍 Analyze My Wallet →
+                  🔍 Analyze Multi-Chain Portfolio →
                 </button>
               </>
             )}
