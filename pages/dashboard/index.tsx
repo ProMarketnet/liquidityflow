@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
+import WalletBalance from '../../components/WalletBalance';
 
 interface PortfolioData {
   totalUsd: number;
@@ -274,58 +275,10 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {/* Stats Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '1.5rem',
-            marginBottom: '2rem'
-          }}>
-            {/* Portfolio Value */}
-            <div style={{
-              background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
-              border: '2px solid #10b981', // 🚨 EMERGENCY VISIBLE BORDER
-              borderLeft: '4px solid #10b981',
-              borderRadius: '1rem',
-              padding: '1.5rem'
-            }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💰</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#000000', marginBottom: '0.5rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
-                ${portfolioData?.totalUsd.toFixed(2) || '0.00'}
-              </div>
-              <div style={{ color: '#10b981' }}>Portfolio Value</div>
-            </div>
-
-            {/* ETH Balance */}
-            <div style={{
-              background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
-              border: '2px solid #3b82f6', // 🚨 EMERGENCY VISIBLE BORDER
-              borderLeft: '4px solid #3b82f6',
-              borderRadius: '1rem',
-              padding: '1.5rem'
-            }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#000000', marginBottom: '0.5rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
-                {portfolioData?.ethBalance.toFixed(4) || '0.0000'} ETH
-              </div>
-              <div style={{ color: '#3b82f6' }}>ETH Balance</div>
-            </div>
-
-            {/* Token Holdings */}
-            <div style={{
-              background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
-              border: '2px solid #8b5cf6', // 🚨 EMERGENCY VISIBLE BORDER
-              borderLeft: '4px solid #8b5cf6',
-              borderRadius: '1rem',
-              padding: '1.5rem'
-            }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🪙</div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#000000', marginBottom: '0.5rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
-                {portfolioData?.tokens.length || 0}
-              </div>
-              <div style={{ color: '#8b5cf6' }}>Token Holdings</div>
-            </div>
-          </div>
+          {/* Real-time Wallet Balance */}
+          {walletAddress && (
+            <WalletBalance walletAddress={walletAddress} showChains={true} />
+          )}
 
           {/* Content Sections */}
           <div style={{
