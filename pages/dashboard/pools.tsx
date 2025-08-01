@@ -581,6 +581,99 @@ const Pools = () => {
     );
   }
 
+  const getDirectTradingUrl = (rawData: any, positionId: string) => {
+    const baseToken = rawData.baseToken;
+    const pairedToken = rawData.pairedToken;
+    const dex = rawData.dex?.toLowerCase() || '';
+    const chain = rawData.chain?.toLowerCase() || '';
+
+    // If we already have a direct URL from the API, use it
+    if (rawData.url && rawData.url.includes('swap')) {
+      return rawData.url;
+    }
+
+    // Build direct trading URLs based on DEX and chain
+    if (dex.includes('uniswap')) {
+      // Uniswap V2/V3 - works on Ethereum, Arbitrum, Base, Optimism
+      const baseAddress = baseToken?.address || '';
+      const quoteAddress = pairedToken?.address || '';
+      
+      if (baseAddress && quoteAddress) {
+        return `https://app.uniswap.org/#/swap?inputCurrency=${baseAddress}&outputCurrency=${quoteAddress}&chain=${getUniswapChainId(chain)}`;
+      }
+    }
+    
+    else if (dex.includes('sushiswap')) {
+      // SushiSwap
+      const baseAddress = baseToken?.address || '';
+      const quoteAddress = pairedToken?.address || '';
+      
+      if (baseAddress && quoteAddress) {
+        return `https://sushi.com/swap?fromCurrency=${baseAddress}&toCurrency=${quoteAddress}&fromChainId=${getSushiChainId(chain)}`;
+      }
+    }
+    
+    else if (dex.includes('raydium')) {
+      // Raydium on Solana
+      const baseAddress = baseToken?.address || '';
+      const quoteAddress = pairedToken?.address || '';
+      
+      if (baseAddress && quoteAddress) {
+        return `https://raydium.io/swap/?inputCurrency=${baseAddress}&outputCurrency=${quoteAddress}`;
+      }
+    }
+    
+    else if (dex.includes('orca')) {
+      // Orca on Solana
+      const baseAddress = baseToken?.address || '';
+      const quoteAddress = pairedToken?.address || '';
+      
+      if (baseAddress && quoteAddress) {
+        return `https://www.orca.so/swap?tokenIn=${baseAddress}&tokenOut=${quoteAddress}`;
+      }
+    }
+    
+    else if (dex.includes('curve')) {
+      // Curve - more complex, try to build URL
+      return `https://curve.fi/#/ethereum/pools`;
+    }
+    
+    else if (dex.includes('aerodrome')) {
+      // Aerodrome on Base
+      return `https://aerodrome.finance/swap`;
+    }
+    
+    else if (dex.includes('velodrome')) {
+      // Velodrome on Optimism
+      return `https://velodrome.finance/swap`;
+    }
+
+    // Fallback to DexScreener if we can't build a direct trading URL
+    return `https://dexscreener.com/${chain}/${positionId}`;
+  };
+
+  const getUniswapChainId = (chain: string): string => {
+    switch (chain) {
+      case 'ethereum': return 'mainnet';
+      case 'arbitrum': return 'arbitrum';
+      case 'base': return 'base';
+      case 'optimism': return 'optimism';
+      case 'polygon': return 'polygon';
+      default: return 'mainnet';
+    }
+  };
+
+  const getSushiChainId = (chain: string): string => {
+    switch (chain) {
+      case 'ethereum': return '1';
+      case 'arbitrum': return '42161';
+      case 'base': return '8453';
+      case 'optimism': return '10';
+      case 'polygon': return '137';
+      default: return '1';
+    }
+  };
+
   return (
     <>
       <Head>
@@ -784,7 +877,7 @@ const Pools = () => {
                               {/* Trade Button */}
                               {position.rawData?.url && (
                                 <a
-                                  href={position.rawData.url}
+                                  href={getDirectTradingUrl(position.rawData, position.position_id)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   style={{
@@ -798,7 +891,7 @@ const Pools = () => {
                                     display: 'inline-block'
                                   }}
                                 >
-                                  🦄 Trade on {position.rawData.dex || 'DEX'}
+                                  🦄 Trade {position.rawData?.baseToken?.symbol || position.position_token_data?.[0]?.symbol || 'TOKEN'}/{position.rawData?.pairedToken?.symbol || position.position_token_data?.[1]?.symbol || 'TOKEN'}
                                 </a>
                               )}
                               
