@@ -20,6 +20,7 @@ interface ProtocolPosition {
   apr?: number;
   apy?: number;
   rewards?: any;
+  rawData?: any; // Added for detailed display
 }
 
 interface LiquidityPoolsData {
@@ -156,84 +157,119 @@ const Pools = () => {
     setPoolsData(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      // 🏊‍♂️ Load DeFi Positions Summary and Protocol-Specific Data
-      const [summaryRes, advancedRes, liquidityRes, yieldRes] = await Promise.all([
-        fetch(`/api/wallet/defi?address=${address}`),
-        fetch(`/api/defi/advanced-positions?address=${address}`),
-        fetch(`/api/defi/liquidity-pools?address=${address}`),
-        fetch(`/api/defi/yield-farming?address=${address}`)
-      ]);
-
-      let summary = null;
-      let protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
-
-      if (summaryRes.ok) {
-        summary = await summaryRes.json();
+      console.log('🔍 Loading DeFi positions for:', address);
+      
+      // Use the updated multi-chain DeFi API
+      const response = await fetch(`/api/wallet/defi?address=${address}`);
+      
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
       }
-
-      if (advancedRes.ok) {
-        const advancedData = await advancedRes.json();
-        // Process advanced positions into protocol groups
-        if (advancedData.activeProtocols) {
-          advancedData.activeProtocols.forEach((protocol: any) => {
-            protocolPositions[protocol.name] = protocol.positions || [];
+      
+      const data = await response.json();
+      console.log('📊 Multi-chain DeFi data received:', data);
+      
+      // Process the new data format
+      const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+      
+      if (data.positions && Array.isArray(data.positions)) {
+        // Group positions by protocol and chain
+        data.positions.forEach((pos: any) => {
+          const protocolName = `${pos.protocol} (${pos.chain})`;
+          
+          if (!protocolPositions[protocolName]) {
+            protocolPositions[protocolName] = [];
+          }
+          
+          // Convert to the expected format
+          protocolPositions[protocolName].push({
+            position_type: 'defi_position',
+            position_id: `${pos.protocol}_${pos.chain}`,
+            position_token_data: [], // Will be populated from the raw data
+            total_usd_value: 0, // Will be calculated from the raw data
+            apr: undefined,
+            apy: undefined,
+            rewards: undefined,
+            rawData: pos.data // Store original data for detailed display
           });
-        }
+        });
       }
-
-      if (liquidityRes.ok) {
-        const liquidityData = await liquidityRes.json();
-        console.log('🌊 Liquidity Data:', liquidityData);
-        
-        // Add liquidity pool data
-        if (liquidityData.primary && liquidityData.primary.positions.length > 0) {
-          protocolPositions['Liquidity Pools'] = liquidityData.primary.positions.map((pos: any) => ({
-            position_type: 'liquidity_pool',
-            position_id: pos.pool,
-            position_token_data: pos.tokens,
-            total_usd_value: pos.liquidity,
-            apr: pos.apr
-          }));
-        }
+      
+      // Also handle direct protocol breakdown
+      if (data.protocolBreakdown && Object.keys(data.protocolBreakdown).length > 0) {
+        Object.entries(data.protocolBreakdown).forEach(([protocolChain, protocolData]: [string, any]) => {
+          const [protocol, chain] = protocolChain.split('_');
+          const displayName = `${protocol.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} (${chain.charAt(0).toUpperCase() + chain.slice(1)})`;
+          
+          if (!protocolPositions[displayName]) {
+            protocolPositions[displayName] = [];
+          }
+          
+          if (Array.isArray(protocolData)) {
+            // Handle array data (typical for Solana)
+            protocolData.forEach((position: any, index: number) => {
+              protocolPositions[displayName].push({
+                position_type: position.position_type || 'liquidity_pool',
+                position_id: position.position_id || `${protocol}_${index}`,
+                position_token_data: position.tokens || position.position_token_data || [],
+                total_usd_value: parseFloat(position.total_usd_value || position.value || position.usd_value || '0'),
+                apr: position.apr,
+                apy: position.apy,
+                rewards: position.rewards,
+                rawData: position
+              });
+            });
+          } else if (protocolData && typeof protocolData === 'object') {
+            // Handle object data (typical for EVM chains)
+            if (protocolData.positions && Array.isArray(protocolData.positions)) {
+              protocolData.positions.forEach((position: any, index: number) => {
+                protocolPositions[displayName].push({
+                  position_type: position.position_type || 'defi_position',
+                  position_id: position.position_id || `${protocol}_${index}`,
+                  position_token_data: position.tokens || position.position_token_data || [],
+                  total_usd_value: parseFloat(position.total_usd_value || position.value || position.usd_value || '0'),
+                  apr: position.apr,
+                  apy: position.apy,
+                  rewards: position.rewards,
+                  rawData: position
+                });
+              });
+            } else {
+              // Single position object
+              protocolPositions[displayName].push({
+                position_type: 'defi_position',
+                position_id: protocolChain,
+                position_token_data: [],
+                total_usd_value: parseFloat(protocolData.total_usd_value || protocolData.value || '0'),
+                apr: protocolData.apr,
+                apy: protocolData.apy,
+                rewards: protocolData.rewards,
+                rawData: protocolData
+              });
+            }
+          }
+        });
       }
-
-      if (yieldRes.ok) {
-        const yieldData = await yieldRes.json();
-        console.log('🌾 Yield Data:', yieldData);
-        
-        // Add yield farming data
-        if (yieldData.yieldFarming && yieldData.yieldFarming.positions.length > 0) {
-          protocolPositions['Yield Farming'] = yieldData.yieldFarming.positions.map((pos: any) => ({
-            position_type: pos.type,
-            position_id: pos.protocol,
-            position_token_data: pos.tokens,
-            total_usd_value: pos.value,
-            apy: pos.apy,
-            rewards: pos.rewards
-          }));
-        }
-
-        // Add lending positions
-        if (yieldData.lending && yieldData.lending.lendingPositions.length > 0) {
-          protocolPositions['Lending'] = yieldData.lending.lendingPositions.map((pos: any) => ({
-            position_type: 'lending',
-            position_id: pos.protocol,
-            position_token_data: [{ symbol: pos.asset }],
-            total_usd_value: pos.value,
-            apr: pos.apr
-          }));
-        }
-      }
+      
+      console.log('🏊‍♂️ Processed protocol positions:', Object.keys(protocolPositions));
 
       setPoolsData({
-        summary,
+        summary: {
+          total_usd_value: data.totalValue || 0,
+          active_protocols: Object.keys(protocolPositions).map(name => ({
+            protocol_name: name,
+            protocol_id: name.toLowerCase().replace(/\s+/g, '_'),
+            total_usd_value: protocolPositions[name].reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0),
+            relative_portfolio_percentage: 0 // Will be calculated if needed
+          }))
+        },
         protocolPositions,
         isLoading: false,
         error: null
       });
 
     } catch (error) {
-      console.error('Error loading DeFi positions:', error);
+      console.error('❌ Error loading DeFi positions:', error);
       setPoolsData(prev => ({
         ...prev,
         isLoading: false,
@@ -523,7 +559,11 @@ const Pools = () => {
                     </p>
                     <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
                       <strong>Supported Protocols:</strong><br />
-                      Uniswap, Aave, Compound, Curve, Yearn, Lido, SushiSwap, Balancer, Convex, and more...
+                      <strong>Ethereum:</strong> Uniswap V2/V3, Aave V2/V3, Compound, Curve, Yearn, Lido, SushiSwap<br />
+                      <strong>Arbitrum:</strong> Uniswap V3, SushiSwap, Aave V3, Curve<br />
+                      <strong>Base:</strong> Uniswap V3, SushiSwap, Compound V3<br />
+                      <strong>Optimism:</strong> Uniswap V3, SushiSwap, Aave V3<br />
+                      <strong>Solana:</strong> Raydium, Orca, Serum, Marinade, Lido
                     </div>
                   </div>
                 )}
