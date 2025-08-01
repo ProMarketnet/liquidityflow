@@ -39,6 +39,7 @@ const Pools = () => {
     isLoading: false,
     error: null
   });
+  const [searchAddress, setSearchAddress] = useState<string>('');
 
   // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
   const styles = {
@@ -138,6 +139,23 @@ const Pools = () => {
       borderRadius: '1rem',
       padding: '3rem',
       textAlign: 'center' as const
+    },
+    searchSection: {
+      background: 'rgba(0,0,0,0.05)',
+      border: '2px solid #e5e7eb',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      marginBottom: '1.5rem'
+    },
+    analyzeButton: {
+      background: '#3b82f6',
+      color: '#ffffff',
+      padding: '1rem 2rem',
+      borderRadius: '0.5rem',
+      border: 'none',
+      fontWeight: 'bold',
+      cursor: 'pointer',
+      fontSize: '1rem'
     }
   };
 
@@ -220,7 +238,63 @@ const Pools = () => {
         }
       }
       
-      // Step 2: Try comprehensive token pools API (requires Moralis)
+      // Step 2: Try specific pair lookup (for pool/pair addresses)
+      console.log('🔄 Trying as specific pair address...');
+      const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
+      const chain = isEVMAddress ? 'eth' : 'solana';
+      
+      let pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
+      let data;
+      
+      if (pairResponse.ok) {
+        data = await pairResponse.json();
+        console.log('📊 Pair data received:', data);
+        
+        // Check if this is pair/pool data and process it
+        if (data.pairInfo || data.poolInfo || data.pair || data.pool) {
+          console.log('🏊‍♂️ Processing specific pair/pool data...');
+          
+          const pairData = data.pairInfo || data.poolInfo || data.pair || data.pool || data;
+          const protocol = pairData.dex || pairData.protocol || 'Unknown DEX';
+          const pairChain = pairData.chain || (address.startsWith('0x') ? 'Ethereum' : 'Solana');
+          
+          const protocolName = `${protocol} (${pairChain})`;
+          const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+          
+          protocolPositions[protocolName] = [{
+            position_type: 'liquidity_pool',
+            position_id: address,
+            position_token_data: [
+              { symbol: pairData.token0?.symbol || pairData.baseToken?.symbol || 'TOKEN0' },
+              { symbol: pairData.token1?.symbol || pairData.quoteToken?.symbol || 'TOKEN1' }
+            ],
+            total_usd_value: parseFloat(pairData.liquidity || pairData.liquidityUSD || pairData.tvl || '0'),
+            apr: pairData.apr || pairData.apy,
+            rawData: pairData
+          }];
+          
+          const totalValue = parseFloat(pairData.liquidity || pairData.liquidityUSD || pairData.tvl || '0');
+          
+          setPoolsData({
+            summary: {
+              total_usd_value: totalValue,
+              active_protocols: [{
+                protocol_name: protocolName,
+                protocol_id: protocol.toLowerCase(),
+                total_usd_value: totalValue,
+                relative_portfolio_percentage: 100
+              }]
+            },
+            protocolPositions,
+            isLoading: false,
+            error: null
+          });
+          
+          return;
+        }
+      }
+      
+      // Step 3: Try comprehensive token pools API (requires Moralis)
       console.log('🔄 Trying Moralis token pools search...');
       let tokenPoolsResponse = await fetch(`/api/pools/token-pools?address=${address}`);
       
@@ -282,29 +356,16 @@ const Pools = () => {
         }
       }
       
-      // Step 3: Fallback to specific pair lookup
-      console.log('🔄 Trying as specific pair address...');
-      const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
-      const chain = isEVMAddress ? 'eth' : 'solana';
+      // Step 3: Final fallback to wallet DeFi positions
+      console.log('🔄 Trying as wallet address...');
+      const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
       
-      let pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
-      let data;
-      
-      if (pairResponse.ok) {
-        data = await pairResponse.json();
-        console.log('📊 Pair data received:', data);
-      } else {
-        // Step 3: Final fallback to wallet DeFi positions
-        console.log('🔄 Trying as wallet address...');
-        const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
-        
-        if (!walletResponse.ok) {
-          throw new Error(`No data found for address ${address}`);
-        }
-        
-        data = await walletResponse.json();
-        console.log('📊 Wallet data received:', data);
+      if (!walletResponse.ok) {
+        throw new Error(`No data found for address ${address}`);
       }
+      
+      data = await walletResponse.json();
+      console.log('📊 Wallet data received:', data);
       
       // Process the data based on type
       const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
@@ -565,83 +626,42 @@ const Pools = () => {
             Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)} | Analyze DEX pairs and liquidity pools across all chains
           </p>
           
-          {/* Manual Wallet Address Input */}
-          <div style={{
-            background: 'rgba(0,0,0,0.05)',
-            border: '2px solid #e5e7eb',
-            borderRadius: '1rem',
-            padding: '1rem',
-            marginBottom: '1rem'
-          }}>
-            <h3 style={{ color: '#000000', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold' }}>
-              🔍 Look up any DEX Pair on any DeFi protocol
-            </h3>
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+          {/* Search Input */}
+          <div style={styles.searchSection}>
+            <h3 style={{ color: '#000000', marginBottom: '1rem' }}>🔍 Look up any DEX Pair on any DeFi protocol</h3>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
               <input
                 type="text"
-                placeholder="Enter pair address (e.g., 6WB2jVdBxJk7UtNsvnhNfU374usXsLGmTDLzFHg3cq7)"
+                value={searchAddress}
+                onChange={(e) => setSearchAddress(e.target.value)}
+                placeholder="Enter token address OR pool/pair address (0x... or Solana address)"
                 style={{
                   flex: 1,
-                  padding: '0.75rem',
-                  border: '2px solid #d1d5db',
+                  padding: '1rem',
+                  border: '2px solid #000000',
                   borderRadius: '0.5rem',
-                  fontSize: '0.875rem',
-                  color: '#000000'
+                  fontSize: '1rem'
                 }}
-                id="walletAddressInput"
               />
               <button
-                onClick={() => {
-                  const input = document.getElementById('walletAddressInput') as HTMLInputElement;
-                  const address = input.value.trim();
-                  if (address) {
-                    // Validate address format (both EVM and Solana pairs)
-                    const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
-                    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
-                    
-                    if (isEVMAddress || isSolanaAddress) {
-                      setWalletAddress(address);
-                      loadDeFiPositions(address);
-                    } else {
-                      alert('Invalid pair address format. Please enter a valid Ethereum (0x...) or Solana pair address.');
-                    }
-                  }
-                }}
+                onClick={() => loadDeFiPositions(searchAddress)}
+                disabled={!searchAddress || poolsData.isLoading}
                 style={{
-                  background: '#3b82f6',
-                  color: '#ffffff',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  border: 'none',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem'
+                  ...styles.analyzeButton,
+                  opacity: (!searchAddress || poolsData.isLoading) ? 0.6 : 1,
+                  cursor: (!searchAddress || poolsData.isLoading) ? 'not-allowed' : 'pointer'
                 }}
               >
-                🔍 Look Up
+                {poolsData.isLoading ? '🔄 Searching...' : '🔍 Look Up'}
               </button>
             </div>
-            <p style={{ color: '#666666', fontSize: '0.75rem', margin: 0 }}>
-              Enter any DEX pair address to view liquidity pool information across Ethereum, Arbitrum, Base, Optimism, and Solana
+            <p style={{ color: '#666666', fontSize: '0.9rem', marginBottom: '1rem' }}>
+              • <strong>Token Address:</strong> Find ALL pools containing this token across all chains<br/>
+              • <strong>Pool/Pair Address:</strong> Get specific information about a single pool/pair<br/>
+              • Supports: Ethereum, Arbitrum, Base, Optimism, and Solana
             </p>
           </div>
           
-          <button
-            onClick={() => {
-              const input = document.getElementById('walletAddressInput') as HTMLInputElement;
-              const address = input.value.trim();
-              if (address) {
-                loadDeFiPositions(address);
-              } else {
-                alert('Please enter a pair address first');
-              }
-            }}
-            style={styles.connectButton}
-            disabled={poolsData.isLoading}
-          >
-            {poolsData.isLoading ? '🔄 Analyzing...' : '🔄 Analyze Pair/Pool'}
-          </button>
-
           {poolsData.isLoading && (
             <div style={styles.loadingCard}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
@@ -714,28 +734,163 @@ const Pools = () => {
                     
                     {positions.length > 0 ? (
                       <div>
-                        {positions.map((position, index) => (
-                          <div key={index} style={styles.positionCard}>
+                        {positions.map((position, idx) => (
+                          <div
+                            key={idx}
+                            style={{
+                              background: '#ffffff',
+                              border: '2px solid #e5e7eb',
+                              borderRadius: '0.5rem',
+                              padding: '1rem',
+                              marginBottom: '0.5rem'
+                            }}
+                          >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <div>
-                                <div style={{ fontWeight: 'bold', color: '#000000' }}>
-                                  {position.position_type.replace('_', ' ').toUpperCase()}
+                                <div style={{ fontWeight: 'bold', color: '#000000', textTransform: 'uppercase' }}>
+                                  {position.position_type?.replace('_', ' ') || 'LIQUIDITY POOL'}
                                 </div>
-                                <div style={{ fontSize: '0.875rem', color: '#666' }}>
-                                  {position.position_token_data?.map((token: any) => token.symbol).join(', ') || 'Multiple Assets'}
+                                <div style={{ color: '#374151', marginTop: '0.25rem' }}>
+                                  {position.position_token_data?.map((token: any) => token.symbol).join(', ') || 'Unknown Tokens'}
                                 </div>
+                                {/* Pool/Pair Address */}
+                                {position.position_id && (
+                                  <div style={{ color: '#6b7280', fontSize: '0.8rem', marginTop: '0.25rem' }}>
+                                    📍 {position.position_id.length > 42 ? 
+                                      `${position.position_id.substring(0, 6)}...${position.position_id.substring(position.position_id.length - 4)}` : 
+                                      position.position_id}
+                                  </div>
+                                )}
                               </div>
                               <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontWeight: 'bold', color: '#000000' }}>
-                                  ${position.total_usd_value?.toFixed(2) || '0.00'}
+                                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#000000' }}>
+                                  ${(position.total_usd_value || 0).toLocaleString()}
                                 </div>
-                                {(position.apr || position.apy) && (
-                                  <div style={{ fontSize: '0.875rem', color: '#22c55e' }}>
-                                    {(position.apr || position.apy)?.toFixed(2)}% APR
+                                {position.rawData?.volume24h && (
+                                  <div style={{ color: '#6b7280', fontSize: '0.9rem' }}>
+                                    Vol: ${parseFloat(position.rawData.volume24h).toLocaleString()}
                                   </div>
                                 )}
                               </div>
                             </div>
+                            
+                            {/* Action Buttons */}
+                            <div style={{ 
+                              display: 'flex', 
+                              gap: '0.5rem', 
+                              marginTop: '1rem',
+                              flexWrap: 'wrap' as const
+                            }}>
+                              {/* Trade Button */}
+                              {position.rawData?.url && (
+                                <a
+                                  href={position.rawData.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    background: '#10b981',
+                                    color: '#ffffff',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '0.375rem',
+                                    textDecoration: 'none',
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                    display: 'inline-block'
+                                  }}
+                                >
+                                  🦄 Trade on {position.rawData.dex || 'DEX'}
+                                </a>
+                              )}
+                              
+                              {/* DexScreener Link */}
+                              {position.position_id && (
+                                <a
+                                  href={`https://dexscreener.com/${position.rawData?.chain?.toLowerCase() || 'ethereum'}/${position.position_id}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    background: '#3b82f6',
+                                    color: '#ffffff',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '0.375rem',
+                                    textDecoration: 'none',
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                    display: 'inline-block'
+                                  }}
+                                >
+                                  📊 View on DexScreener
+                                </a>
+                              )}
+                              
+                              {/* Copy Address Button */}
+                              {position.position_id && (
+                                <button
+                                  onClick={(event) => {
+                                    navigator.clipboard.writeText(position.position_id);
+                                    // Simple feedback - you could enhance this with a toast
+                                    const button = event?.target as HTMLButtonElement;
+                                    const originalText = button.textContent;
+                                    button.textContent = '✅ Copied!';
+                                    setTimeout(() => {
+                                      button.textContent = originalText;
+                                    }, 2000);
+                                  }}
+                                  style={{
+                                    background: '#6b7280',
+                                    color: '#ffffff',
+                                    padding: '0.5rem 1rem',
+                                    borderRadius: '0.375rem',
+                                    border: 'none',
+                                    fontSize: '0.875rem',
+                                    fontWeight: '500',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  📋 Copy Address
+                                </button>
+                              )}
+                            </div>
+                            
+                            {/* Additional Pool Info */}
+                            {position.rawData && (
+                              <div style={{ 
+                                marginTop: '1rem', 
+                                padding: '0.75rem',
+                                background: '#f9fafb',
+                                borderRadius: '0.375rem',
+                                fontSize: '0.875rem'
+                              }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '0.5rem' }}>
+                                  {position.rawData.feeTier && (
+                                    <div>
+                                      <span style={{ color: '#6b7280' }}>Fee:</span> {position.rawData.feeTier}
+                                    </div>
+                                  )}
+                                  {position.rawData.txCount24h && (
+                                    <div>
+                                      <span style={{ color: '#6b7280' }}>24h Txs:</span> {position.rawData.txCount24h}
+                                    </div>
+                                  )}
+                                  {position.rawData.priceChange24h && (
+                                    <div>
+                                      <span style={{ color: '#6b7280' }}>24h Change:</span> 
+                                      <span style={{ 
+                                        color: position.rawData.priceChange24h >= 0 ? '#10b981' : '#ef4444',
+                                        fontWeight: 'bold'
+                                      }}>
+                                        {position.rawData.priceChange24h >= 0 ? '+' : ''}{position.rawData.priceChange24h}%
+                                      </span>
+                                    </div>
+                                  )}
+                                  {position.rawData.marketCap && (
+                                    <div>
+                                      <span style={{ color: '#6b7280' }}>Market Cap:</span> ${parseFloat(position.rawData.marketCap).toLocaleString()}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
