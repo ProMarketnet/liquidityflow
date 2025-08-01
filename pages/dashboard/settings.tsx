@@ -259,12 +259,31 @@ export default function SettingsPage() {
         <nav style={styles.nav}>
           <div style={styles.navContainer}>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
-                         <div>
-               <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
-               <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
-               <a href="/dashboard/alerts" style={styles.navLink}>Alerts</a>
-               <a href="/dashboard/pools" style={styles.navLink}>Pools</a>
-             </div>
+                                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
+              <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
+              <a href="/dashboard/alerts" style={styles.navLink}>Alerts</a>
+              <a href="/dashboard/pools" style={styles.navLink}>Pools</a>
+              <button 
+                onClick={() => {
+                  localStorage.removeItem('connectedWallet');
+                  localStorage.removeItem('walletType');
+                  window.location.href = '/';
+                }}
+                style={{
+                  background: '#dc2626',
+                  color: '#ffffff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                🚪 Disconnect Wallet
+              </button>
+            </div>
           </div>
         </nav>
 

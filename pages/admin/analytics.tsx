@@ -206,20 +206,41 @@ export default function AdminAnalyticsPage() {
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>
               🏢 LiquidFlow Admin
             </div>
-            <div>
-              <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
-              <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
-              <select 
-                value={timeRange} 
-                onChange={(e) => setTimeRange(e.target.value)}
-                style={styles.select}
-              >
-                <option value="24h">Last 24 Hours</option>
-                <option value="7d">Last 7 Days</option>
-                <option value="30d">Last 30 Days</option>
-                <option value="90d">Last 90 Days</option>
-              </select>
-            </div>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
+            <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
+            <select 
+              value={timeRange} 
+              onChange={(e) => setTimeRange(e.target.value)}
+              style={styles.select}
+            >
+              <option value="24h">Last 24 Hours</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+            </select>
+            <button 
+              onClick={() => {
+                localStorage.removeItem('connectedWallet');
+                localStorage.removeItem('walletType');
+                localStorage.removeItem('liquidflow_admin');
+                localStorage.removeItem('admin_session');
+                window.location.href = '/';
+              }}
+              style={{
+                background: '#dc2626',
+                color: '#ffffff',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '0.875rem'
+              }}
+            >
+              🚪 Logout
+            </button>
+          </div>
           </div>
         </nav>
 

@@ -434,11 +434,32 @@ export default function AdminPortfoliosPage() {
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>
               🏢 LiquidFlow Admin
             </div>
-            <div>
-              <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
-              <a href="/admin/analytics" style={styles.navLink}>📊 Analytics</a>
-              <a href="/dashboard" style={styles.navLink}>← Dashboard</a>
-            </div>
+                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
+            <a href="/admin/analytics" style={styles.navLink}>📊 Analytics</a>
+            <a href="/dashboard" style={styles.navLink}>← Dashboard</a>
+            <button 
+              onClick={() => {
+                localStorage.removeItem('connectedWallet');
+                localStorage.removeItem('walletType');
+                localStorage.removeItem('liquidflow_admin');
+                localStorage.removeItem('admin_session');
+                window.location.href = '/';
+              }}
+              style={{
+                background: '#dc2626',
+                color: '#ffffff',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                fontSize: '0.875rem'
+              }}
+            >
+              🚪 Logout
+            </button>
+          </div>
           </div>
         </nav>
 

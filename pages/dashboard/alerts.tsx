@@ -299,10 +299,29 @@ export default function AlertsPage() {
           <nav style={styles.nav}>
             <div style={styles.navContainer}>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
-                           <div>
-               <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
-               <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
-             </div>
+                                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
+                <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
+                <button 
+                  onClick={() => {
+                    localStorage.removeItem('connectedWallet');
+                    localStorage.removeItem('walletType');
+                    window.location.href = '/';
+                  }}
+                  style={{
+                    background: '#dc2626',
+                    color: '#ffffff',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.5rem',
+                    border: 'none',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  🚪 Disconnect Wallet
+                </button>
+              </div>
             </div>
           </nav>
 
@@ -348,6 +367,66 @@ export default function AlertsPage() {
           <p style={styles.subtitle}>
             Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
           </p>
+          
+          {/* Multi-Chain Wallet Research */}
+          <div style={{
+            background: 'rgba(0,0,0,0.05)',
+            border: '2px solid #e5e7eb',
+            borderRadius: '1rem',
+            padding: '1rem',
+            marginBottom: '1rem'
+          }}>
+            <h3 style={{ color: '#000000', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold' }}>
+              🌐 Multi-Chain DeFi Intelligence
+            </h3>
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <input
+                type="text"
+                placeholder="Research any wallet: 0x... or Solana address"
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  border: '2px solid #d1d5db',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem',
+                  color: '#000000'
+                }}
+                id="researchWalletInput"
+              />
+              <button
+                onClick={() => {
+                  const input = document.getElementById('researchWalletInput') as HTMLInputElement;
+                  const address = input.value.trim();
+                  if (address) {
+                    const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
+                    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
+                    
+                    if (isEVMAddress || isSolanaAddress) {
+                      window.location.href = `/dashboard/pools?address=${address}`;
+                    } else {
+                      alert('Invalid wallet address format. Please enter a valid Ethereum (0x...) or Solana address.');
+                    }
+                  }
+                }}
+                style={{
+                  background: '#3b82f6',
+                  color: '#ffffff',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  border: 'none',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
+              >
+                🔍 Research
+              </button>
+            </div>
+            <p style={{ color: '#666666', fontSize: '0.75rem', margin: 0 }}>
+              🕵️ <strong>DeFi Intelligence:</strong> Analyze any wallet's positions across Ethereum, Arbitrum, Base, Optimism & Solana • Perfect for competitor research, whale watching, and client due diligence
+            </p>
+          </div>
+          
           <button
             onClick={() => walletAddress && loadAlertsAndPositions(walletAddress)}
             style={styles.connectButton}

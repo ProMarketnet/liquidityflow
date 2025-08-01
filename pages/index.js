@@ -225,7 +225,7 @@ export default function Home() {
                 <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Solana">◉</span>
               </div>
               <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>
-                View portfolios across all major chains
+                View portfolios across all major chains + Research any wallet address
               </span>
             </div>
           </div>
@@ -253,6 +253,7 @@ export default function Home() {
                  <div style={{ marginBottom: '0.5rem' }}>🔗 Get trading links to DEX platforms</div>
                  <div style={{ marginBottom: '0.5rem' }}>⚡ Instant access - no account needed</div>
                  <div style={{ marginBottom: '0.5rem' }}>🔒 No private keys stored or required</div>
+                 <div style={{ marginBottom: '0.5rem' }}>🕵️ <strong>Research any wallet:</strong> Analyze competitors & whales</div>
                </div>
               <a
                 href="/onboarding-new"
@@ -289,6 +290,7 @@ export default function Home() {
                  <div style={{ marginBottom: '0.5rem' }}>💼 Manage multiple client wallets (50+)</div>
                  <div style={{ marginBottom: '0.5rem' }}>⚡ Execute trades directly on platform</div>
                  <div style={{ marginBottom: '0.5rem' }}>🔑 Secure private key management</div>
+                 <div style={{ marginBottom: '0.5rem' }}>📊 <strong>Platform analytics:</strong> Aggregate data & reporting</div>
                </div>
               <a
                 href="/admin/login"
