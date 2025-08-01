@@ -275,13 +275,43 @@ export default async function handler(
       const targetChain = Array.isArray(chain) ? chain[0] : chain || 'eth';
       console.log(`📱 Processing EVM address on ${targetChain}`);
       
-      // Focus on DexScreener since user confirmed pairs exist there
-      result = await fetchDexScreenerData(pairAddress, targetChain);
+      // For Ethereum, try Uniswap subgraph first (most reliable)
+      if (targetChain === 'eth' || targetChain === 'ethereum') {
+        try {
+          console.log('🦄 Trying Uniswap subgraph...');
+          const uniswapResponse = await fetch(
+            `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/pools/uniswap-subgraph?address=${pairAddress}`,
+            {
+              headers: {
+                'accept': 'application/json'
+              }
+            }
+          );
+
+          if (uniswapResponse.ok) {
+            const uniswapData = await uniswapResponse.json();
+            if (uniswapData.success && uniswapData.pairInfo) {
+              result = {
+                success: true,
+                pairInfo: uniswapData.pairInfo
+              };
+            }
+          }
+        } catch (error) {
+          console.warn('⚠️ Uniswap subgraph lookup failed:', error);
+        }
+      }
+      
+      // If Uniswap subgraph failed, try DexScreener
+      if (!result || !result.success) {
+        console.log('🔄 Falling back to DexScreener...');
+        result = await fetchDexScreenerData(pairAddress, targetChain);
+      }
       
     } else if (isSolanaAddress) {
       console.log('🟣 Processing Solana address');
       
-      // Focus on DexScreener since user confirmed pairs exist there
+      // For Solana, use DexScreener (most comprehensive for Solana)
       result = await fetchDexScreenerData(pairAddress, 'solana');
     }
 
