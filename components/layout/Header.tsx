@@ -17,17 +17,17 @@ export const Header: React.FC = () => {
             <Link href="#pricing" className="text-gray-300 hover:text-white transition-colors">
               Pricing
             </Link>
-            <Link href="/demo" className="text-gray-300 hover:text-white transition-colors">
-              Demo
+            <Link href="/dashboard" className="text-gray-300 hover:text-white transition-colors">
+              Dashboard
             </Link>
           </nav>
           
           <div className="flex items-center space-x-4">
             <Link
-              href="/demo"
+              href="/dashboard"
               className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
             >
-              View Demo
+              Dashboard
             </Link>
             <Link
               href="/onboarding-new"

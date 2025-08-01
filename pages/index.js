@@ -36,7 +36,7 @@ export default function Home() {
           </div>
           
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <a href="/demo" style={{ color: '#cbd5e1', textDecoration: 'none' }}>Demo</a>
+            <a href="/dashboard" style={{ color: '#cbd5e1', textDecoration: 'none' }}>Dashboard</a>
                         <a
               href="/onboarding-new"
               style={{

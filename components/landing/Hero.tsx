@@ -19,10 +19,10 @@ export const Hero: React.FC = () => {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link
-            href="/demo"
+            href="/dashboard"
             className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
           >
-            View Live Demo
+            View Dashboard
           </Link>
           <Link
             href="#pricing"
