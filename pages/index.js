@@ -1,8 +1,41 @@
 export default function Home() {
+  // 🎨 EASY COLOR CUSTOMIZATION - Modern Green/Blue Theme
+  const colors = {
+    // Background gradients
+    mainBg: 'linear-gradient(135deg, #0f172a, #064e3b, #1e3a8a)', // Green/Blue theme
+    navBg: 'rgba(0,0,0,0.8)',
+    sectionBg: 'rgba(255,255,255,0.02)',
+    cardBg: 'rgba(255,255,255,0.05)',
+    
+    // Primary colors
+    primary: '#10b981',      // Green
+    secondary: '#3b82f6',    // Blue  
+    accent: '#06b6d4',       // Cyan
+    
+    // Button gradients
+    primaryBtn: 'linear-gradient(135deg, #10b981, #3b82f6)',
+    secondaryBtn: 'transparent',
+    
+    // Text gradients
+    titleGradient: 'linear-gradient(135deg, #10b981, #06b6d4)',
+    logoGradient: 'linear-gradient(135deg, #10b981, #3b82f6)',
+    
+    // Text colors
+    textPrimary: 'white',
+    textSecondary: '#cbd5e1',
+    textMuted: '#94a3b8',
+    
+    // Status colors
+    success: '#22c55e',
+    warning: '#f59e0b', 
+    danger: '#ef4444',
+    info: '#3b82f6'
+  };
+
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a, #1e1b4b, #581c87)',
+      background: colors.mainBg, // 🎨 Easy to change
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
       {/* Navigation */}
@@ -10,7 +43,7 @@ export default function Home() {
         position: 'fixed',
         top: 0,
         width: '100%',
-        background: 'rgba(0,0,0,0.8)',
+        background: colors.navBg,
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255,255,255,0.1)',
         zIndex: 1000,
@@ -27,7 +60,7 @@ export default function Home() {
           <div style={{
             fontSize: '1.5rem',
             fontWeight: 'bold',
-            background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+            background: colors.logoGradient, // 🎨 Easy to change
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
@@ -36,11 +69,11 @@ export default function Home() {
           </div>
           
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <a href="/dashboard" style={{ color: '#cbd5e1', textDecoration: 'none' }}>Dashboard</a>
+            <a href="/dashboard" style={{ color: colors.textSecondary, textDecoration: 'none' }}>Dashboard</a>
                         <a
               href="/onboarding-new"
               style={{
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                background: colors.primaryBtn, // 🎨 Easy to change
                 color: 'white',
                 padding: '0.5rem 1rem',
                 borderRadius: '0.5rem',
@@ -65,13 +98,13 @@ export default function Home() {
           <h1 style={{
             fontSize: 'clamp(2.5rem, 8vw, 5rem)',
             fontWeight: 'bold',
-            color: 'white',
+            color: colors.textPrimary,
             marginBottom: '1.5rem',
             lineHeight: 1.1
           }}>
             Stop Watching Your{' '}
             <span style={{
-              background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+              background: colors.titleGradient, // 🎨 Easy to change
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
@@ -82,7 +115,7 @@ export default function Home() {
           
           <p style={{
             fontSize: '1.25rem',
-            color: '#cbd5e1',
+            color: colors.textSecondary,
             marginBottom: '2rem',
             maxWidth: '800px',
             margin: '0 auto 2rem',
@@ -102,7 +135,7 @@ export default function Home() {
             <a
               href="/onboarding-new"
               style={{
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                background: colors.primaryBtn, // 🎨 Easy to change
                 color: 'white',
                 padding: '1rem 2rem',
                 borderRadius: '0.5rem',
@@ -116,8 +149,8 @@ export default function Home() {
             <a
               href="#pricing"
               style={{
-                border: '2px solid #3b82f6',
-                color: '#3b82f6',
+                border: `2px solid ${colors.primary}`, // 🎨 Easy to change
+                color: colors.primary,
                 padding: '1rem 2rem',
                 borderRadius: '0.5rem',
                 textDecoration: 'none',
@@ -138,16 +171,16 @@ export default function Home() {
             margin: '0 auto'
           }}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#00d4ff' }}>$50M+</div>
-              <div style={{ color: '#94a3b8' }}>Liquidity Under Management</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: colors.accent }}>$50M+</div>
+              <div style={{ color: colors.textMuted }}>Liquidity Under Management</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#00d4ff' }}>95%</div>
-              <div style={{ color: '#94a3b8' }}>Crisis Recovery Rate</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: colors.accent }}>95%</div>
+              <div style={{ color: colors.textMuted }}>Crisis Recovery Rate</div>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#00d4ff' }}>24/7</div>
-              <div style={{ color: '#94a3b8' }}>Automated Monitoring</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: colors.accent }}>24/7</div>
+              <div style={{ color: colors.textMuted }}>Automated Monitoring</div>
             </div>
           </div>
         </div>

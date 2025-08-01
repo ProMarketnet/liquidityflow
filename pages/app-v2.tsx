@@ -88,7 +88,7 @@ export default function AppV2() {
       margin: 0,
       padding: 0,
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #581c87 100%)',
+      background: 'linear-gradient(135deg, #0f172a 0%, #064e3b 50%, #1e3a8a 100%)', // Updated to Green/Blue theme
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       color: '#ffffff'
     },
@@ -112,7 +112,7 @@ export default function AppV2() {
     logo: {
       fontSize: '1.5rem',
       fontWeight: 'bold',
-      background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+             background: 'linear-gradient(135deg, #10b981, #3b82f6)', // Updated to Green/Blue theme
       WebkitBackgroundClip: 'text',
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text'
