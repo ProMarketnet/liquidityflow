@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 // Moralis EVM API configuration
-const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
 const MORALIS_EVM_BASE = 'https://deep-index.moralis.io/api/v2.2';
 
 // Supported EVM chains for Uniswap
@@ -49,8 +48,8 @@ const EVM_CHAINS = {
 };
 
 // Get Uniswap V3 pair address using Moralis
-async function getUniswapV3PairAddress(tokenA: string, tokenB: string, fee: number, chain: string) {
-  if (!MORALIS_API_KEY) {
+async function getUniswapV3PairAddress(tokenA: string, tokenB: string, fee: number, chain: string, apiKey: string) {
+  if (!apiKey) {
     throw new Error('MORALIS_API_KEY not configured');
   }
 
@@ -59,7 +58,7 @@ async function getUniswapV3PairAddress(tokenA: string, tokenB: string, fee: numb
       `${MORALIS_EVM_BASE}/token/${tokenA}/pair/${tokenB}/${fee}?chain=${chain}`,
       {
         headers: {
-          'X-API-Key': MORALIS_API_KEY,
+          'X-API-Key': apiKey,
           'accept': 'application/json'
         }
       }
@@ -79,6 +78,7 @@ async function getUniswapV3PairAddress(tokenA: string, tokenB: string, fee: numb
 
 // Get token price from Moralis
 async function getTokenPrice(tokenAddress: string, chain: string) {
+  const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
   if (!MORALIS_API_KEY) {
     throw new Error('MORALIS_API_KEY not configured');
   }
@@ -109,6 +109,7 @@ async function getTokenPrice(tokenAddress: string, chain: string) {
 
 // Get token metadata from Moralis
 async function getTokenMetadata(tokenAddress: string, chain: string) {
+  const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
   if (!MORALIS_API_KEY) {
     throw new Error('MORALIS_API_KEY not configured');
   }
@@ -139,6 +140,7 @@ async function getTokenMetadata(tokenAddress: string, chain: string) {
 
 // Get pair reserves from Moralis
 async function getPairReserves(pairAddress: string, chain: string) {
+  const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
   if (!MORALIS_API_KEY) {
     throw new Error('MORALIS_API_KEY not configured');
   }
@@ -169,6 +171,7 @@ async function getPairReserves(pairAddress: string, chain: string) {
 
 // Search for token pairs using Moralis
 async function searchTokenPairs(tokenAddress: string, chain: string) {
+  const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
   if (!MORALIS_API_KEY) {
     throw new Error('MORALIS_API_KEY not configured');
   }
@@ -305,6 +308,7 @@ export default async function handler(
     if (address && typeof address === 'string') {
       console.log(`🔍 Looking up EVM pair: ${address} on ${chainInfo.name}`);
 
+      const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
       if (!MORALIS_API_KEY) {
         console.warn('⚠️ MORALIS_API_KEY not configured, using mock data');
         const mockData = generateMockEVMPair(address, chainInfo);
@@ -396,6 +400,7 @@ export default async function handler(
       
       console.log(`🔍 Looking up Uniswap V3 pair: ${tokenA}/${tokenB} (${feeTier/10000}%) on ${chainInfo.name}`);
 
+      const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
       if (!MORALIS_API_KEY) {
         console.warn('⚠️ MORALIS_API_KEY not configured, using mock data');
         const mockData = generateMockEVMPair(`${tokenA}-${tokenB}`, chainInfo);
@@ -406,7 +411,7 @@ export default async function handler(
       }
 
       try {
-        const pairData = await getUniswapV3PairAddress(tokenA, tokenB, feeTier, chainInfo.moralisId);
+        const pairData = await getUniswapV3PairAddress(tokenA, tokenB, feeTier, chainInfo.moralisId, MORALIS_API_KEY);
         
         if (pairData && pairData.pair_address) {
           // Get additional data for the pair
