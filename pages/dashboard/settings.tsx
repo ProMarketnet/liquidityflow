@@ -1,117 +1,508 @@
-import React from 'react';
-import { Layout } from '@/components/layout/Layout';
+import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
+
+interface SettingsData {
+  moralisApiKey: string;
+  webhookUrl: string;
+  emailNotifications: boolean;
+  slackIntegration: boolean;
+  alertThreshold: number;
+  checkInterval: number;
+  dataRetention: number;
+  healthFactorThreshold: number;
+  minRewardAlert: number;
+  minAprAlert: number;
+  enableSmartAlerts: boolean;
+}
 
 export default function SettingsPage() {
-  return (
-    <Layout title="Settings - LiquidFlow" showSidebar={true}>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
-        </div>
+  const [settings, setSettings] = useState<SettingsData>({
+    moralisApiKey: '',
+    webhookUrl: '',
+    emailNotifications: true,
+    slackIntegration: false,
+    alertThreshold: 5.0,
+    checkInterval: 300,
+    dataRetention: 30,
+    healthFactorThreshold: 1.5,
+    minRewardAlert: 100,
+    minAprAlert: 20,
+    enableSmartAlerts: true
+  });
+  
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [apiTestStatus, setApiTestStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
 
-        {/* API Configuration */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">API Configuration</h2>
-          <div className="space-y-4">
+  // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
+  const styles = {
+    page: {
+      minHeight: '100vh',
+      background: '#ffffff',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      color: '#000000',
+      padding: '2rem 1rem'
+    },
+    container: {
+      maxWidth: '1200px',
+      margin: '0 auto'
+    },
+    title: {
+      fontSize: '2.5rem',
+      fontWeight: 'bold',
+      color: '#000000',
+      marginBottom: '1rem'
+    },
+    subtitle: {
+      color: '#666666',
+      marginBottom: '2rem'
+    },
+    nav: {
+      background: '#ffffff',
+      borderBottom: '2px solid #000000',
+      padding: '1rem 0',
+      marginBottom: '2rem'
+    },
+    navContainer: {
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '0 1rem',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    navLink: {
+      color: '#000000',
+      textDecoration: 'none',
+      fontWeight: '500',
+      marginRight: '2rem'
+    },
+    card: {
+      background: '#ffffff',
+      border: '3px solid #000000',
+      borderRadius: '1rem',
+      padding: '2rem',
+      marginBottom: '2rem'
+    },
+    cardTitle: {
+      fontSize: '1.5rem',
+      fontWeight: 'bold',
+      color: '#000000',
+      marginBottom: '1.5rem'
+    },
+    label: {
+      display: 'block',
+      color: '#000000',
+      fontWeight: '500',
+      marginBottom: '0.5rem'
+    },
+    input: {
+      width: '100%',
+      padding: '0.75rem',
+      border: '2px solid #000000',
+      borderRadius: '0.5rem',
+      fontSize: '1rem',
+      color: '#000000',
+      background: '#ffffff',
+      marginBottom: '1rem'
+    },
+    select: {
+      width: '100%',
+      padding: '0.75rem',
+      border: '2px solid #000000',
+      borderRadius: '0.5rem',
+      fontSize: '1rem',
+      color: '#000000',
+      background: '#ffffff',
+      marginBottom: '1rem'
+    },
+    button: {
+      background: '#000000',
+      color: '#ffffff',
+      padding: '1rem 2rem',
+      border: 'none',
+      borderRadius: '0.5rem',
+      fontSize: '1rem',
+      fontWeight: 'bold',
+      cursor: 'pointer'
+    },
+    toggleContainer: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '1rem',
+      padding: '1rem',
+      border: '2px solid #000000',
+      borderRadius: '0.5rem'
+    },
+    statusBadge: {
+      padding: '0.25rem 0.75rem',
+      borderRadius: '0.25rem',
+      fontSize: '0.875rem',
+      fontWeight: 'bold'
+    },
+    statusSuccess: {
+      background: '#dcfce7',
+      color: '#166534'
+    },
+    statusError: {
+      background: '#fef2f2',
+      color: '#dc2626'
+    },
+    statusTesting: {
+      background: '#fef3c7',
+      color: '#92400e'
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
+      gap: '1.5rem'
+    }
+  };
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      // Load from localStorage for now (in production, this would be from API)
+      const savedSettings = localStorage.getItem('liquidflow_settings');
+      if (savedSettings) {
+        setSettings({ ...settings, ...JSON.parse(savedSettings) });
+      }
+      
+      // Check if Moralis API key is configured
+      const envApiKey = process.env.NEXT_PUBLIC_MORALIS_API_KEY;
+      if (envApiKey && !settings.moralisApiKey) {
+        setSettings(prev => ({ ...prev, moralisApiKey: envApiKey.slice(0, 20) + '...' }));
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
+
+  const testMoralisConnection = async () => {
+    setApiTestStatus('testing');
+    try {
+      // Test the Moralis API connection
+      const response = await fetch('/api/monitoring/health');
+      if (response.ok) {
+        setApiTestStatus('success');
+        setTimeout(() => setApiTestStatus('idle'), 3000);
+      } else {
+        setApiTestStatus('error');
+        setTimeout(() => setApiTestStatus('idle'), 3000);
+      }
+    } catch (error) {
+      console.error('API test failed:', error);
+      setApiTestStatus('error');
+      setTimeout(() => setApiTestStatus('idle'), 3000);
+    }
+  };
+
+  const saveSettings = async () => {
+    setIsSaving(true);
+    setSaveStatus('idle');
+    
+    try {
+      // Save to localStorage (in production, this would be API call)
+      localStorage.setItem('liquidflow_settings', JSON.stringify(settings));
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof SettingsData, value: any) => {
+    setSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <span style={{ ...styles.statusBadge, ...styles.statusSuccess }}>✅ Connected</span>;
+      case 'error':
+        return <span style={{ ...styles.statusBadge, ...styles.statusError }}>❌ Error</span>;
+      case 'testing':
+        return <span style={{ ...styles.statusBadge, ...styles.statusTesting }}>⏳ Testing...</span>;
+      default:
+        return <span style={{ ...styles.statusBadge, background: '#f3f4f6', color: '#374151' }}>⚪ Not Tested</span>;
+    }
+  };
+
+  return (
+    <>
+      <Head>
+        <title>Settings - LiquidFlow</title>
+        <meta name="description" content="Configure your DeFi monitoring and alert preferences" />
+      </Head>
+      
+      <div style={styles.page}>
+        <nav style={styles.nav}>
+          <div style={styles.navContainer}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                DEX API Key
-              </label>
-              <input
-                type="password"
-                placeholder="Enter your API key"
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
+              <a href="/dashboard/alerts" style={styles.navLink}>Alerts</a>
+              <a href="/dashboard/pools" style={styles.navLink}>Pools</a>
             </div>
+          </div>
+        </nav>
+
+        <div style={styles.container}>
+          <h1 style={styles.title}>⚙️ Settings</h1>
+          <p style={styles.subtitle}>
+            Configure your DeFi monitoring, alerts, and API integrations
+          </p>
+
+          {/* API Configuration */}
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>🔌 API Configuration</h2>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={styles.label}>Moralis API Key</label>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <input
+                  type="password"
+                  value={settings.moralisApiKey}
+                  onChange={(e) => handleInputChange('moralisApiKey', e.target.value)}
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  style={styles.input}
+                />
+                <button onClick={testMoralisConnection} style={styles.button}>
+                  Test Connection
+                </button>
+                {getStatusBadge(apiTestStatus)}
+              </div>
+              <p style={{ color: '#666', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                Your Moralis Web3 API key for fetching DeFi positions and analytics
+              </p>
+            </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Webhook URL
-              </label>
+              <label style={styles.label}>Webhook URL (Optional)</label>
               <input
                 type="url"
+                value={settings.webhookUrl}
+                onChange={(e) => handleInputChange('webhookUrl', e.target.value)}
                 placeholder="https://your-app.com/webhook"
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                style={styles.input}
               />
+              <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                Receive real-time alerts via webhook notifications
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Alert Settings */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Alert Settings</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
+          {/* Smart Alert Configuration */}
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>🧠 Smart Alert Configuration</h2>
+            
+            <div style={styles.grid}>
               <div>
-                <div className="text-white font-medium">Email Notifications</div>
-                <div className="text-gray-400 text-sm">Receive alerts via email</div>
+                <label style={styles.label}>Health Factor Alert Threshold</label>
+                <input
+                  type="number"
+                  value={settings.healthFactorThreshold}
+                  onChange={(e) => handleInputChange('healthFactorThreshold', parseFloat(e.target.value))}
+                  min="1.0"
+                  max="3.0"
+                  step="0.1"
+                  style={styles.input}
+                />
+                <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                  Alert when lending health factor drops below this value
+                </p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" defaultChecked />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            <div className="flex items-center justify-between">
+
               <div>
-                <div className="text-white font-medium">Slack Integration</div>
-                <div className="text-gray-400 text-sm">Send alerts to Slack channel</div>
+                <label style={styles.label}>Minimum Reward Alert ($)</label>
+                <input
+                  type="number"
+                  value={settings.minRewardAlert}
+                  onChange={(e) => handleInputChange('minRewardAlert', parseFloat(e.target.value))}
+                  min="1"
+                  step="1"
+                  style={styles.input}
+                />
+                <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                  Alert when unclaimed rewards exceed this amount
+                </p>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Alert Threshold (% Slippage)
-              </label>
-              <input
-                type="number"
-                placeholder="5.0"
-                min="0"
-                max="100"
-                step="0.1"
-                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+
+              <div>
+                <label style={styles.label}>High APR Alert Threshold (%)</label>
+                <input
+                  type="number"
+                  value={settings.minAprAlert}
+                  onChange={(e) => handleInputChange('minAprAlert', parseFloat(e.target.value))}
+                  min="1"
+                  max="100"
+                  step="1"
+                  style={styles.input}
+                />
+                <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                  Alert when positions offer APR above this percentage
+                </p>
+              </div>
+
+              <div>
+                <label style={styles.label}>Price Slippage Alert (%)</label>
+                <input
+                  type="number"
+                  value={settings.alertThreshold}
+                  onChange={(e) => handleInputChange('alertThreshold', parseFloat(e.target.value))}
+                  min="0.1"
+                  max="50"
+                  step="0.1"
+                  style={styles.input}
+                />
+                <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                  Alert when price slippage exceeds this percentage
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Monitoring Settings */}
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Monitoring Settings</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Check Interval (seconds)
+          {/* Notification Settings */}
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>📧 Notification Preferences</h2>
+            
+            <div style={styles.toggleContainer}>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#000000' }}>Smart Alerts</div>
+                <div style={{ color: '#666', fontSize: '0.875rem' }}>
+                  Enable intelligent DeFi position monitoring
+                </div>
+              </div>
+              <label style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.enableSmartAlerts}
+                  onChange={(e) => handleInputChange('enableSmartAlerts', e.target.checked)}
+                  style={{ transform: 'scale(1.5)' }}
+                />
               </label>
-              <select className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="30">30 seconds</option>
-                <option value="60">1 minute</option>
-                <option value="300">5 minutes</option>
-                <option value="900">15 minutes</option>
-              </select>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Data Retention (days)
+
+            <div style={styles.toggleContainer}>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#000000' }}>Email Notifications</div>
+                <div style={{ color: '#666', fontSize: '0.875rem' }}>
+                  Receive alerts via email
+                </div>
+              </div>
+              <label style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.emailNotifications}
+                  onChange={(e) => handleInputChange('emailNotifications', e.target.checked)}
+                  style={{ transform: 'scale(1.5)' }}
+                />
               </label>
-              <select className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="7">7 days</option>
-                <option value="30">30 days</option>
-                <option value="90">90 days</option>
-                <option value="365">1 year</option>
-              </select>
+            </div>
+
+            <div style={styles.toggleContainer}>
+              <div>
+                <div style={{ fontWeight: 'bold', color: '#000000' }}>Slack Integration</div>
+                <div style={{ color: '#666', fontSize: '0.875rem' }}>
+                  Send alerts to Slack channel
+                </div>
+              </div>
+              <label style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={settings.slackIntegration}
+                  onChange={(e) => handleInputChange('slackIntegration', e.target.checked)}
+                  style={{ transform: 'scale(1.5)' }}
+                />
+              </label>
             </div>
           </div>
-        </div>
 
-        {/* Save Button */}
-        <div className="flex justify-end">
-          <button className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-            Save Settings
-          </button>
+          {/* Monitoring Settings */}
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>⏱️ Monitoring Configuration</h2>
+            
+            <div style={styles.grid}>
+              <div>
+                <label style={styles.label}>Check Interval</label>
+                <select
+                  value={settings.checkInterval}
+                  onChange={(e) => handleInputChange('checkInterval', parseInt(e.target.value))}
+                  style={styles.select}
+                >
+                  <option value="30">30 seconds</option>
+                  <option value="60">1 minute</option>
+                  <option value="300">5 minutes</option>
+                  <option value="900">15 minutes</option>
+                  <option value="1800">30 minutes</option>
+                  <option value="3600">1 hour</option>
+                </select>
+                <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                  How often to check for position changes
+                </p>
+              </div>
+
+              <div>
+                <label style={styles.label}>Data Retention</label>
+                <select
+                  value={settings.dataRetention}
+                  onChange={(e) => handleInputChange('dataRetention', parseInt(e.target.value))}
+                  style={styles.select}
+                >
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="90">90 days</option>
+                  <option value="180">6 months</option>
+                  <option value="365">1 year</option>
+                </select>
+                <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                  How long to keep historical data
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Save Button */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              {saveStatus === 'success' && (
+                <span style={{ ...styles.statusBadge, ...styles.statusSuccess }}>
+                  ✅ Settings saved successfully!
+                </span>
+              )}
+              {saveStatus === 'error' && (
+                <span style={{ ...styles.statusBadge, ...styles.statusError }}>
+                  ❌ Error saving settings
+                </span>
+              )}
+            </div>
+            
+            <button 
+              onClick={saveSettings}
+              disabled={isSaving}
+              style={{
+                ...styles.button,
+                opacity: isSaving ? 0.6 : 1,
+                cursor: isSaving ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {isSaving ? '💾 Saving...' : '💾 Save Settings'}
+            </button>
+          </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }
