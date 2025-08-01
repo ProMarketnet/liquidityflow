@@ -68,23 +68,22 @@ export default function Home() {
             LiquidFlow
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <a href="/dashboard" style={{ color: colors.textSecondary, textDecoration: 'none' }}>Dashboard</a>
-            <a href="/admin/portfolios" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
-            <a
-              href="/onboarding-new"
-              style={{
-                background: colors.primaryBtn, // 🎨 Easy to change
-                color: 'white',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                textDecoration: 'none',
-                fontWeight: '600'
-              }}
-            >
-              Get Started
-            </a>
-          </div>
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <a href="/admin/login" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
+          <a
+            href="/onboarding-new"
+            style={{
+              background: colors.primaryBtn, // 🎨 Easy to change
+              color: 'white',
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              textDecoration: 'none',
+              fontWeight: '600'
+            }}
+          >
+            🚀 Get Started
+          </a>
+        </div>
         </div>
       </nav>
 
@@ -182,6 +181,130 @@ export default function Home() {
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: colors.accent }}>24/7</div>
               <div style={{ color: colors.textMuted }}>Automated Monitoring</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Two Paths Section */}
+      <section style={{
+        padding: '4rem 1rem',
+        background: 'rgba(0,0,0,0.3)',
+        borderTop: '2px solid rgba(255,255,255,0.1)',
+        borderBottom: '2px solid rgba(255,255,255,0.1)'
+      }}>
+        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
+              Choose Your Access Level
+            </h2>
+            <p style={{ fontSize: '1.25rem', color: '#cbd5e1' }}>
+              Two distinct ways to use LiquidFlow based on your needs
+            </p>
+          </div>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: '2rem'
+          }}>
+            {/* Get Started Card */}
+            <div style={{
+              background: 'rgba(34, 197, 94, 0.1)',
+              border: '2px solid rgba(34, 197, 94, 0.3)',
+              borderRadius: '1rem',
+              padding: '2rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚀</div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#22c55e', marginBottom: '1rem' }}>
+                Get Started (Launch App)
+              </h3>
+              <div style={{ color: '#cbd5e1', marginBottom: '1.5rem', textAlign: 'left' }}>
+                <div style={{ marginBottom: '0.5rem' }}>✅ Connect any wallet for read-only viewing</div>
+                <div style={{ marginBottom: '0.5rem' }}>✅ View your DeFi positions across protocols</div>
+                <div style={{ marginBottom: '0.5rem' }}>✅ Monitor portfolio health and alerts</div>
+                <div style={{ marginBottom: '0.5rem' }}>✅ Access trading links to DEXs</div>
+                <div style={{ marginBottom: '0.5rem' }}>✅ No account required</div>
+              </div>
+              <a
+                href="/onboarding-new"
+                style={{
+                  display: 'inline-block',
+                  background: '#22c55e',
+                  color: 'white',
+                  padding: '1rem 2rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem'
+                }}
+              >
+                🚀 Launch App Now
+              </a>
+            </div>
+
+            {/* Admin Card */}
+            <div style={{
+              background: 'rgba(220, 38, 38, 0.1)',
+              border: '2px solid rgba(220, 38, 38, 0.3)',
+              borderRadius: '1rem',
+              padding: '2rem',
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626', marginBottom: '1rem' }}>
+                Admin (Portfolio Management)
+              </h3>
+              <div style={{ color: '#cbd5e1', marginBottom: '1.5rem', textAlign: 'left' }}>
+                <div style={{ marginBottom: '0.5rem' }}>🔐 Create account with email/password</div>
+                <div style={{ marginBottom: '0.5rem' }}>🔑 Manage client wallets with private keys</div>
+                <div style={{ marginBottom: '0.5rem' }}>💼 Portfolio management for multiple clients</div>
+                <div style={{ marginBottom: '0.5rem' }}>⚡ Direct trading access and execution</div>
+                <div style={{ marginBottom: '0.5rem' }}>📊 Platform-wide analytics and reporting</div>
+              </div>
+              <a
+                href="/admin/login"
+                style={{
+                  display: 'inline-block',
+                  background: '#dc2626',
+                  color: 'white',
+                  padding: '1rem 2rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  fontWeight: 'bold',
+                  fontSize: '1.1rem'
+                }}
+              >
+                🏢 Admin Access
+              </a>
+            </div>
+          </div>
+
+          {/* Business Flow Explanation */}
+          <div style={{
+            marginTop: '3rem',
+            background: 'rgba(255,255,255,0.05)',
+            border: '2px solid rgba(255,255,255,0.1)',
+            borderRadius: '1rem',
+            padding: '2rem'
+          }}>
+            <h4 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem', textAlign: 'center' }}>
+              💼 Business Partnership Model
+            </h4>
+            <div style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: '1.6' }}>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#22c55e' }}>Client Onboarding:</strong> ABC Company can either create an admin account 
+                and share private keys with LiquidFlow, or LiquidFlow can create the account and provide access credentials.
+              </p>
+              <p style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#dc2626' }}>Multi-Wallet Management:</strong> LiquidFlow admins can set up access to 
+                multiple client wallets under a single admin account, managing portfolios for dozens of clients simultaneously.
+              </p>
+              <p style={{ margin: 0 }}>
+                <strong style={{ color: '#3b82f6' }}>Access Control:</strong> Each client wallet can have different permission 
+                levels (View Only, Trading Enabled, or Full Control) based on the service agreement.
+              </p>
             </div>
           </div>
         </div>
