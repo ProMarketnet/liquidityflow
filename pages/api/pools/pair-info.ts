@@ -108,18 +108,38 @@ async function fetchDexScreenerData(pairAddress: string, chain: string) {
     };
     
     const dexScreenerChain = chainMapping[chain] || chain;
-    const dexScreenerResponse = await fetch(
+    
+    // Try the pairs endpoint first
+    let dexScreenerResponse = await fetch(
       `https://api.dexscreener.com/latest/dex/pairs/${dexScreenerChain}/${pairAddress}`,
       {
         headers: {
-          'accept': 'application/json'
+          'accept': 'application/json',
+          'user-agent': 'LiquidFlow/1.0'
         }
       }
     );
 
+    console.log(`📊 DexScreener ${dexScreenerChain} response status:`, dexScreenerResponse.status);
+
+    // If pair endpoint fails, try token endpoint for Solana
+    if (!dexScreenerResponse.ok && chain === 'solana') {
+      console.log('🔄 Trying DexScreener token endpoint for Solana...');
+      dexScreenerResponse = await fetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${pairAddress}`,
+        {
+          headers: {
+            'accept': 'application/json',
+            'user-agent': 'LiquidFlow/1.0'
+          }
+        }
+      );
+      console.log('📊 DexScreener token response status:', dexScreenerResponse.status);
+    }
+
     if (dexScreenerResponse.ok) {
       const dexData = await dexScreenerResponse.json();
-      console.log('📊 DexScreener response:', dexData);
+      console.log('📊 DexScreener response data:', JSON.stringify(dexData, null, 2));
       
       if (dexData.pairs && dexData.pairs.length > 0) {
         const pair = dexData.pairs[0];
@@ -144,15 +164,23 @@ async function fetchDexScreenerData(pairAddress: string, chain: string) {
             priceChange24h: parseFloat(pair.priceChange?.h24 || '0'),
             fdv: parseFloat(pair.fdv || '0'),
             marketCap: parseFloat(pair.marketCap || '0'),
+            pairCreatedAt: pair.pairCreatedAt,
+            url: pair.url,
             source: 'DexScreener'
           }
         };
+      } else {
+        console.log('⚠️ DexScreener returned data but no pairs found');
       }
+    } else {
+      console.log(`❌ DexScreener API failed with status: ${dexScreenerResponse.status}`);
+      const errorText = await dexScreenerResponse.text();
+      console.log('Error response:', errorText);
     }
 
     return {
       success: false,
-      error: `Pair not found on ${chain} via DexScreener`
+      error: `Pair not found on ${chain} via DexScreener (Status: ${dexScreenerResponse.status})`
     };
 
   } catch (error) {
@@ -247,26 +275,14 @@ export default async function handler(
       const targetChain = Array.isArray(chain) ? chain[0] : chain || 'eth';
       console.log(`📱 Processing EVM address on ${targetChain}`);
       
-      // Try DexScreener first for pair data
+      // Focus on DexScreener since user confirmed pairs exist there
       result = await fetchDexScreenerData(pairAddress, targetChain);
-      
-      // If no pair found, try as wallet address with Moralis DeFi
-      if (!result.success) {
-        console.log('🔄 Trying as wallet address...');
-        result = await fetchMoralisDeFiData(pairAddress, targetChain);
-      }
       
     } else if (isSolanaAddress) {
       console.log('🟣 Processing Solana address');
       
-      // Try DexScreener first
+      // Focus on DexScreener since user confirmed pairs exist there
       result = await fetchDexScreenerData(pairAddress, 'solana');
-      
-      // If no pair found, try as token address
-      if (!result.success) {
-        console.log('🔄 Trying as token address...');
-        result = await fetchSolanaTokenInfo(pairAddress);
-      }
     }
 
     if (result && result.success) {
