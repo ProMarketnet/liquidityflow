@@ -9,4 +9,5 @@ const nextConfig = {
   // Removed experimental.appDir as it's deprecated
 }
 
+// Cache bust: 1754019060980
 module.exports = nextConfig
