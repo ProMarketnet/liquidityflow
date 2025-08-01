@@ -158,44 +158,91 @@ const Pools = () => {
     try {
       console.log('🔍 Loading data for address:', address);
       
-      // Determine if this is a wallet address or a pair/pool address
-      const isEVMWallet = /^0x[a-fA-F0-9]{40}$/.test(address);
-      const isSolanaWallet = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
-      const isSolanaPair = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address); // Same format as wallet, need to detect by context
+      // Step 1: Try comprehensive token pools API first (finds ALL pools for a token)
+      console.log('🔎 Trying comprehensive token pools search...');
+      let tokenPoolsResponse = await fetch(`/api/pools/token-pools?address=${address}`);
       
-      let response;
+      if (tokenPoolsResponse.ok) {
+        const tokenPoolsData = await tokenPoolsResponse.json();
+        
+        if (tokenPoolsData.success && tokenPoolsData.allPools && tokenPoolsData.allPools.length > 0) {
+          console.log(`✅ Found ${tokenPoolsData.allPools.length} pools across ${tokenPoolsData.summary.chainsFound.length} chains`);
+          
+          // Process multiple pools data
+          const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+          let totalValue = 0;
+          
+          tokenPoolsData.allPools.forEach((pool: any) => {
+            const protocolName = `${pool.dex} (${pool.chain})`;
+            
+            if (!protocolPositions[protocolName]) {
+              protocolPositions[protocolName] = [];
+            }
+            
+            const poolValue = parseFloat(pool.liquidity || '0');
+            totalValue += poolValue;
+            
+            protocolPositions[protocolName].push({
+              position_type: 'liquidity_pool',
+              position_id: pool.pairAddress || pool.address,
+              position_token_data: [
+                { symbol: pool.baseToken?.symbol || 'TOKEN0' },
+                { symbol: pool.pairedToken?.symbol || pool.quoteToken?.symbol || 'TOKEN1' }
+              ],
+              total_usd_value: poolValue,
+              apr: pool.apr || pool.apy,
+              rawData: pool
+            });
+          });
+          
+          // Create summary
+          const activeProtocols = Object.entries(protocolPositions).map(([name, positions]) => {
+            const protocolValue = positions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0);
+            return {
+              protocol_name: name,
+              protocol_id: name.toLowerCase().replace(/\s+/g, '-'),
+              total_usd_value: protocolValue,
+              relative_portfolio_percentage: totalValue > 0 ? (protocolValue / totalValue) * 100 : 0
+            };
+          });
+          
+          setPoolsData({
+            summary: {
+              total_usd_value: totalValue,
+              active_protocols: activeProtocols
+            },
+            protocolPositions,
+            isLoading: false,
+            error: null
+          });
+          
+          return;
+        }
+      }
+      
+      // Step 2: Fallback to specific pair lookup
+      console.log('🔄 Trying as specific pair address...');
+      const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
+      const chain = isEVMAddress ? 'eth' : 'solana';
+      
+      let pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
       let data;
       
-      if (isEVMWallet) {
-        console.log('📱 Detected EVM wallet address, fetching DeFi positions...');
-        response = await fetch(`/api/wallet/defi?address=${address}`);
-      } else if (isSolanaWallet || isSolanaPair) {
-        console.log('🟣 Detected Solana address, attempting both wallet and pair lookup...');
-        
-        // First try as wallet address
-        const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
-        if (walletResponse.ok) {
-          const walletData = await walletResponse.json();
-          if (walletData.totalPositions > 0) {
-            response = walletResponse;
-          }
-        }
-        
-        // If no wallet positions found, try as pair address
-        if (!response || !response.ok) {
-          console.log('🔍 No wallet positions found, trying as pair/pool address...');
-          response = await fetch(`/api/pools/pair-info?address=${address}`);
-        }
+      if (pairResponse.ok) {
+        data = await pairResponse.json();
+        console.log('📊 Pair data received:', data);
       } else {
-        throw new Error('Invalid address format. Please enter a valid wallet address or pair/pool address.');
+        // Step 3: Final fallback to wallet DeFi positions
+        console.log('🔄 Trying as wallet address...');
+        const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
+        
+        if (!walletResponse.ok) {
+          throw new Error(`No data found for address ${address}`);
+        }
+        
+        data = await walletResponse.json();
+        console.log('📊 Wallet data received:', data);
       }
-      
-      if (!response || !response.ok) {
-        throw new Error(`API returned ${response?.status}: ${response?.statusText || 'Unknown error'}`);
-      }
-      
-      data = await response.json();
-      console.log('📊 Data received:', data);
       
       // Process the data based on type
       const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
