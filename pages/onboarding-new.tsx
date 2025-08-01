@@ -133,10 +133,10 @@ function OnboardingContent() {
               ))}
             </div>
             <div className="flex justify-between mt-6 text-lg font-bold">
-              <span className={`${step >= 1 ? 'text-white' : 'text-white/60'} drop-shadow-lg`}>Connect</span>
-              <span className={`${step >= 2 ? 'text-white' : 'text-white/60'} drop-shadow-lg`}>Analyze</span>
-              <span className={`${step >= 3 ? 'text-white' : 'text-white/60'} drop-shadow-lg`}>Select</span>
-              <span className={`${step >= 4 ? 'text-white' : 'text-white/60'} drop-shadow-lg`}>Monitor</span>
+              <span className={`${step >= 1 ? 'text-white' : 'text-white/60'} drop-shadow-lg`} style={{color: step >= 1 ? '#ffffff' : '#ffffff99', fontSize: '1.125rem', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Connect</span>
+              <span className={`${step >= 2 ? 'text-white' : 'text-white/60'} drop-shadow-lg`} style={{color: step >= 2 ? '#ffffff' : '#ffffff99', fontSize: '1.125rem', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Analyze</span>
+              <span className={`${step >= 3 ? 'text-white' : 'text-white/60'} drop-shadow-lg`} style={{color: step >= 3 ? '#ffffff' : '#ffffff99', fontSize: '1.125rem', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Select</span>
+              <span className={`${step >= 4 ? 'text-white' : 'text-white/60'} drop-shadow-lg`} style={{color: step >= 4 ? '#ffffff' : '#ffffff99', fontSize: '1.125rem', fontWeight: 'bold', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Monitor</span>
             </div>
           </div>
 
@@ -147,10 +147,10 @@ function OnboardingContent() {
             {step === 1 && (
               <div className="text-center">
                 <div className="text-8xl mb-8">🚀</div>
-                <h1 className="text-6xl font-bold text-white mb-8 drop-shadow-2xl">
+                <h1 className="text-6xl font-bold text-white mb-8 drop-shadow-2xl" style={{color: '#ffffff', fontSize: '4rem', fontWeight: 'bold', textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
                   Connect Your Wallet
                 </h1>
-                <p className="text-white text-2xl mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+                <p className="text-white text-2xl mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg" style={{color: '#ffffff', fontSize: '1.5rem', textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>
                   Connect your wallet to start monitoring liquidity pools and track your DeFi positions
                 </p>
                 
@@ -159,20 +159,20 @@ function OnboardingContent() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm">
+                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm" style={{backgroundColor: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.4)'}}>
                     <div className="text-4xl mb-4">✨</div>
-                    <h3 className="text-white text-xl font-bold mb-2">Real-time Portfolio</h3>
-                    <p className="text-white/90">Track your wallet balance and token holdings</p>
+                    <h3 className="text-white text-xl font-bold mb-2" style={{color: '#ffffff', fontSize: '1.25rem', fontWeight: 'bold'}}>Real-time Portfolio</h3>
+                    <p className="text-white/90" style={{color: '#ffffff', opacity: 0.9}}>Track your wallet balance and token holdings</p>
                   </div>
-                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm">
+                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm" style={{backgroundColor: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.4)'}}>
                     <div className="text-4xl mb-4">📊</div>
-                    <h3 className="text-white text-xl font-bold mb-2">DeFi Positions</h3>
-                    <p className="text-white/90">Monitor your DeFi protocol interactions</p>
+                    <h3 className="text-white text-xl font-bold mb-2" style={{color: '#ffffff', fontSize: '1.25rem', fontWeight: 'bold'}}>DeFi Positions</h3>
+                    <p className="text-white/90" style={{color: '#ffffff', opacity: 0.9}}>Monitor your DeFi protocol interactions</p>
                   </div>
-                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm">
+                  <div className="bg-white/15 border border-white/30 rounded-xl p-6 backdrop-blur-sm" style={{backgroundColor: 'rgba(255,255,255,0.2)', border: '2px solid rgba(255,255,255,0.4)'}}>
                     <div className="text-4xl mb-4">🔔</div>
-                    <h3 className="text-white text-xl font-bold mb-2">Smart Alerts</h3>
-                    <p className="text-white/90">Get notified of important changes</p>
+                    <h3 className="text-white text-xl font-bold mb-2" style={{color: '#ffffff', fontSize: '1.25rem', fontWeight: 'bold'}}>Smart Alerts</h3>
+                    <p className="text-white/90" style={{color: '#ffffff', opacity: 0.9}}>Get notified of important changes</p>
                   </div>
                 </div>
               </div>
