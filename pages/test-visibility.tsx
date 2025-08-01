@@ -96,16 +96,17 @@ export default function TestVisibilityPage() {
           
         </div>
         
-        <div style={{
-          marginTop: '2rem',
-          color: '#ffffff',
-          fontSize: '1rem',
-          textAlign: 'center',
-          textShadow: '1px 1px 2px rgba(0, 0, 0, 1)'
-        }}>
-          <p>If this text is clearly visible, Railway deployment is working correctly.</p>
-          <p>Test URL: /test-visibility</p>
-        </div>
+                 <div style={{
+           marginTop: '2rem',
+           color: '#ffffff',
+           fontSize: '1rem',
+           textAlign: 'center',
+           textShadow: '1px 1px 2px rgba(0, 0, 0, 1)'
+         }}>
+           <p>If this text is clearly visible, Railway deployment is working correctly.</p>
+           <p>Test URL: /test-visibility</p>
+           <p style={{color: '#ff4444', fontWeight: 'bold'}}>FORCE DEPLOY - Version 2</p>
+         </div>
         
       </div>
     </>
