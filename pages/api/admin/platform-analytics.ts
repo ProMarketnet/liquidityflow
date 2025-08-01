@@ -7,6 +7,20 @@ interface UserWallet {
   totalValue: number;
   positionCount: number;
   protocols: string[];
+  chainData: any[];
+}
+
+interface ClientWallet {
+  id: string;
+  address: string;
+  clientName: string;
+  totalValue: number;
+  lastUpdated: string;
+  status: 'active' | 'warning' | 'critical';
+  positions: number;
+  protocols: string[];
+  alerts: number;
+  performance24h: number;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,16 +31,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { timeRange = '7d' } = req.query;
     
+    console.log(`📊 Fetching platform analytics for ${timeRange}`);
+    
     // 🔒 In production, add admin authentication here
     // const user = await verifyAdminToken(req);
     // if (!user?.isAdmin) return res.status(403).json({ error: 'Admin access required' });
 
-    // 📊 Get all connected wallets from localStorage tracking
-    // In production, this would query your database of connected users
-    const connectedWallets = await getAllConnectedWallets();
+    // 📊 Get all wallets from multiple sources
+    const allWallets = await getAllPlatformWallets();
     
-    // 🏦 Aggregate platform-wide data using Moralis API
-    const platformAnalytics = await aggregatePlatformData(connectedWallets, timeRange as string);
+    // 🏦 Aggregate platform-wide data using real Moralis API calls
+    const platformAnalytics = await aggregatePlatformData(allWallets, timeRange as string);
     
     res.status(200).json(platformAnalytics);
 
@@ -36,176 +51,254 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function getAllConnectedWallets(): Promise<UserWallet[]> {
-  // 📝 Mock data - In production, query your user database
-  // This would be: SELECT wallet_address, connected_at, last_seen FROM users
+async function getAllPlatformWallets(): Promise<UserWallet[]> {
+  console.log('🔍 Collecting all platform wallet addresses...');
   
+  // 📝 Collect wallet addresses from multiple sources
+  const walletAddresses = new Set<string>();
+  
+  // 1. 🏠 Add admin/client wallets from the portfolio management system
+  const clientWallets = await getClientWallets();
+  clientWallets.forEach(wallet => walletAddresses.add(wallet.address));
+  
+  // 2. 🔑 Add any stored private key wallets (for full management)
+  const managedWallets = await getManagedWallets();
+  managedWallets.forEach(address => walletAddresses.add(address));
+  
+  // 3. 👤 Add frequently accessed wallets (would come from usage logs in production)
+  const frequentWallets = [
+    '0x4f02bb03', // User's connected wallet (from dashboard activity)
+    // Add other frequently accessed wallets here
+  ];
+  frequentWallets.forEach(address => walletAddresses.add(address));
+  
+  console.log(`📊 Found ${walletAddresses.size} unique wallet addresses across platform`);
+  
+  // 🏦 Fetch real balance data for each wallet
+  const walletData: UserWallet[] = [];
+  
+  for (const address of Array.from(walletAddresses)) {
+    try {
+      console.log(`💰 Fetching real data for wallet: ${address}`);
+      
+      // Call our existing balance API to get real Moralis data
+      const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/wallet/balance?address=${address}`);
+      
+      if (response.ok) {
+        const balanceData = await response.json();
+        
+        // Try to get DeFi positions too
+        const defiResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/wallet/defi?address=${address}`);
+        let defiData = null;
+        if (defiResponse.ok) {
+          defiData = await defiResponse.json();
+        }
+        
+        // Extract protocols and position count
+        const protocols = new Set<string>();
+        let positionCount = 0;
+        
+        if (defiData?.positions) {
+          defiData.positions.forEach((pos: any) => {
+            if (pos.protocol) protocols.add(pos.protocol);
+            positionCount++;
+          });
+        }
+        
+        // Add chains with balances as "protocols"
+        balanceData.chains?.forEach((chain: any) => {
+          if (chain.totalValueUsd > 0.01) {
+            protocols.add(chain.chainName);
+          }
+        });
+        
+        walletData.push({
+          address,
+          connectedAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(), // Mock connected time
+          lastSeen: balanceData.lastUpdated || new Date().toISOString(),
+          totalValue: balanceData.totalValueUsd || 0,
+          positionCount,
+          protocols: Array.from(protocols),
+          chainData: balanceData.chains || []
+        });
+        
+        console.log(`✅ Wallet ${address}: $${balanceData.totalValueUsd || 0}, ${positionCount} positions`);
+      } else {
+        console.warn(`⚠️ Failed to fetch data for wallet ${address}`);
+        // Add wallet with zero data rather than skipping
+        walletData.push({
+          address,
+          connectedAt: new Date().toISOString(),
+          lastSeen: new Date().toISOString(),
+          totalValue: 0,
+          positionCount: 0,
+          protocols: [],
+          chainData: []
+        });
+      }
+    } catch (error) {
+      console.error(`❌ Error fetching data for wallet ${address}:`, error);
+    }
+  }
+  
+  console.log(`📊 Successfully aggregated data for ${walletData.length} wallets`);
+  return walletData;
+}
+
+async function getClientWallets(): Promise<ClientWallet[]> {
+  // Get client wallets from the admin portfolio system
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/all-wallets`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.wallets || [];
+    }
+  } catch (error) {
+    console.error('Error fetching client wallets:', error);
+  }
+  
+  // Fallback to hardcoded client wallets if API fails
   return [
     {
+      id: '1',
       address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-      connectedAt: '2024-01-20T10:30:00Z',
-      lastSeen: '2024-01-20T16:45:00Z',
-      totalValue: 45823.12,
-      positionCount: 7,
-      protocols: ['Uniswap V3', 'Aave V3']
+      clientName: 'Alice Johnson',
+      totalValue: 0,
+      lastUpdated: new Date().toISOString(),
+      status: 'active' as const,
+      positions: 0,
+      protocols: [],
+      alerts: 0,
+      performance24h: 0
     },
     {
+      id: '2', 
       address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
-      connectedAt: '2024-01-19T14:22:00Z',
-      lastSeen: '2024-01-20T15:30:00Z',
-      totalValue: 123456.78,
-      positionCount: 12,
-      protocols: ['Uniswap V3', 'Compound', 'Curve']
-    },
-    {
-      address: '0x9f8e7d6c5b4a3928374656789abcdef0123456789',
-      connectedAt: '2024-01-18T09:15:00Z',
-      lastSeen: '2024-01-20T14:20:00Z',
-      totalValue: 87234.56,
-      positionCount: 5,
-      protocols: ['Aave V3', 'Balancer']
+      clientName: 'Bob Chen',
+      totalValue: 0,
+      lastUpdated: new Date().toISOString(),
+      status: 'active' as const,
+      positions: 0,
+      protocols: [],
+      alerts: 0,
+      performance24h: 0
     }
-    // ... would continue with all 47+ users
+  ];
+}
+
+async function getManagedWallets(): Promise<string[]> {
+  // In production, this would query wallets with stored private keys
+  // For now, return empty array since we don't store private keys yet
+  return [
+    // Add any wallets with stored private keys here
   ];
 }
 
 async function aggregatePlatformData(wallets: UserWallet[], timeRange: string) {
-  // 🔥 In production, you'd make batch Moralis API calls here:
-  // 1. Get positions for all wallet addresses
-  // 2. Aggregate by protocol
-  // 3. Calculate platform-wide metrics
+  console.log(`📈 Aggregating platform data for ${wallets.length} wallets over ${timeRange}`);
   
-  // Example pseudo-code for production:
-  /*
-  const allPositions = await Promise.all(
-    wallets.map(wallet => 
-      fetch(`/api/defi/advanced-positions?address=${wallet.address}`)
-    )
-  );
-  
-  const aggregatedData = allPositions.reduce((acc, positions) => {
-    // Aggregate TVL by protocol
-    // Count users per protocol  
-    // Sum total platform TVL
-    return acc;
-  }, {});
-  */
-
-  // 🎯 Mock aggregated data for demonstration
+  // Calculate real totals
   const totalUsers = wallets.length;
   const totalValueLocked = wallets.reduce((sum, wallet) => sum + wallet.totalValue, 0);
   const totalPositions = wallets.reduce((sum, wallet) => sum + wallet.positionCount, 0);
-
-  // Group protocols by usage
-  const protocolUsage = wallets.reduce((acc: any, wallet) => {
+  
+  // Count unique protocols
+  const allProtocols = new Set<string>();
+  wallets.forEach(wallet => {
+    wallet.protocols.forEach(protocol => allProtocols.add(protocol));
+  });
+  
+  // Calculate protocol TVL distribution
+  const protocolTVL: { [key: string]: { tvl: number, users: number } } = {};
+  
+  wallets.forEach(wallet => {
+    const valuePerProtocol = wallet.totalValue / Math.max(wallet.protocols.length, 1);
+    
     wallet.protocols.forEach(protocol => {
-      if (!acc[protocol]) {
-        acc[protocol] = { users: 0, tvl: 0 };
+      if (!protocolTVL[protocol]) {
+        protocolTVL[protocol] = { tvl: 0, users: 0 };
       }
-      acc[protocol].users += 1;
-      acc[protocol].tvl += wallet.totalValue / wallet.protocols.length; // Estimate
+      protocolTVL[protocol].tvl += valuePerProtocol;
+      protocolTVL[protocol].users += 1;
     });
-    return acc;
-  }, {});
-
-  const topProtocols = Object.entries(protocolUsage)
-    .map(([name, data]: [string, any]) => ({
+  });
+  
+  // Sort protocols by TVL
+  const topProtocols = Object.entries(protocolTVL)
+    .map(([name, data]) => ({
       name,
+      totalValue: data.tvl,
       users: data.users,
-      tvl: data.tvl
+      percentage: totalValueLocked > 0 ? (data.tvl / totalValueLocked) * 100 : 0
     }))
-    .sort((a, b) => b.tvl - a.tvl)
-    .slice(0, 5);
-
-  // Recent connections (last 5)
+    .sort((a, b) => b.totalValue - a.totalValue)
+    .slice(0, 10);
+  
+  // Recent wallet connections (last 7 days)
   const recentConnections = wallets
+    .filter(wallet => {
+      const connectedDate = new Date(wallet.connectedAt);
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      return connectedDate > weekAgo;
+    })
     .sort((a, b) => new Date(b.connectedAt).getTime() - new Date(a.connectedAt).getTime())
     .slice(0, 5)
     .map(wallet => ({
-      address: `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}`,
-      timestamp: getTimeAgo(wallet.connectedAt),
-      tvl: wallet.totalValue
+      address: wallet.address,
+      connectedAt: wallet.connectedAt,
+      totalValue: wallet.totalValue,
+      protocols: wallet.protocols.length
     }));
-
-  // Mock alerts summary
-  const alertsSummary = {
-    critical: Math.floor(totalUsers * 0.06), // ~6% critical alerts
-    warning: Math.floor(totalUsers * 0.25),  // ~25% warning alerts  
-    info: Math.floor(totalUsers * 0.6)       // ~60% info alerts
-  };
-
-  // Daily activity (mock data based on time range)
-  const dailyActivity = generateDailyActivity(timeRange, totalValueLocked);
-
+  
+  // Generate daily activity (mock data based on real wallet count)
+  const dailyActivity = generateDailyActivity(totalUsers, parseInt(timeRange.replace(/\D/g, '')) || 7);
+  
+  console.log(`✅ Platform Analytics Summary:
+    - Total Users: ${totalUsers}
+    - Total Value Locked: $${totalValueLocked.toFixed(2)}
+    - Total Positions: ${totalPositions}
+    - Top Protocol: ${topProtocols[0]?.name || 'None'} ($${topProtocols[0]?.totalValue.toFixed(2) || '0'})`);
+  
   return {
-    totalUsers,
-    totalValueLocked,
-    totalPositions,
+    summary: {
+      totalUsers,
+      totalValueLocked,
+      totalPositions,
+      activeAlerts: Math.floor(totalPositions * 0.1), // Estimate 10% of positions have alerts
+      averagePortfolioValue: totalUsers > 0 ? totalValueLocked / totalUsers : 0,
+      uniqueProtocols: allProtocols.size
+    },
     topProtocols,
     recentConnections,
-    alertsSummary,
-    dailyActivity
+    dailyActivity,
+    alertsSummary: {
+      critical: Math.floor(totalPositions * 0.02), // 2% critical
+      warning: Math.floor(totalPositions * 0.05),  // 5% warning  
+      info: Math.floor(totalPositions * 0.03)      // 3% info
+    },
+    lastUpdated: new Date().toISOString()
   };
 }
 
-function getTimeAgo(dateString: string): string {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} days ago`;
-}
-
-function generateDailyActivity(timeRange: string, currentTvl: number) {
-  const days = timeRange === '24h' ? 1 : 
-               timeRange === '7d' ? 7 : 
-               timeRange === '30d' ? 30 : 90;
-  
+function generateDailyActivity(totalUsers: number, days: number) {
   const activity = [];
-  const today = new Date();
+  const baseActivity = Math.max(1, Math.floor(totalUsers * 0.7)); // 70% of users are typically active
   
-  for (let i = 0; i < days; i++) {
-    const date = new Date(today);
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date();
     date.setDate(date.getDate() - i);
     
-    // Mock growth pattern
-    const growthFactor = 1 - (i * 0.05); // Simulate decline going back in time
-    const dayTvl = currentTvl * growthFactor;
-    const newUsers = Math.floor(Math.random() * 12) + 1; // 1-12 new users per day
+    // Add some realistic variance
+    const variance = 0.3; // 30% variance
+    const dailyUsers = Math.floor(baseActivity * (1 + (Math.random() - 0.5) * variance));
     
     activity.push({
       date: date.toISOString().split('T')[0],
-      newUsers,
-      totalTvl: dayTvl
+      activeUsers: Math.max(1, dailyUsers),
+      transactions: Math.floor(dailyUsers * (2 + Math.random() * 3)), // 2-5 transactions per active user
+      totalVolume: dailyUsers * (100 + Math.random() * 500) // $100-600 per user
     });
   }
   
   return activity;
-}
-
-// 🚀 Production Implementation Notes:
-//
-// 1. USER TRACKING DATABASE:
-//    - Store wallet addresses when users connect
-//    - Track connection timestamps, last activity
-//    - Store user preferences and settings
-//
-// 2. BATCH MORALIS API CALLS:
-//    - Aggregate positions for all users
-//    - Cache results to avoid API rate limits
-//    - Update platform analytics periodically
-//
-// 3. ADMIN AUTHENTICATION:
-//    - Verify admin JWT tokens
-//    - Role-based access control
-//    - Audit log for admin actions
-//
-// 4. REAL-TIME UPDATES:
-//    - WebSocket for live platform metrics
-//    - Background jobs for data aggregation
-//    - Caching layer for performance 
+} 
