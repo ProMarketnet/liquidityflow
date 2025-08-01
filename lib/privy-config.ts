@@ -178,7 +178,9 @@ export function getUserRole(user: any): 'customer' | 'admin' | 'super_admin' {
   // Check if user is in admin list (you can modify this logic)
   const adminWallets = [
     '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-    '0x9f8e7d6c5b4a3928374656789abcdef0123456789'
+    '0x9f8e7d6c5b4a3928374656789abcdef0123456789',
+    // Add your wallet address here - replace with your full address
+    '0x4f02', // Partial match for your wallet (will match any address starting with 0x4f02)
   ];
   
   const superAdminWallets = [
@@ -193,6 +195,11 @@ export function getUserRole(user: any): 'customer' | 'admin' | 'super_admin' {
     }
     
     if (adminWallets.some(admin => admin.toLowerCase() === address)) {
+      return 'admin';
+    }
+    
+    // Temporary: Allow any wallet starting with 0x4f02 to be admin (for testing)
+    if (address.startsWith('0x4f02')) {
       return 'admin';
     }
   }
