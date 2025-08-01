@@ -81,7 +81,7 @@ export default function Home() {
               fontWeight: '600'
             }}
           >
-            🚀 Get Started
+            👀 View Wallet
           </a>
         </div>
         </div>
@@ -217,16 +217,16 @@ export default function Home() {
               textAlign: 'center'
             }}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚀</div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#22c55e', marginBottom: '1rem' }}>
-                Get Started (Launch App)
-              </h3>
-              <div style={{ color: '#cbd5e1', marginBottom: '1.5rem', textAlign: 'left' }}>
-                <div style={{ marginBottom: '0.5rem' }}>✅ Connect any wallet for read-only viewing</div>
-                <div style={{ marginBottom: '0.5rem' }}>✅ View your DeFi positions across protocols</div>
-                <div style={{ marginBottom: '0.5rem' }}>✅ Monitor portfolio health and alerts</div>
-                <div style={{ marginBottom: '0.5rem' }}>✅ Access trading links to DEXs</div>
-                <div style={{ marginBottom: '0.5rem' }}>✅ No account required</div>
-              </div>
+                             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#22c55e', marginBottom: '1rem' }}>
+                 🚀 Get Started (View Only)
+               </h3>
+               <div style={{ color: '#cbd5e1', marginBottom: '1.5rem', textAlign: 'left' }}>
+                 <div style={{ marginBottom: '0.5rem' }}>👀 <strong>VIEW ONLY:</strong> Connect wallet to see positions</div>
+                 <div style={{ marginBottom: '0.5rem' }}>📊 Monitor your DeFi portfolio health</div>
+                 <div style={{ marginBottom: '0.5rem' }}>🔗 Get trading links to DEX platforms</div>
+                 <div style={{ marginBottom: '0.5rem' }}>⚡ Instant access - no account needed</div>
+                 <div style={{ marginBottom: '0.5rem' }}>🔒 No private keys stored or required</div>
+               </div>
               <a
                 href="/onboarding-new"
                 style={{
@@ -240,7 +240,7 @@ export default function Home() {
                   fontSize: '1.1rem'
                 }}
               >
-                🚀 Launch App Now
+                                 👀 View My Wallet
               </a>
             </div>
 
@@ -253,16 +253,16 @@ export default function Home() {
               textAlign: 'center'
             }}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
-              <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626', marginBottom: '1rem' }}>
-                Admin (Portfolio Management)
-              </h3>
-              <div style={{ color: '#cbd5e1', marginBottom: '1.5rem', textAlign: 'left' }}>
-                <div style={{ marginBottom: '0.5rem' }}>🔐 Create account with email/password</div>
-                <div style={{ marginBottom: '0.5rem' }}>🔑 Manage client wallets with private keys</div>
-                <div style={{ marginBottom: '0.5rem' }}>💼 Portfolio management for multiple clients</div>
-                <div style={{ marginBottom: '0.5rem' }}>⚡ Direct trading access and execution</div>
-                <div style={{ marginBottom: '0.5rem' }}>📊 Platform-wide analytics and reporting</div>
-              </div>
+                             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626', marginBottom: '1rem' }}>
+                 🏢 Admin (Full Management + Sharing)
+               </h3>
+               <div style={{ color: '#cbd5e1', marginBottom: '1.5rem', textAlign: 'left' }}>
+                 <div style={{ marginBottom: '0.5rem' }}>🔐 <strong>FULL ACCESS:</strong> Create account to manage portfolios</div>
+                 <div style={{ marginBottom: '0.5rem' }}>🤝 Share access with team/clients</div>
+                 <div style={{ marginBottom: '0.5rem' }}>💼 Manage multiple client wallets (50+)</div>
+                 <div style={{ marginBottom: '0.5rem' }}>⚡ Execute trades directly on platform</div>
+                 <div style={{ marginBottom: '0.5rem' }}>🔑 Secure private key management</div>
+               </div>
               <a
                 href="/admin/login"
                 style={{
@@ -276,37 +276,12 @@ export default function Home() {
                   fontSize: '1.1rem'
                 }}
               >
-                🏢 Admin Access
+                                 🔐 Create Admin Account
               </a>
             </div>
           </div>
 
-          {/* Business Flow Explanation */}
-          <div style={{
-            marginTop: '3rem',
-            background: 'rgba(255,255,255,0.05)',
-            border: '2px solid rgba(255,255,255,0.1)',
-            borderRadius: '1rem',
-            padding: '2rem'
-          }}>
-            <h4 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem', textAlign: 'center' }}>
-              💼 Business Partnership Model
-            </h4>
-            <div style={{ color: '#cbd5e1', fontSize: '0.9rem', lineHeight: '1.6' }}>
-              <p style={{ marginBottom: '1rem' }}>
-                <strong style={{ color: '#22c55e' }}>Client Onboarding:</strong> ABC Company can either create an admin account 
-                and share private keys with LiquidFlow, or LiquidFlow can create the account and provide access credentials.
-              </p>
-              <p style={{ marginBottom: '1rem' }}>
-                <strong style={{ color: '#dc2626' }}>Multi-Wallet Management:</strong> LiquidFlow admins can set up access to 
-                multiple client wallets under a single admin account, managing portfolios for dozens of clients simultaneously.
-              </p>
-              <p style={{ margin: 0 }}>
-                <strong style={{ color: '#3b82f6' }}>Access Control:</strong> Each client wallet can have different permission 
-                levels (View Only, Trading Enabled, or Full Control) based on the service agreement.
-              </p>
-            </div>
-          </div>
+          
         </div>
       </section>
 
