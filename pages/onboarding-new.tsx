@@ -11,6 +11,8 @@ export default function OnboardingNew() {
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         setWalletAddress(accounts[0]);
+        // Save to localStorage for dashboard access
+        localStorage.setItem('connectedWallet', accounts[0]);
         setStep(2);
       } catch (error) {
         console.error('Error connecting wallet:', error);
