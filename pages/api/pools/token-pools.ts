@@ -1,10 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-const MORALIS_API_KEY = process.env.MORALIS_API_KEY;
-
 // Get all pools for a token on EVM chains
-async function getAllEVMTokenPools(tokenAddress: string, chain: string) {
-  if (!MORALIS_API_KEY) {
+async function getAllEVMTokenPools(tokenAddress: string, chain: string, apiKey: string) {
+  if (!apiKey) {
     return { pools: [], error: 'MORALIS_API_KEY not configured' };
   }
 
@@ -14,7 +12,7 @@ async function getAllEVMTokenPools(tokenAddress: string, chain: string) {
       `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress}/pairs?chain=${chain}&limit=50&exchange=uniswapv3`,
       {
         headers: {
-          'X-API-Key': MORALIS_API_KEY,
+          'X-API-Key': apiKey,
           'accept': 'application/json'
         }
       }
@@ -41,10 +39,10 @@ async function getAllEVMTokenPools(tokenAddress: string, chain: string) {
           : pool.token0?.address;
 
         const [tokenMetadata, pairedTokenMetadata, tokenPrice, pairedTokenPrice] = await Promise.all([
-          getTokenMetadata(tokenAddress, chain),
-          getTokenMetadata(pairedTokenAddress, chain),
-          getTokenPrice(tokenAddress, chain),
-          getTokenPrice(pairedTokenAddress, chain)
+          getTokenMetadata(tokenAddress, chain, apiKey),
+          getTokenMetadata(pairedTokenAddress, chain, apiKey),
+          getTokenPrice(tokenAddress, chain, apiKey),
+          getTokenPrice(pairedTokenAddress, chain, apiKey)
         ]);
 
         return {
@@ -98,8 +96,8 @@ async function getAllEVMTokenPools(tokenAddress: string, chain: string) {
 }
 
 // Get all pools for a token on Solana
-async function getAllSolanaTokenPools(tokenAddress: string) {
-  if (!MORALIS_API_KEY) {
+async function getAllSolanaTokenPools(tokenAddress: string, apiKey: string) {
+  if (!apiKey) {
     return { pools: [], error: 'MORALIS_API_KEY not configured' };
   }
 
@@ -109,7 +107,7 @@ async function getAllSolanaTokenPools(tokenAddress: string) {
       `https://solana-gateway.moralis.io/pairs?token_a=${tokenAddress}&limit=50`,
       {
         headers: {
-          'X-API-Key': MORALIS_API_KEY,
+          'X-API-Key': apiKey,
           'accept': 'application/json'
         }
       }
@@ -133,9 +131,9 @@ async function getAllSolanaTokenPools(tokenAddress: string) {
         const pairedTokenAddress = pool.token_b;
         
         const [tokenMetadata, pairedTokenMetadata, tokenPrice] = await Promise.all([
-          getSolanaTokenMetadata(tokenAddress),
-          getSolanaTokenMetadata(pairedTokenAddress),
-          getSolanaTokenPrice(tokenAddress)
+          getSolanaTokenMetadata(tokenAddress, apiKey),
+          getSolanaTokenMetadata(pairedTokenAddress, apiKey),
+          getSolanaTokenPrice(tokenAddress, apiKey)
         ]);
 
         const dexInfo = getDexInfo(pool.exchange);
@@ -191,13 +189,13 @@ async function getAllSolanaTokenPools(tokenAddress: string) {
 }
 
 // Helper functions
-async function getTokenMetadata(tokenAddress: string, chain: string) {
+async function getTokenMetadata(tokenAddress: string, chain: string, apiKey: string) {
   try {
     const response = await fetch(
       `https://deep-index.moralis.io/api/v2.2/erc20/metadata?chain=${chain}&addresses%5B0%5D=${tokenAddress}`,
       {
         headers: {
-          'X-API-Key': MORALIS_API_KEY!,
+          'X-API-Key': apiKey,
           'accept': 'application/json'
         }
       }
@@ -210,13 +208,13 @@ async function getTokenMetadata(tokenAddress: string, chain: string) {
   }
 }
 
-async function getTokenPrice(tokenAddress: string, chain: string) {
+async function getTokenPrice(tokenAddress: string, chain: string, apiKey: string) {
   try {
     const response = await fetch(
       `https://deep-index.moralis.io/api/v2.2/erc20/${tokenAddress}/price?chain=${chain}`,
       {
         headers: {
-          'X-API-Key': MORALIS_API_KEY!,
+          'X-API-Key': apiKey,
           'accept': 'application/json'
         }
       }
@@ -231,13 +229,13 @@ async function getTokenPrice(tokenAddress: string, chain: string) {
   }
 }
 
-async function getSolanaTokenMetadata(tokenAddress: string) {
+async function getSolanaTokenMetadata(tokenAddress: string, apiKey: string) {
   try {
     const response = await fetch(
       `https://solana-gateway.moralis.io/token/${tokenAddress}/metadata`,
       {
         headers: {
-          'X-API-Key': MORALIS_API_KEY!,
+          'X-API-Key': apiKey,
           'accept': 'application/json'
         }
       }
@@ -252,13 +250,13 @@ async function getSolanaTokenMetadata(tokenAddress: string) {
   }
 }
 
-async function getSolanaTokenPrice(tokenAddress: string) {
+async function getSolanaTokenPrice(tokenAddress: string, apiKey: string) {
   try {
     const response = await fetch(
       `https://solana-gateway.moralis.io/token/${tokenAddress}/price`,
       {
         headers: {
-          'X-API-Key': MORALIS_API_KEY!,
+          'X-API-Key': apiKey,
           'accept': 'application/json'
         }
       }
@@ -313,6 +311,20 @@ export default async function handler(
 
     console.log(`🔍 Finding ALL pools for token: ${address}`);
 
+    // Get API key inside handler (like balance API does)
+    const apiKey = process.env.MORALIS_API_KEY;
+    if (!apiKey) {
+      console.warn('⚠️ MORALIS_API_KEY not configured, returning empty result');
+      return res.status(200).json({
+        success: false,
+        error: 'MORALIS_API_KEY not configured',
+        tokenAddress: address,
+        summary: { totalPools: 0, totalLiquidity: 0, totalVolume24h: 0, chainsFound: [], dexsFound: [] },
+        poolsByDex: {},
+        allPools: []
+      });
+    }
+
     // Determine if this is an EVM or Solana address
     const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
     const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address);
@@ -327,7 +339,7 @@ export default async function handler(
       console.log(`🔗 Checking EVM chains: ${chains.join(', ')}`);
       
       const chainPromises = chains.map(async (chainId) => {
-        const result = await getAllEVMTokenPools(address, chainId);
+        const result = await getAllEVMTokenPools(address, chainId, apiKey);
         if (result.error) {
           errors.push(`${getChainName(chainId)}: ${result.error}`);
         }
@@ -340,7 +352,7 @@ export default async function handler(
     } else if (isSolanaAddress) {
       console.log('🟣 Checking Solana DEXs');
       
-      const result = await getAllSolanaTokenPools(address);
+      const result = await getAllSolanaTokenPools(address, apiKey);
       if (result.error) {
         errors.push(`Solana: ${result.error}`);
       }
