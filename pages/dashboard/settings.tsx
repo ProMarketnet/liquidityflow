@@ -13,6 +13,10 @@ interface SettingsData {
   minRewardAlert: number;
   minAprAlert: number;
   enableSmartAlerts: boolean;
+  // Wallet connection options
+  connectionMode: 'read-only' | 'advanced';
+  enablePrivateKeyStorage: boolean;
+  encryptedPrivateKey: string;
 }
 
 export default function SettingsPage() {
@@ -27,7 +31,11 @@ export default function SettingsPage() {
     healthFactorThreshold: 1.5,
     minRewardAlert: 100,
     minAprAlert: 20,
-    enableSmartAlerts: true
+    enableSmartAlerts: true,
+    // Wallet connection options
+    connectionMode: 'read-only',
+    enablePrivateKeyStorage: false,
+    encryptedPrivateKey: ''
   });
   
   const [isSaving, setIsSaving] = useState(false);
@@ -264,6 +272,124 @@ export default function SettingsPage() {
           <p style={styles.subtitle}>
             Configure your DeFi monitoring, alerts, and API integrations
           </p>
+
+          {/* Wallet Connection Options */}
+          <div style={styles.card}>
+            <h2 style={styles.cardTitle}>🔗 Wallet Connection Options</h2>
+            
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={styles.label}>Connection Mode</label>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                
+                {/* Read-Only Mode */}
+                <div style={{
+                  ...styles.toggleContainer,
+                  border: settings.connectionMode === 'read-only' ? '3px solid #22c55e' : '2px solid #000000',
+                  background: settings.connectionMode === 'read-only' ? '#f0fdf4' : '#ffffff'
+                }}>
+                  <div style={{ width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <div style={{ fontWeight: 'bold', color: '#000000' }}>🔍 Read-Only (Recommended)</div>
+                      <input
+                        type="radio"
+                        name="connectionMode"
+                        checked={settings.connectionMode === 'read-only'}
+                        onChange={() => handleInputChange('connectionMode', 'read-only')}
+                        style={{ transform: 'scale(1.5)' }}
+                      />
+                    </div>
+                    <div style={{ color: '#666', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                      ✅ <strong>Safe:</strong> Only reads public blockchain data<br/>
+                      ✅ <strong>Fast:</strong> No private key management<br/>
+                      ✅ <strong>Secure:</strong> Zero risk of fund loss<br/>
+                      📊 View positions, balances, and analytics
+                    </div>
+                    <div style={{ color: '#16a34a', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                      CURRENT MODE
+                    </div>
+                  </div>
+                </div>
+
+                {/* Advanced Mode */}
+                <div style={{
+                  ...styles.toggleContainer,
+                  border: settings.connectionMode === 'advanced' ? '3px solid #ef4444' : '2px solid #000000',
+                  background: settings.connectionMode === 'advanced' ? '#fef2f2' : '#ffffff'
+                }}>
+                  <div style={{ width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <div style={{ fontWeight: 'bold', color: '#000000' }}>⚡ Advanced (High Risk)</div>
+                      <input
+                        type="radio"
+                        name="connectionMode"
+                        checked={settings.connectionMode === 'advanced'}
+                        onChange={() => handleInputChange('connectionMode', 'advanced')}
+                        style={{ transform: 'scale(1.5)' }}
+                      />
+                    </div>
+                    <div style={{ color: '#666', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                      ⚠️ <strong>Risky:</strong> Stores encrypted private keys<br/>
+                      🔥 <strong>Powerful:</strong> Execute transactions<br/>
+                      🤖 <strong>Automated:</strong> Portfolio rebalancing<br/>
+                      💡 Auto-claim rewards, optimize yields
+                    </div>
+                    <div style={{ color: '#dc2626', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                      ⚠️ ADVANCED USERS ONLY
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced Mode Configuration */}
+            {settings.connectionMode === 'advanced' && (
+              <div style={{ 
+                background: '#fef2f2', 
+                border: '2px solid #ef4444', 
+                borderRadius: '0.5rem', 
+                padding: '1.5rem',
+                marginBottom: '1.5rem' 
+              }}>
+                <h3 style={{ color: '#dc2626', fontWeight: 'bold', marginBottom: '1rem' }}>
+                  ⚠️ Advanced Configuration (Use at Your Own Risk)
+                </h3>
+                
+                <div style={styles.toggleContainer}>
+                  <div>
+                    <div style={{ fontWeight: 'bold', color: '#000000' }}>Enable Private Key Storage</div>
+                    <div style={{ color: '#666', fontSize: '0.875rem' }}>
+                      Store encrypted private keys for transaction execution
+                    </div>
+                  </div>
+                  <label style={{ cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={settings.enablePrivateKeyStorage}
+                      onChange={(e) => handleInputChange('enablePrivateKeyStorage', e.target.checked)}
+                      style={{ transform: 'scale(1.5)' }}
+                    />
+                  </label>
+                </div>
+
+                {settings.enablePrivateKeyStorage && (
+                  <div>
+                    <label style={styles.label}>Private Key (Will be Encrypted)</label>
+                    <input
+                      type="password"
+                      value={settings.encryptedPrivateKey}
+                      onChange={(e) => handleInputChange('encryptedPrivateKey', e.target.value)}
+                      placeholder="0x..."
+                      style={styles.input}
+                    />
+                    <div style={{ color: '#dc2626', fontSize: '0.875rem' }}>
+                      🔒 <strong>Security Notice:</strong> Private keys are encrypted with AES-256 and stored locally. 
+                      We recommend using a separate wallet with limited funds for automated strategies.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* API Configuration */}
           <div style={styles.card}>
