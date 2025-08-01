@@ -9,7 +9,7 @@ export default function OnboardingNew() {
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
       try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const accounts = await (window.ethereum as any).request({ method: 'eth_requestAccounts' });
         setWalletAddress(accounts[0]);
         // Save to localStorage for dashboard access
         localStorage.setItem('connectedWallet', accounts[0]);

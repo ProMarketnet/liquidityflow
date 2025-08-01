@@ -69,7 +69,7 @@ export default function Home() {
           </div>
           
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <a href="/admin/login" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
+          <a href="/auth/admin" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
           <a
             href="/onboarding-new"
             style={{
@@ -292,21 +292,21 @@ export default function Home() {
                  <div style={{ marginBottom: '0.5rem' }}>🔑 Secure private key management</div>
                  <div style={{ marginBottom: '0.5rem' }}>📊 <strong>Platform analytics:</strong> Aggregate data & reporting</div>
                </div>
-              <a
-                href="/admin/login"
-                style={{
-                  display: 'inline-block',
-                  background: '#dc2626',
-                  color: 'white',
-                  padding: '1rem 2rem',
-                  borderRadius: '0.5rem',
-                  textDecoration: 'none',
-                  fontWeight: 'bold',
-                  fontSize: '1.1rem'
-                }}
-              >
-                                 🔐 Create Admin Account
-              </a>
+                             <a
+                 href="/auth/admin"
+                 style={{
+                   display: 'inline-block',
+                   background: '#dc2626',
+                   color: 'white',
+                   padding: '1rem 2rem',
+                   borderRadius: '0.5rem',
+                   textDecoration: 'none',
+                   fontWeight: 'bold',
+                   fontSize: '1.1rem'
+                 }}
+               >
+                 🔐 Admin Login
+               </a>
             </div>
           </div>
 

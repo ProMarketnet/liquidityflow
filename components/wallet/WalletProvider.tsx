@@ -4,9 +4,9 @@ import { ethers } from 'ethers';
 // Extend Window interface for ethereum and other wallets
 declare global {
   interface Window {
-    ethereum?: any;
-    trustWallet?: any;
-    coinbaseWalletExtension?: any;
+    ethereum?: Record<string, unknown>;
+    trustWallet?: Record<string, unknown>;
+    coinbaseWalletExtension?: Record<string, unknown>;
   }
 }
 
@@ -51,21 +51,21 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           if (!window.ethereum?.isMetaMask) {
             throw new Error('MetaMask not installed');
           }
-          provider = new ethers.BrowserProvider(window.ethereum);
+          provider = new ethers.BrowserProvider(window.ethereum as any);
           break;
         
         case 'coinbase':
           if (!window.coinbaseWalletExtension) {
             throw new Error('Coinbase Wallet not installed');
           }
-          provider = new ethers.BrowserProvider(window.coinbaseWalletExtension);
+                    provider = new ethers.BrowserProvider(window.coinbaseWalletExtension as any);
           break;
-          
+        
         case 'trust':
           if (!window.trustWallet) {
             throw new Error('Trust Wallet not installed');
           }
-          provider = new ethers.BrowserProvider(window.trustWallet);
+          provider = new ethers.BrowserProvider(window.trustWallet as any);
           break;
           
         default:
