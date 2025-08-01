@@ -208,6 +208,8 @@ export default function AdminAnalyticsPage() {
             </div>
                       <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
+            <a href="/admin/wallets" style={styles.navLink}>💳 Manage Wallets</a>
+            <a href="/admin/portfolios" style={styles.navLink}>💼 Portfolios</a>
             <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
             <select 
               value={timeRange} 

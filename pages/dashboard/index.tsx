@@ -170,6 +170,7 @@ export default function DashboardPage() {
             <a href="/dashboard/alerts" style={{ color: '#000000', textDecoration: 'none' }}>🚨 Alerts & Monitoring</a> {/* 🚨 EMERGENCY BLACK TEXT */}
             <a href="/dashboard/settings" style={{ color: '#000000', textDecoration: 'none' }}>⚙️ Settings</a> {/* 🚨 EMERGENCY BLACK TEXT */}
             <div style={{ borderLeft: '2px solid #000000', height: '20px', margin: '0 1rem' }}></div>
+            <a href="/admin/wallets" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>💳 Wallets</a>
             <a href="/admin/portfolios" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
             <a href="/admin/analytics" style={{ color: '#dc2626', textDecoration: 'none' }}>📊 Analytics</a>
             <div style={{ borderLeft: '2px solid #000000', height: '20px', margin: '0 1rem' }}></div>
