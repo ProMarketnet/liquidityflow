@@ -1,232 +1,398 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout/Layout';
 
-// Get wallet address from localStorage if available
-function getConnectedWallet() {
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('connectedWallet') || null;
-  }
-  return null;
+interface PortfolioData {
+  totalUsd: number;
+  ethBalance: number;
+  ethUsd: number;
+  tokens: Array<{
+    name: string;
+    symbol: string;
+    balance: number;
+    usdValue: number;
+    logo?: string;
+  }>;
+}
+
+interface DeFiData {
+  protocols: Array<{
+    name: string;
+    positions: Array<{
+      label: string;
+      value: number;
+    }>;
+  }>;
 }
 
 export default function DashboardPage() {
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
+  const [defiData, setDefiData] = useState<DeFiData | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [portfolioData, setPortfolioData] = useState<any>(null);
-  const [defiData, setDefiData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const wallet = getConnectedWallet();
-    setWalletAddress(wallet);
-    
-    if (wallet) {
-      loadWalletData(wallet);
-    } else {
-      setIsLoading(false);
+    if (typeof window !== 'undefined') {
+      const wallet = localStorage.getItem('connectedWallet');
+      setWalletAddress(wallet);
+      
+      if (wallet) {
+        loadDashboardData(wallet);
+      } else {
+        setIsLoading(false);
+      }
     }
   }, []);
 
-  const loadWalletData = async (address: string) => {
+  const loadDashboardData = async (address: string) => {
     setIsLoading(true);
     try {
-      // Load portfolio data
-      const portfolioRes = await fetch(`/api/wallet/portfolio?address=${address}`);
+      const [portfolioRes, defiRes] = await Promise.all([
+        fetch(`/api/wallet/portfolio?address=${address}`),
+        fetch(`/api/wallet/defi?address=${address}`)
+      ]);
+
       if (portfolioRes.ok) {
         const portfolio = await portfolioRes.json();
         setPortfolioData(portfolio);
       }
 
-      // Load DeFi data
-      const defiRes = await fetch(`/api/wallet/defi?address=${address}`);
       if (defiRes.ok) {
         const defi = await defiRes.json();
         setDefiData(defi);
       }
     } catch (error) {
-      console.error('Error loading wallet data:', error);
+      console.error('Error loading dashboard data:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // If no wallet connected, show connection prompt
+  const connectWallet = async () => {
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        const accounts = await (window.ethereum as any).request({ method: 'eth_requestAccounts' });
+        const address = accounts[0];
+        localStorage.setItem('connectedWallet', address);
+        setWalletAddress(address);
+        loadDashboardData(address);
+      } catch (error) {
+        console.error('Error connecting wallet:', error);
+      }
+    } else {
+      alert('Please install MetaMask to continue');
+    }
+  };
+
   if (!walletAddress) {
     return (
-      <Layout title="Dashboard" showSidebar={true}>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🔗</div>
-            <h2 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h2>
-            <p className="text-gray-400 mb-6">Connect your wallet to view your liquidity dashboard</p>
-            <a
-              href="/onboarding-new"
-              className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
-            >
-              Get Started
-            </a>
-          </div>
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0f172a, #1e1b4b, #581c87)',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          background: 'rgba(255,255,255,0.05)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '1rem',
+          padding: '3rem',
+          textAlign: 'center',
+          maxWidth: '500px'
+        }}>
+          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔗</div>
+          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
+            Connect Your Wallet
+          </h2>
+          <p style={{ color: '#cbd5e1', marginBottom: '2rem' }}>
+            Connect your wallet to view your dashboard and portfolio data
+          </p>
+          <button
+            onClick={connectWallet}
+            style={{
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              color: 'white',
+              padding: '1rem 2rem',
+              borderRadius: '0.5rem',
+              border: 'none',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              fontSize: '1rem'
+            }}
+          >
+            Connect Wallet
+          </button>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout title="Dashboard" showSidebar={true}>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-            <p className="text-gray-400 mt-1">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f172a, #1e1b4b, #581c87)',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      {/* Navigation */}
+      <nav style={{
+        background: 'rgba(0,0,0,0.8)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        padding: '1rem 0'
+      }}>
+        <div style={{
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: '0 1rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{
+            fontSize: '1.5rem',
+            fontWeight: 'bold',
+            background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            LiquidFlow
+          </div>
+          
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <a href="/dashboard" style={{ color: '#cbd5e1', textDecoration: 'none' }}>📊 Overview</a>
+            <a href="/dashboard/pools" style={{ color: '#cbd5e1', textDecoration: 'none' }}>💧 Liquidity Pools</a>
+            <a href="/dashboard/alerts" style={{ color: '#cbd5e1', textDecoration: 'none' }}>🚨 Alerts & Monitoring</a>
+            <a href="/dashboard/settings" style={{ color: '#cbd5e1', textDecoration: 'none' }}>⚙️ Settings</a>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div style={{ padding: '2rem 1rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          {/* Header */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+              Dashboard
+            </h1>
+            <p style={{ color: '#cbd5e1' }}>
               Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
             </p>
+            <button
+              onClick={() => loadDashboardData(walletAddress)}
+              style={{
+                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                color: 'white',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem',
+                border: 'none',
+                fontWeight: '500',
+                cursor: 'pointer',
+                marginTop: '0.5rem'
+              }}
+              disabled={isLoading}
+            >
+              {isLoading ? '🔄 Loading...' : '🔄 Refresh'}
+            </button>
           </div>
-          <button
-            onClick={() => loadWalletData(walletAddress)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            disabled={isLoading}
-          >
-            {isLoading ? '🔄 Loading...' : '🔄 Refresh'}
-          </button>
-        </div>
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse">
-                <div className="h-8 bg-white/10 rounded mb-4"></div>
-                <div className="h-6 bg-white/10 rounded mb-2"></div>
-                <div className="h-4 bg-white/10 rounded"></div>
+          {/* Stats Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '2rem'
+          }}>
+            {/* Portfolio Value */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(255,255,255,0.05))',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              borderLeft: '4px solid #10b981',
+              borderRadius: '1rem',
+              padding: '1.5rem'
+            }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💰</div>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+                ${portfolioData?.totalUsd.toFixed(2) || '0.00'}
               </div>
-            ))}
+              <div style={{ color: '#10b981' }}>Portfolio Value</div>
+            </div>
+
+            {/* ETH Balance */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(255,255,255,0.05))',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderLeft: '4px solid #3b82f6',
+              borderRadius: '1rem',
+              padding: '1.5rem'
+            }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚡</div>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+                {portfolioData?.ethBalance.toFixed(4) || '0.0000'} ETH
+              </div>
+              <div style={{ color: '#3b82f6' }}>ETH Balance</div>
+            </div>
+
+            {/* Token Holdings */}
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(255,255,255,0.05))',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
+              borderLeft: '4px solid #8b5cf6',
+              borderRadius: '1rem',
+              padding: '1.5rem'
+            }}>
+              <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🪙</div>
+              <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+                {portfolioData?.tokens.length || 0}
+              </div>
+              <div style={{ color: '#8b5cf6' }}>Token Holdings</div>
+            </div>
           </div>
-        ) : (
-          <>
-                                      {/* Portfolio Stats */}
-             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-               <div className="bg-gradient-to-br from-green-900/20 to-green-600/10 border border-green-500/20 rounded-xl p-6">
-                 <div className="text-2xl mb-2">💰</div>
-                 <div className="text-2xl font-bold text-white">
-                   ${portfolioData?.totalUsdValue?.toFixed(2) || '0.00'}
-                 </div>
-                 <div className="text-green-400 text-sm">Portfolio Value</div>
-               </div>
-               
-               <div className="bg-gradient-to-br from-blue-900/20 to-blue-600/10 border border-blue-500/20 rounded-xl p-6">
-                 <div className="text-2xl mb-2">⚡</div>
-                 <div className="text-2xl font-bold text-white">
-                   {portfolioData?.ethBalance?.toFixed(4) || '0.0000'} ETH
-                 </div>
-                 <div className="text-blue-400 text-sm">ETH Balance</div>
-               </div>
-               
-               <div className="bg-gradient-to-br from-purple-900/20 to-purple-600/10 border border-purple-500/20 rounded-xl p-6">
-                 <div className="text-2xl mb-2">🪙</div>
-                 <div className="text-2xl font-bold text-white">
-                   {portfolioData?.tokens?.length || 0}
-                 </div>
-                 <div className="text-purple-400 text-sm">Token Holdings</div>
-               </div>
-               
-               <div className="bg-gradient-to-br from-orange-900/20 to-orange-600/10 border border-orange-500/20 rounded-xl p-6">
-                 <div className="text-2xl mb-2">🏛️</div>
-                 <div className="text-2xl font-bold text-white">
-                   {defiData?.protocolCount || 0}
-                 </div>
-                 <div className="text-orange-400 text-sm">DeFi Protocols</div>
-               </div>
-             </div>
 
-                                      {/* Portfolio Overview */}
-             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-               {/* Token Holdings */}
-               <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                 <h3 className="text-xl font-semibold text-white mb-4">Top Token Holdings</h3>
-                <div className="space-y-3">
-                  {portfolioData?.tokens?.slice(0, 5).map((token: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {token.logo && (
-                          <img src={token.logo} alt={token.symbol} className="w-8 h-8 rounded-full" />
-                        )}
-                        <div>
-                          <div className="text-white font-medium">{token.symbol}</div>
-                          <div className="text-gray-400 text-sm">{token.name}</div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-white font-medium">
-                          ${token.usdValue?.toFixed(2) || '0.00'}
-                        </div>
-                        <div className="text-gray-400 text-sm">
-                          {parseFloat(token.balance).toFixed(4)} {token.symbol}
-                        </div>
-                      </div>
-                    </div>
-                  )) || (
-                    <div className="text-center py-8 text-gray-400">
-                      <div className="text-4xl mb-2">🔍</div>
-                      <p>No tokens found or still loading...</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* DeFi Positions */}
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                <h3 className="text-xl font-semibold text-white mb-4">DeFi Positions</h3>
-                <div className="space-y-3">
-                  {defiData?.protocols?.slice(0, 5).map((protocol: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+          {/* Content Sections */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: '1.5rem'
+          }}>
+            {/* Top Token Holdings */}
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '1rem',
+              padding: '1.5rem'
+            }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
+                Top Token Holdings
+              </h3>
+              {isLoading ? (
+                <div style={{ color: '#cbd5e1' }}>Loading tokens...</div>
+              ) : portfolioData?.tokens.length ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {portfolioData.tokens.slice(0, 5).map((token, i) => (
+                    <div key={i} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.75rem',
+                      background: 'rgba(255,255,255,0.03)',
+                      borderRadius: '0.5rem'
+                    }}>
                       <div>
-                        <div className="text-white font-medium">{protocol.protocol_name}</div>
-                        <div className="text-gray-400 text-sm">{protocol.position_type}</div>
+                        <div style={{ color: 'white', fontWeight: '500' }}>{token.symbol}</div>
+                        <div style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>{token.balance.toFixed(4)}</div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-white font-medium">
-                          ${protocol.usd_value?.toFixed(2) || '0.00'}
-                        </div>
-                        <div className="text-gray-400 text-sm">
-                          {protocol.tokens?.length || 0} tokens
-                        </div>
+                      <div style={{ color: '#10b981', fontWeight: '500' }}>
+                        ${token.usdValue.toFixed(2)}
                       </div>
                     </div>
-                  )) || (
-                    <div className="text-center py-8 text-gray-400">
-                      <div className="text-4xl mb-2">🏛️</div>
-                      <p>No DeFi positions found</p>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div style={{ color: '#cbd5e1' }}>No tokens found or still loading...</div>
+              )}
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Quick Actions</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <a
-                  href="/dashboard/pools"
-                  className="flex items-center justify-center p-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg text-white font-medium hover:shadow-lg transition-all"
-                >
-                  🏊 View Liquidity Pools
-                </a>
-                <a
-                  href="/dashboard/alerts"
-                  className="flex items-center justify-center p-4 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg text-white font-medium hover:shadow-lg transition-all"
-                >
-                  🔔 Manage Alerts
-                </a>
-                <a
-                  href="/dashboard/settings"
-                  className="flex items-center justify-center p-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:shadow-lg transition-all"
-                >
-                  ⚙️ Settings
-                </a>
-              </div>
+            {/* DeFi Positions */}
+            <div style={{
+              background: 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '1rem',
+              padding: '1.5rem'
+            }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
+                DeFi Positions
+              </h3>
+              {isLoading ? (
+                <div style={{ color: '#cbd5e1' }}>Loading DeFi data...</div>
+              ) : defiData?.protocols.length ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {defiData.protocols.slice(0, 5).map((protocol, i) => (
+                    <div key={i} style={{
+                      padding: '0.75rem',
+                      background: 'rgba(255,255,255,0.03)',
+                      borderRadius: '0.5rem'
+                    }}>
+                      <div style={{ color: 'white', fontWeight: '500', marginBottom: '0.5rem' }}>
+                        {protocol.name}
+                      </div>
+                      {protocol.positions.map((position, j) => (
+                        <div key={j} style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          color: '#cbd5e1',
+                          fontSize: '0.875rem'
+                        }}>
+                          <span>{position.label}</span>
+                          <span>${position.value.toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ color: '#cbd5e1' }}>No DeFi positions found</div>
+              )}
             </div>
-          </>
-        )}
+          </div>
+
+          {/* Quick Actions */}
+          <div style={{
+            marginTop: '2rem',
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '1rem',
+            padding: '1.5rem'
+          }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
+              Quick Actions
+            </h3>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <a
+                href="/dashboard/pools"
+                style={{
+                  background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  fontWeight: '500'
+                }}
+              >
+                🏊 View Liquidity Pools
+              </a>
+              <a
+                href="/dashboard/alerts"
+                style={{
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  fontWeight: '500'
+                }}
+              >
+                🔔 Manage Alerts
+              </a>
+              <a
+                href="/dashboard/settings"
+                style={{
+                  background: 'linear-gradient(135deg, #6b7280, #4b5563)',
+                  color: 'white',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  fontWeight: '500'
+                }}
+              >
+                ⚙️ Settings
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
-    </Layout>
+    </div>
   );
 }
