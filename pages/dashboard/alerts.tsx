@@ -299,9 +299,10 @@ export default function AlertsPage() {
           <nav style={styles.nav}>
             <div style={styles.navContainer}>
               <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
-              <div>
-                <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
-              </div>
+                           <div>
+               <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
+               <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
+             </div>
             </div>
           </nav>
 
@@ -333,11 +334,12 @@ export default function AlertsPage() {
         <nav style={styles.nav}>
           <div style={styles.navContainer}>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
-            <div>
-              <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
-              <a href="/dashboard/pools" style={styles.navLink}>Pools</a>
-              <a href="/dashboard/settings" style={styles.navLink}>Settings</a>
-            </div>
+                         <div>
+               <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
+               <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
+               <a href="/dashboard/pools" style={styles.navLink}>Pools</a>
+               <a href="/dashboard/settings" style={styles.navLink}>Settings</a>
+             </div>
           </div>
         </nav>
 

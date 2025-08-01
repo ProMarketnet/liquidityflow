@@ -207,6 +207,7 @@ export default function AdminAnalyticsPage() {
               🏢 LiquidFlow Admin
             </div>
             <div>
+              <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
               <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
               <select 
                 value={timeRange} 

@@ -422,6 +422,7 @@ export default function AdminPortfoliosPage() {
               🏢 LiquidFlow Admin
             </div>
             <div>
+              <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
               <a href="/admin/analytics" style={styles.navLink}>📊 Analytics</a>
               <a href="/dashboard" style={styles.navLink}>← Dashboard</a>
             </div>

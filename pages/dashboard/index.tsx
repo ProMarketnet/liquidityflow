@@ -161,6 +161,7 @@ export default function DashboardPage() {
           </div>
           
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <a href="/" style={{ color: '#16a34a', textDecoration: 'none', fontWeight: 'bold' }}>🏠 Home</a>
             <a href="/dashboard" style={{ color: '#000000', textDecoration: 'none' }}>📊 Overview</a> {/* 🚨 EMERGENCY BLACK TEXT */}
             <a href="/dashboard/pools" style={{ color: '#000000', textDecoration: 'none' }}>💧 Liquidity Pools</a> {/* 🚨 EMERGENCY BLACK TEXT */}
             <a href="/dashboard/alerts" style={{ color: '#000000', textDecoration: 'none' }}>🚨 Alerts & Monitoring</a> {/* 🚨 EMERGENCY BLACK TEXT */}
