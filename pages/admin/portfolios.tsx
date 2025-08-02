@@ -169,7 +169,7 @@ Would you like to get admin access?`);
   return (
     <>
       <Head>
-        <title>Portfolio Analytics - LiquidFlow</title>
+        <title>Portfolio Analytics - LiquidFlow v2.1</title>
       </Head>
       <div style={styles.page}>
         <div style={styles.container}>
