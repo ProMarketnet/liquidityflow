@@ -7,12 +7,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 🏢 MULTI-TENANT COMPANY MODEL
+model Company {
+  id          String   @id @default(cuid())
+  name        String   @unique  // "ABC Company", "XYZ Corp", etc.
+  slug        String   @unique  // "abc-company", "xyz-corp" for URLs
+  domain      String?  @unique  // "abc.com" for email-based assignment
+  plan        Plan     @default(BASIC)
+  
+  // Company settings
+  maxWallets  Int      @default(50)
+  maxPools    Int      @default(100)
+  isActive    Boolean  @default(true)
+  
+  // Relations
+  users       User[]
+  projects    Project[]
+  wallets     ClientWallet[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("companies")
+}
+
+// 👥 CLIENT WALLETS MANAGED BY COMPANIES
+model ClientWallet {
+  id            String   @id @default(cuid())
+  address       String
+  clientName    String
+  status        String   @default("active") // active, warning, critical
+  totalValue    Float    @default(0)
+  lastUpdated   DateTime @default(now())
+  
+  // Company association
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  
+  // Metadata
+  addedBy       String   // User ID who added this wallet
+  notes         String?
+  tags          String[] // ["high-value", "institutional", etc.]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Each company can have multiple wallets with the same address (different clients)
+  @@unique([companyId, address, clientName])
+  @@map("client_wallets")
+}
+
 model User {
   id          String   @id @default(cuid())
   email       String   @unique
   name        String?
   password    String
   plan        Plan     @default(BASIC)
+  
+  // 🏢 COMPANY ASSOCIATION
+  companyId   String?
+  company     Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  
+  // Role within the company
+  role        UserRole @default(MEMBER)
+  permissions String[] // JSON array of permissions
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -32,10 +91,13 @@ model Project {
   description     String?
   website         String?
   twitter         String?
-  telegram        String?
   
+  // User and Company Association
   userId          String
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  companyId       String?
+  company         Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   
   pools           Pool[]
   alerts          Alert[]
@@ -48,6 +110,7 @@ model Project {
   @@map("projects")
 }
 
+// 💧 POOLS WITH COMPANY ISOLATION
 model Pool {
   id              String   @id @default(cuid())
   address         String   @unique
@@ -155,10 +218,18 @@ model EmergencyAction {
   @@map("emergency_actions")
 }
 
+// 📊 ENUMS
 enum Plan {
   BASIC
   PRO
   ENTERPRISE
+}
+
+enum UserRole {
+  MEMBER      // Regular company member
+  ADMIN       // Company admin (can manage company wallets/pools)
+  OWNER       // Company owner (full access)
+  SUPER_ADMIN // LiquidFlow platform admin (access all companies)
 }
 
 enum HealthStatus {

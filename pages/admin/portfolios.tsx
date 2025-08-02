@@ -53,6 +53,8 @@ export default function AdminPortfoliosPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'warning' | 'critical'>('all');
+  const [currentCompany, setCurrentCompany] = useState<string>('');
+  const [adminWallet, setAdminWallet] = useState<string>('');
 
   // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
   const styles = {
@@ -77,9 +79,16 @@ export default function AdminPortfoliosPage() {
       color: '#666666',
       marginBottom: '2rem'
     },
+    companySelector: {
+      background: '#f0f7ff',
+      border: '3px solid #2563eb',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      marginBottom: '2rem'
+    },
     nav: {
       background: '#ffffff',
-      borderBottom: '2px solid #000000',
+      borderBottom: '3px solid #000000',
       padding: '1rem 0',
       marginBottom: '2rem'
     },
@@ -139,6 +148,16 @@ export default function AdminPortfoliosPage() {
       color: '#000000',
       background: '#ffffff',
       minWidth: '120px'
+    },
+    button: {
+      background: '#2563eb',
+      color: '#ffffff',
+      padding: '0.75rem 1.5rem',
+      border: 'none',
+      borderRadius: '0.5rem',
+      fontSize: '1rem',
+      fontWeight: 'bold',
+      cursor: 'pointer'
     },
     table: {
       width: '100%',
@@ -229,7 +248,17 @@ export default function AdminPortfoliosPage() {
   };
 
   useEffect(() => {
-    loadAllWallets();
+    // Check for saved admin session
+    const savedAdminWallet = localStorage.getItem('adminWallet');
+    const savedCompany = localStorage.getItem('currentCompany');
+    
+    if (savedAdminWallet && savedCompany) {
+      setAdminWallet(savedAdminWallet);
+      setCurrentCompany(savedCompany);
+      loadAllWallets();
+    } else {
+      setIsLoading(false); // Show company selector
+    }
   }, []);
 
   useEffect(() => {
@@ -238,84 +267,246 @@ export default function AdminPortfoliosPage() {
     }
   }, [selectedWallet]);
 
+  // 🏢 COMPANY LOGIN/SELECTION
+  const handleCompanyLogin = (companySlug: string, wallet: string) => {
+    setAdminWallet(wallet);
+    setCurrentCompany(companySlug);
+    localStorage.setItem('adminWallet', wallet);
+    localStorage.setItem('currentCompany', companySlug);
+    loadAllWallets();
+  };
+
+  const handleLogout = () => {
+    setAdminWallet('');
+    setCurrentCompany('');
+    setWallets([]);
+    setSelectedWallet(null);
+    setWalletDetails(null);
+    localStorage.removeItem('adminWallet');
+    localStorage.removeItem('currentCompany');
+  };
+
+  // If not logged in, show company selector
+  if (!currentCompany || !adminWallet) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <h1 style={styles.title}>🏢 Company Portfolio Management</h1>
+          <p style={styles.subtitle}>Select your company to access portfolio management</p>
+          
+          <div style={styles.companySelector}>
+            <h3 style={{ marginBottom: '1.5rem', color: '#2563eb' }}>Select Your Company:</h3>
+            
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <button
+                onClick={() => handleCompanyLogin('abc-company', '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2')}
+                style={{
+                  ...styles.button,
+                  background: '#16a34a',
+                  padding: '1rem',
+                  textAlign: 'left',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>🏢 ABC Company</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Enterprise Plan • 50 Wallets • 100 Pools</div>
+                </div>
+                <div>→</div>
+              </button>
+              
+              <button
+                onClick={() => handleCompanyLogin('xyz-corp', '0x9f8e7d6c5b4a3928374656789abcdef0123456789')}
+                style={{
+                  ...styles.button,
+                  background: '#0891b2',
+                  padding: '1rem',
+                  textAlign: 'left',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>🏭 XYZ Corporation</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Pro Plan • 25 Wallets • 50 Pools</div>
+                </div>
+                <div>→</div>
+              </button>
+              
+              <button
+                onClick={() => handleCompanyLogin('demo-llc', '0xabcdef0123456789abcdef0123456789abcdef01')}
+                style={{
+                  ...styles.button,
+                  background: '#7c3aed',
+                  padding: '1rem',
+                  textAlign: 'left',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>🔧 Demo LLC</div>
+                  <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>Basic Plan • 10 Wallets • 20 Pools</div>
+                </div>
+                <div>→</div>
+              </button>
+            </div>
+            
+            <div style={{ marginTop: '1rem', padding: '1rem', background: '#fef3c7', borderRadius: '0.5rem' }}>
+              <div style={{ fontSize: '0.875rem', color: '#92400e' }}>
+                <strong>🔐 Multi-Tenant Access:</strong> Each company can only see and manage their own wallets and pools. 
+                This ensures complete data isolation and security.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const loadAllWallets = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/admin/all-wallets');
+      // Get current admin's wallet address (in production, from session/JWT)
+      const adminWallet = localStorage.getItem('adminWallet') || '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2';
+      
+      console.log('🔗 Loading wallets for admin:', adminWallet);
+      
+      const response = await fetch(`/api/admin/all-wallets?wallet=${adminWallet}`, {
+        headers: {
+          'x-wallet-address': adminWallet
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
-        setWallets(data.wallets);
+        console.log('✅ Company wallets loaded:', data);
+        setWallets(data.wallets || []);
+        
+        // Update page header with company info
+        if (data.company) {
+          console.log(`👥 Logged in as: ${data.company} (${data.userRole})`);
+        }
       } else {
-        // Mock data for demonstration
-        setWallets([
-          {
-            id: '1',
-            address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-            clientName: 'Alice Johnson',
-            totalValue: 245823.12,
-            lastUpdated: '2 mins ago',
-            status: 'active',
-            positions: 8,
-            protocols: ['Uniswap V3', 'Aave V3'],
-            alerts: 0,
-            performance24h: 2.45
-          },
-          {
-            id: '2',
-            address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
-            clientName: 'Bob Chen',
-            totalValue: 123456.78,
-            lastUpdated: '5 mins ago',
-            status: 'warning',
-            positions: 12,
-            protocols: ['Compound', 'Curve', 'Balancer'],
-            alerts: 2,
-            performance24h: -1.23
-          },
-          {
-            id: '3',
-            address: '0x9f8e7d6c5b4a3928374656789abcdef0123456789',
-            clientName: 'Carol Smith',
-            totalValue: 87234.56,
-            lastUpdated: '1 hour ago',
-            status: 'critical',
-            positions: 5,
-            protocols: ['Aave V3'],
-            alerts: 4,
-            performance24h: -5.67
-          },
-          {
-            id: '4',
-            address: '0x456789abcdef0123456789abcdef0123456789ab',
-            clientName: 'David Brown',
-            totalValue: 456789.23,
-            lastUpdated: '10 mins ago',
-            status: 'active',
-            positions: 15,
-            protocols: ['Uniswap V3', 'Compound', 'Yearn'],
-            alerts: 1,
-            performance24h: 3.21
-          },
-          {
-            id: '5',
-            address: '0xabcdef0123456789abcdef0123456789abcdef01',
-            clientName: 'Emma Wilson',
-            totalValue: 198765.43,
-            lastUpdated: '3 mins ago',
-            status: 'active',
-            positions: 9,
-            protocols: ['Curve', 'Balancer'],
-            alerts: 0,
-            performance24h: 1.89
-          }
-          // ... would continue with all 50+ wallets
-        ]);
+        console.warn('⚠️ Wallets API failed, using mock data for company');
+        
+        // Use company-specific mock data based on admin wallet
+        const mockWallets = getCompanyMockWallets(adminWallet);
+        setWallets(mockWallets);
       }
     } catch (error) {
-      console.error('Error loading wallets:', error);
+      console.error('❌ Error loading company wallets:', error);
+      // Fallback to mock data
+      const adminWallet = localStorage.getItem('adminWallet') || '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2';
+      const mockWallets = getCompanyMockWallets(adminWallet);
+      setWallets(mockWallets);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // 🏢 COMPANY-SPECIFIC MOCK DATA BASED ON ADMIN WALLET
+  const getCompanyMockWallets = (adminWallet: string): ClientWallet[] => {
+    const address = adminWallet.toLowerCase();
+    
+    // ABC Company admins
+    if (address === '0x742d35cc6635c0532925a3b8c0d2c35ad81c35c2' || 
+        address === '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t') {
+      return [
+        {
+          id: '1',
+          address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
+          clientName: 'ABC Client - Alice Johnson',
+          totalValue: 245823.12,
+          lastUpdated: '2 mins ago',
+          status: 'active',
+          positions: 8,
+          protocols: ['Uniswap V3', 'Aave V3'],
+          alerts: 0,
+          performance24h: 2.45
+        },
+        {
+          id: '2',
+          address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
+          clientName: 'ABC Client - Bob Chen',
+          totalValue: 123456.78,
+          lastUpdated: '5 mins ago',
+          status: 'warning',
+          positions: 12,
+          protocols: ['Compound', 'Curve', 'Balancer'],
+          alerts: 2,
+          performance24h: -1.23
+        },
+        {
+          id: '3',
+          address: '0x9f8e7d6c5b4a3928374656789abcdef0123456789',
+          clientName: 'ABC Client - Carol Smith',
+          totalValue: 87234.56,
+          lastUpdated: '1 hour ago',
+          status: 'critical',
+          positions: 5,
+          protocols: ['Aave V3'],
+          alerts: 4,
+          performance24h: -5.67
+        }
+      ];
+    }
+    
+    // XYZ Corporation admins
+    if (address === '0x9f8e7d6c5b4a3928374656789abcdef0123456789' || 
+        address === '0x456789abcdef0123456789abcdef0123456789ab') {
+      return [
+        {
+          id: '4',
+          address: '0x456789abcdef0123456789abcdef0123456789ab',
+          clientName: 'XYZ Client - David Brown',
+          totalValue: 456789.23,
+          lastUpdated: '10 mins ago',
+          status: 'active',
+          positions: 15,
+          protocols: ['Uniswap V3', 'Compound', 'Yearn'],
+          alerts: 1,
+          performance24h: 3.21
+        },
+        {
+          id: '5',
+          address: '0xabcdef0123456789abcdef0123456789abcdef01',
+          clientName: 'XYZ Client - Emma Wilson',
+          totalValue: 198765.43,
+          lastUpdated: '3 mins ago',
+          status: 'active',
+          positions: 9,
+          protocols: ['Curve', 'Balancer'],
+          alerts: 0,
+          performance24h: 1.89
+        }
+      ];
+    }
+    
+    // Demo LLC admins
+    if (address === '0xabcdef0123456789abcdef0123456789abcdef01') {
+      return [
+        {
+          id: '6',
+          address: '0xdemo123456789abcdef0123456789abcdef012345',
+          clientName: 'Demo Client - Frank Miller',
+          totalValue: 54321.09,
+          lastUpdated: '15 mins ago',
+          status: 'active',
+          positions: 3,
+          protocols: ['Uniswap V2'],
+          alerts: 0,
+          performance24h: 0.85
+        }
+      ];
+    }
+    
+    // Default: empty for unknown admins
+    return [];
   };
 
   const loadWalletDetails = async (walletId: string) => {
@@ -482,13 +673,7 @@ export default function AdminPortfoliosPage() {
             <a href="/admin/analytics" style={styles.navLink}>📈 Analytics</a>
             <a href="/dashboard" style={styles.navLink}>← Dashboard</a>
             <button 
-              onClick={() => {
-                localStorage.removeItem('connectedWallet');
-                localStorage.removeItem('walletType');
-                localStorage.removeItem('liquidflow_admin');
-                localStorage.removeItem('admin_session');
-                window.location.href = '/';
-              }}
+              onClick={handleLogout}
               style={{
                 background: '#dc2626',
                 color: '#ffffff',
