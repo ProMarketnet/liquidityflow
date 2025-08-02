@@ -38,7 +38,7 @@ export default function PortfoliosPage() {
     }
   }, []);
 
-  const loadPoolsFromWallets = () => {
+  const loadPoolsFromWallets = async () => {
     setIsLoading(true);
     try {
       // Load wallets from localStorage (same source as Wallet Management)
@@ -49,40 +49,78 @@ export default function PortfoliosPage() {
         wallets = JSON.parse(savedWallets);
       }
 
-      // Generate pool data for each wallet
-      const poolsData: PoolData[] = wallets.map((wallet, index) => {
-        // Generate realistic pool data based on wallet
-        const protocols = ['Uniswap V3', 'Raydium', 'Aave V3', 'Compound', 'SushiSwap', 'PancakeSwap'];
-        const pairs = ['ETH/USDC', 'SOL/USDC', 'WBTC/ETH', 'USDT/USDC', 'AVAX/USDT', 'MATIC/ETH'];
-        const statuses: ('HEALTHY' | 'WARNING' | 'CRITICAL')[] = ['HEALTHY', 'HEALTHY', 'HEALTHY', 'WARNING', 'CRITICAL'];
-        
-        return {
+      if (wallets.length === 0) {
+        setPools([]);
+        return;
+      }
+
+      console.log(`🔍 Fetching real pool data for ${wallets.length} wallets via Moralis API`);
+
+      // Call our new API endpoint to get real Moralis data
+      const response = await fetch('/api/admin/wallet-pools', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallets: wallets.map(wallet => ({
+            address: wallet.address,
+            clientName: wallet.clientName
+          }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && Array.isArray(data.pools)) {
+        console.log(`✅ Received ${data.pools.length} real pools from Moralis API`);
+        setPools(data.pools);
+      } else {
+        console.warn('API returned no pools, falling back to placeholder data');
+        // Fallback to generate basic placeholder data if no real pools found
+        const fallbackPools: PoolData[] = wallets.map((wallet, index) => ({
           id: wallet.id,
           clientName: wallet.clientName,
           address: wallet.address,
-          protocol: protocols[index % protocols.length],
-          pair: pairs[index % pairs.length],
-          totalValue: wallet.totalValue > 0 ? wallet.totalValue : Math.random() * 100000 + 10000,
-          change24h: (Math.random() - 0.5) * 10, // Random between -5% and +5%
-          status: statuses[index % statuses.length],
-          pairAddress: generateMockPairAddress(wallet.address, index)
-        };
-      });
+          protocol: 'No DeFi Positions',
+          pair: 'Wallet Analysis',
+          totalValue: wallet.totalValue || 0,
+          change24h: 0,
+          status: 'HEALTHY' as const,
+          pairAddress: wallet.address
+        }));
+        setPools(fallbackPools);
+      }
 
-      setPools(poolsData);
     } catch (error) {
-      console.error('Error loading pools from wallets:', error);
-      setPools([]);
+      console.error('Error loading real pool data:', error);
+      
+      // Fallback to localStorage wallets on error
+      const savedWallets = localStorage.getItem('managedWallets');
+      if (savedWallets) {
+        const wallets: ManagedWallet[] = JSON.parse(savedWallets);
+        const fallbackPools: PoolData[] = wallets.map((wallet, index) => ({
+          id: wallet.id,
+          clientName: wallet.clientName,
+          address: wallet.address,
+          protocol: 'API Error - Retry Later',
+          pair: 'Unable to fetch',
+          totalValue: wallet.totalValue || 0,
+          change24h: 0,
+          status: 'WARNING' as const,
+          pairAddress: wallet.address
+        }));
+        setPools(fallbackPools);
+      } else {
+        setPools([]);
+      }
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const generateMockPairAddress = (walletAddress: string, index: number): string => {
-    // Generate a mock pair address based on wallet address
-    const base = walletAddress.substring(0, 10);
-    const suffix = (1000 + index).toString();
-    return base + suffix.padStart(32, '0');
   };
 
   const handleAuthenticatedAction = (actionName: string, action: () => void) => {
@@ -204,90 +242,42 @@ export default function PortfoliosPage() {
           
           {/* Header */}
           <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{ 
-              fontSize: '2rem', 
-              fontWeight: 'bold', 
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1f2937' }}>
               Active Pairs / Pools
             </h1>
-            <p style={{ 
-              color: '#6b7280', 
-              fontSize: '1.1rem'
-            }}>
+            <p style={{ color: '#6b7280' }}>
               Manage and monitor liquidity pools from tracked wallet addresses
             </p>
           </div>
 
           {/* Quick Access Cards */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-            gap: '1.5rem',
-            marginBottom: '2rem'
-          }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
             <a href="/admin/wallets" style={{ textDecoration: 'none' }}>
-              <div style={{ 
-                background: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '0.75rem',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                border: '2px solid #f3f4f6',
-                transition: 'all 0.2s',
-                cursor: 'pointer'
-              }}>
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💳</div>
-                <h3 style={{ color: '#1f2937', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Wallet Management</h3>
-                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Add, remove, and manage all client wallets with different access levels</p>
+              <div style={{ background: '#ffffff', borderRadius: '0.75rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', transition: 'all 0.2s', cursor: 'pointer' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>💳</div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>Wallet Management</h3>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Add, remove, and manage all client wallets with different access levels</p>
               </div>
             </a>
-
             <a href="/admin/reports" style={{ textDecoration: 'none' }}>
-              <div style={{ 
-                background: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '0.75rem',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                border: '2px solid #f3f4f6',
-                transition: 'all 0.2s',
-                cursor: 'pointer'
-              }}>
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📊</div>
-                <h3 style={{ color: '#1f2937', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Trading Reports</h3>
-                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Generate comprehensive P&L, transfer tracking, and wallet balance reports</p>
+              <div style={{ background: '#ffffff', borderRadius: '0.75rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', transition: 'all 0.2s', cursor: 'pointer' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📊</div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>Trading Reports</h3>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Generate comprehensive P&L, transfer tracking, and wallet balance reports</p>
               </div>
             </a>
-
             <a href="/admin/analytics" style={{ textDecoration: 'none' }}>
-              <div style={{ 
-                background: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '0.75rem',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                border: '2px solid #f3f4f6',
-                transition: 'all 0.2s',
-                cursor: 'pointer'
-              }}>
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📈</div>
-                <h3 style={{ color: '#1f2937', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Platform Analytics</h3>
-                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>View comprehensive platform analytics and performance metrics</p>
+              <div style={{ background: '#ffffff', borderRadius: '0.75rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', transition: 'all 0.2s', cursor: 'pointer' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📈</div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>Platform Analytics</h3>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>View comprehensive platform analytics and performance metrics</p>
               </div>
             </a>
-
             <a href="/dashboard/pools" style={{ textDecoration: 'none' }}>
-              <div style={{ 
-                background: '#ffffff',
-                padding: '1.5rem',
-                borderRadius: '0.75rem',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                border: '2px solid #f3f4f6',
-                transition: 'all 0.2s',
-                cursor: 'pointer'
-              }}>
-                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔍</div>
-                <h3 style={{ color: '#1f2937', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Pool Lookup</h3>
-                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Look up any DEX pair on any DeFi protocol across all chains</p>
+              <div style={{ background: '#ffffff', borderRadius: '0.75rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', transition: 'all 0.2s', cursor: 'pointer' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🔍</div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1f2937' }}>Pool Lookup</h3>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Look up any DEX pair on any DeFi protocol across all chains</p>
               </div>
             </a>
           </div>
@@ -295,7 +285,28 @@ export default function PortfoliosPage() {
           {/* Active Pairs/Pools Table */}
           <div style={{ background: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
             <div style={{ padding: '1.5rem', borderBottom: '1px solid #e5e7eb' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#1f2937' }}>💧 Active Pairs / Pools</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#1f2937' }}>💧 Active Pairs / Pools</h2>
+                <button
+                  onClick={loadPoolsFromWallets}
+                  disabled={isLoading}
+                  style={{
+                    background: isLoading ? '#9ca3af' : '#3b82f6',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  {isLoading ? '🔄 Loading Moralis Data...' : '🔄 Refresh Pool Data'}
+                </button>
+              </div>
             </div>
 
             <div style={{ overflowX: 'auto' }}>
@@ -404,6 +415,60 @@ export default function PortfoliosPage() {
               </table>
             </div>
           </div>
+
+          {/* Loading State */}
+          {isLoading && (
+            <div style={{ 
+              background: '#ffffff', 
+              borderRadius: '0.5rem', 
+              padding: '3rem', 
+              textAlign: 'center',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              marginTop: '2rem'
+            }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔄</div>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#1f2937' }}>
+                Loading Real Pool Data...
+              </h3>
+              <p style={{ color: '#6b7280' }}>
+                Fetching DeFi positions from Moralis API across all supported chains
+              </p>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && pools.length === 0 && (
+            <div style={{ 
+              background: '#ffffff', 
+              borderRadius: '0.5rem', 
+              padding: '3rem', 
+              textAlign: 'center',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              marginTop: '2rem'
+            }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💧</div>
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#1f2937' }}>
+                No Active Pools Found
+              </h3>
+              <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+                Add wallet addresses in Wallet Management to see their DeFi positions
+              </p>
+              <a 
+                href="/admin/wallets"
+                style={{
+                  background: '#3b82f6',
+                  color: '#ffffff',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  textDecoration: 'none',
+                  fontWeight: '600',
+                  display: 'inline-block'
+                }}
+              >
+                + Add Wallets
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </>
