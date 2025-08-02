@@ -168,13 +168,102 @@ const Pools = () => {
   const loadDeFiPositions = async (address: string) => {
     console.log('🔍🔍🔍 === SMART ADDRESS DETECTION STARTED ===');
     console.log('🔍 Input address:', address);
-    console.log('🔍 Will detect: Token → Find trading pools | Pool → Show pool data | Wallet → Show DeFi positions');
     
     setPoolsData(prev => ({ ...prev, isLoading: true, error: null }));
     setHasSearched(true);
     
     try {
       console.log('🔍 Loading data for address:', address);
+      
+      // 🚀 STEP 0: Check if we have stored chain data for faster lookup
+      const storedWallets = typeof window !== 'undefined' ? localStorage.getItem('managedWallets') : null;
+      let knownChains: string[] = [];
+      let primaryChain: string | null = null;
+      
+      if (storedWallets) {
+        try {
+          const wallets = JSON.parse(storedWallets);
+          const matchingWallet = wallets.find((w: any) => w.address.toLowerCase() === address.toLowerCase());
+          
+          if (matchingWallet && matchingWallet.supportedChains?.length > 0) {
+            knownChains = matchingWallet.supportedChains;
+            primaryChain = matchingWallet.primaryChain;
+            console.log(`🎯 FOUND STORED CHAIN DATA! Primary: ${primaryChain}, Supported: ${knownChains.join(', ')}`);
+          }
+        } catch (parseError) {
+          console.warn('Error parsing stored wallet data:', parseError);
+        }
+      }
+      
+      // 🎯 FAST PATH: If we know the chains, try them first
+      if (knownChains.length > 0) {
+        console.log('🚀 FAST PATH: Using stored chain data for targeted lookup...');
+        
+        // Start with primary chain, then try other known chains
+        const orderedChains = primaryChain 
+          ? [primaryChain, ...knownChains.filter(c => c !== primaryChain)]
+          : knownChains;
+          
+        for (const chain of orderedChains) {
+          try {
+            console.log(`🎯 Trying known chain: ${chain}`);
+            const pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
+            
+            if (pairResponse.ok) {
+              const pairData = await pairResponse.json();
+              
+              if (pairData.success && (pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool)) {
+                console.log(`✅ FAST LOOKUP SUCCESS on ${chain.toUpperCase()}!`, pairData);
+                
+                const poolInfo = pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool || pairData;
+                const protocol = poolInfo.dex || poolInfo.protocol || 'Unknown DEX';
+                const poolChain = poolInfo.chain || chain;
+                
+                const protocolName = `${protocol} (${poolChain})`;
+                const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+                
+                protocolPositions[protocolName] = [{
+                  position_type: 'liquidity_pool',
+                  position_id: address,
+                  position_token_data: [
+                    { symbol: poolInfo.baseToken?.symbol || poolInfo.token0?.symbol || 'TOKEN0' },
+                    { symbol: poolInfo.quoteToken?.symbol || poolInfo.token1?.symbol || 'TOKEN1' }
+                  ],
+                  total_usd_value: parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0'),
+                  apr: poolInfo.apr || poolInfo.apy,
+                  rawData: poolInfo
+                }];
+                
+                const totalValue = parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0');
+                
+                setPoolsData({
+                  summary: {
+                    total_usd_value: totalValue,
+                    active_protocols: [{
+                      protocol_name: protocolName,
+                      protocol_id: protocol.toLowerCase(),
+                      total_usd_value: totalValue,
+                      relative_portfolio_percentage: 100
+                    }]
+                  },
+                  protocolPositions,
+                  isLoading: false,
+                  error: null
+                });
+                
+                console.log(`🎯 FAST PATH SUCCESS: Found on ${chain.toUpperCase()} using stored data!`);
+                return;
+              }
+            }
+          } catch (chainError) {
+            console.warn(`⚠️ Fast lookup failed on ${chain}:`, chainError);
+          }
+        }
+        
+        console.log('⚠️ Fast path didn\'t find pool, falling back to comprehensive search...');
+      }
+      
+      console.log('🔍 Will detect: Token → Find trading pools | Pool → Show pool data | Wallet → Show DeFi positions');
       
       // STEP 1: PRIORITY - Try Moralis Token Pools API (most reliable for tokens like WXM)
       console.log('🎯 STEP 1: Checking if this is a TOKEN with trading pools...');
