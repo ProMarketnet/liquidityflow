@@ -149,64 +149,69 @@ const Pools = () => {
       
       // Step 1: Try DexScreener-based token pools API first (no API key needed)
       console.log('🔎 Trying DexScreener token pools search...');
-      let dexScreenerResponse = await fetch(`/api/pools/dex-screener-all-pools?address=${address}`);
       
-      if (dexScreenerResponse.ok) {
-        const dexScreenerData = await dexScreenerResponse.json();
+      try {
+        let dexScreenerResponse = await fetch(`/api/pools/dex-screener-all-pools?address=${address}`);
         
-        if (dexScreenerData.success && dexScreenerData.allPools && dexScreenerData.allPools.length > 0) {
-          console.log(`✅ DexScreener found ${dexScreenerData.allPools.length} pools across ${dexScreenerData.summary.chainsFound.length} chains`);
+        if (dexScreenerResponse.ok) {
+          const dexScreenerData = await dexScreenerResponse.json();
           
-          // Process multiple pools data
-          const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
-          let totalValue = 0;
-          
-          dexScreenerData.allPools.forEach((pool: any) => {
-            const protocolName = `${pool.dex} (${pool.chain})`;
+          if (dexScreenerData.success && dexScreenerData.allPools && dexScreenerData.allPools.length > 0) {
+            console.log(`✅ DexScreener found ${dexScreenerData.allPools.length} pools across ${dexScreenerData.summary.chainsFound.length} chains`);
             
-            if (!protocolPositions[protocolName]) {
-              protocolPositions[protocolName] = [];
-            }
+            // Process multiple pools data
+            const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+            let totalValue = 0;
             
-            const poolValue = parseFloat(pool.liquidity || '0');
-            totalValue += poolValue;
-            
-            protocolPositions[protocolName].push({
-              position_type: 'liquidity_pool',
-              position_id: pool.pairAddress || pool.address,
-              position_token_data: [
-                { symbol: pool.baseToken?.symbol || 'TOKEN0' },
-                { symbol: pool.pairedToken?.symbol || pool.quoteToken?.symbol || 'TOKEN1' }
-              ],
-              total_usd_value: poolValue,
-              apr: pool.apr || pool.apy,
-              rawData: pool
+            dexScreenerData.allPools.forEach((pool: any) => {
+              const protocolName = `${pool.dex} (${pool.chain})`;
+              
+              if (!protocolPositions[protocolName]) {
+                protocolPositions[protocolName] = [];
+              }
+              
+              const poolValue = parseFloat(pool.liquidity || '0');
+              totalValue += poolValue;
+              
+              protocolPositions[protocolName].push({
+                position_type: 'liquidity_pool',
+                position_id: pool.pairAddress || pool.address,
+                position_token_data: [
+                  { symbol: pool.baseToken?.symbol || 'TOKEN0' },
+                  { symbol: pool.pairedToken?.symbol || pool.quoteToken?.symbol || 'TOKEN1' }
+                ],
+                total_usd_value: poolValue,
+                apr: pool.apr || pool.apy,
+                rawData: pool
+              });
             });
-          });
-          
-          // Create summary
-          const activeProtocols = Object.entries(protocolPositions).map(([name, positions]) => {
-            const protocolValue = positions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0);
-            return {
-              protocol_name: name,
-              protocol_id: name.toLowerCase().replace(/\s+/g, '-'),
-              total_usd_value: protocolValue,
-              relative_portfolio_percentage: totalValue > 0 ? (protocolValue / totalValue) * 100 : 0
-            };
-          });
-          
-          setPoolsData({
-            summary: {
-              total_usd_value: totalValue,
-              active_protocols: activeProtocols
-            },
-            protocolPositions,
-            isLoading: false,
-            error: null
-          });
-          
-          return;
+            
+            // Create summary
+            const activeProtocols = Object.entries(protocolPositions).map(([name, positions]) => {
+              const protocolValue = positions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0);
+              return {
+                protocol_name: name,
+                protocol_id: name.toLowerCase().replace(/\s+/g, '-'),
+                total_usd_value: protocolValue,
+                relative_portfolio_percentage: totalValue > 0 ? (protocolValue / totalValue) * 100 : 0
+              };
+            });
+            
+            setPoolsData({
+              summary: {
+                total_usd_value: totalValue,
+                active_protocols: activeProtocols
+              },
+              protocolPositions,
+              isLoading: false,
+              error: null
+            });
+            
+            return;
+          }
         }
+      } catch (error) {
+        console.warn('⚠️ DexScreener API failed:', error);
       }
       
       // Step 2: Try specific pair lookup (for pool/pair addresses)
@@ -214,55 +219,59 @@ const Pools = () => {
       const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
       const chain = isEVMAddress ? 'eth' : 'solana';
       
-      let pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
-      let pairData;
-      
-              if (pairResponse.ok) {
-        pairData = await pairResponse.json();
-        console.log('📊 Pair data received:', pairData);
+      try {
+        let pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
+        let pairData;
         
-        // Check if this is pair/pool data and process it
-        if (pairData.success && (pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool)) {
-          console.log('🏊‍♂️ Processing specific pair/pool data...');
+        if (pairResponse.ok) {
+          pairData = await pairResponse.json();
+          console.log('📊 Pair data received:', pairData);
           
-          const specificPairData = pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool || pairData;
-          const protocol = specificPairData.dex || specificPairData.protocol || 'Unknown DEX';
-          const pairChain = specificPairData.chain || (address.startsWith('0x') ? 'Ethereum' : 'Solana');
-          
-          const protocolName = `${protocol} (${pairChain})`;
-          const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
-          
-          protocolPositions[protocolName] = [{
-            position_type: 'liquidity_pool',
-            position_id: address,
-            position_token_data: [
-              { symbol: specificPairData.token0?.symbol || specificPairData.baseToken?.symbol || 'TOKEN0' },
-              { symbol: specificPairData.token1?.symbol || specificPairData.quoteToken?.symbol || 'TOKEN1' }
-            ],
-            total_usd_value: parseFloat(specificPairData.liquidity || specificPairData.liquidityUSD || specificPairData.tvl || '0'),
-            apr: specificPairData.apr || specificPairData.apy,
-            rawData: specificPairData
-          }];
-          
-          const totalValue = parseFloat(specificPairData.liquidity || specificPairData.liquidityUSD || specificPairData.tvl || '0');
-          
-          setPoolsData({
-            summary: {
-              total_usd_value: totalValue,
-              active_protocols: [{
-                protocol_name: protocolName,
-                protocol_id: protocol.toLowerCase(),
+          // Check if this is pair/pool data and process it
+          if (pairData.success && (pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool)) {
+            console.log('🏊‍♂️ Processing specific pair/pool data...');
+            
+            const specificPairData = pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool || pairData;
+            const protocol = specificPairData.dex || specificPairData.protocol || 'Unknown DEX';
+            const pairChain = specificPairData.chain || (address.startsWith('0x') ? 'Ethereum' : 'Solana');
+            
+            const protocolName = `${protocol} (${pairChain})`;
+            const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+            
+            protocolPositions[protocolName] = [{
+              position_type: 'liquidity_pool',
+              position_id: address,
+              position_token_data: [
+                { symbol: specificPairData.token0?.symbol || specificPairData.baseToken?.symbol || 'TOKEN0' },
+                { symbol: specificPairData.token1?.symbol || specificPairData.quoteToken?.symbol || 'TOKEN1' }
+              ],
+              total_usd_value: parseFloat(specificPairData.liquidity || specificPairData.liquidityUSD || specificPairData.tvl || '0'),
+              apr: specificPairData.apr || specificPairData.apy,
+              rawData: specificPairData
+            }];
+            
+            const totalValue = parseFloat(specificPairData.liquidity || specificPairData.liquidityUSD || specificPairData.tvl || '0');
+            
+            setPoolsData({
+              summary: {
                 total_usd_value: totalValue,
-                relative_portfolio_percentage: 100
-              }]
-            },
-            protocolPositions,
-            isLoading: false,
-            error: null
-          });
-          
-          return;
+                active_protocols: [{
+                  protocol_name: protocolName,
+                  protocol_id: protocol.toLowerCase(),
+                  total_usd_value: totalValue,
+                  relative_portfolio_percentage: 100
+                }]
+              },
+              protocolPositions,
+              isLoading: false,
+              error: null
+            });
+            
+            return;
+          }
         }
+      } catch (error) {
+        console.warn('⚠️ Pair lookup API failed:', error);
       }
       
       // Step 3: Try comprehensive token pools API (requires Moralis)
@@ -328,59 +337,74 @@ const Pools = () => {
       
       // Step 4: Final fallback to wallet DeFi positions
       console.log('🔄 Trying as wallet address...');
-      const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
-      let walletData: any;
       
-      if (!walletResponse.ok) {
-        throw new Error(`API returned ${walletResponse?.status}: ${walletResponse?.statusText || 'Unknown error'}`);
-      }
-      
-      walletData = await walletResponse.json();
-      console.log('📊 Wallet data received:', walletData);
-      
-      // Process the data based on type
-      const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
-      
-      if (walletData.positions && Array.isArray(walletData.positions)) {
-        walletData.positions.forEach((pos: any) => {
-          const protocolName = `${pos.protocol} (${pos.chain})`;
+      try {
+        const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
+        
+        if (!walletResponse.ok) {
+          console.warn(`⚠️ Wallet DeFi API returned ${walletResponse.status}: ${walletResponse.statusText}`);
+        } else {
+          const walletData = await walletResponse.json();
+          console.log('📊 Wallet data received:', walletData);
           
-          if (!protocolPositions[protocolName]) {
-            protocolPositions[protocolName] = [];
+          // Process the data based on type
+          const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+          
+          if (walletData.positions && Array.isArray(walletData.positions)) {
+            walletData.positions.forEach((pos: any) => {
+              const protocolName = `${pos.protocol} (${pos.chain})`;
+              
+              if (!protocolPositions[protocolName]) {
+                protocolPositions[protocolName] = [];
+              }
+              
+              protocolPositions[protocolName].push({
+                position_type: pos.position_type,
+                position_id: pos.position_id,
+                position_token_data: pos.position_token_data,
+                total_usd_value: pos.total_usd_value,
+                apr: pos.apr,
+                rawData: pos
+              });
+            });
           }
           
-          protocolPositions[protocolName].push({
-            position_type: pos.position_type,
-            position_id: pos.position_id,
-            position_token_data: pos.position_token_data,
-            total_usd_value: pos.total_usd_value,
-            apr: pos.apr,
-            rawData: pos
+          setPoolsData({
+            summary: {
+              total_usd_value: walletData.totalValue || 0,
+              active_protocols: walletData.protocolBreakdown ? Object.entries(walletData.protocolBreakdown).map(([name, value]) => ({
+                protocol_name: name,
+                protocol_id: name.toLowerCase(),
+                total_usd_value: value as number,
+                relative_portfolio_percentage: walletData.totalValue > 0 ? ((value as number) / walletData.totalValue) * 100 : 0
+              })) : []
+            },
+            protocolPositions,
+            isLoading: false,
+            error: null
           });
-        });
+          
+          return;
+        }
+      } catch (error) {
+        console.warn('⚠️ Wallet DeFi API failed:', error);
       }
-      
+
+      // If all APIs failed, show helpful message instead of error
+      console.log('⚠️ All APIs failed, showing helpful message');
       setPoolsData({
-        summary: {
-          total_usd_value: walletData.totalValue || 0,
-          active_protocols: walletData.protocolBreakdown ? Object.entries(walletData.protocolBreakdown).map(([name, value]) => ({
-            protocol_name: name,
-            protocol_id: name.toLowerCase(),
-            total_usd_value: value as number,
-            relative_portfolio_percentage: walletData.totalValue > 0 ? ((value as number) / walletData.totalValue) * 100 : 0
-          })) : []
-        },
-        protocolPositions,
+        summary: null,
+        protocolPositions: {},
         isLoading: false,
-        error: null
+        error: `No DeFi positions found for ${address.slice(0, 6)}...${address.slice(-4)}. This address might not have active liquidity pools or DeFi positions on supported protocols.`
       });
       
     } catch (error) {
-      console.error('Error loading DeFi positions:', error);
+      console.error('❌ Error loading DeFi positions:', error);
       setPoolsData(prev => ({
         ...prev,
         isLoading: false,
-        error: `Error Loading Data: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: `Error analyzing ${address.slice(0, 6)}...${address.slice(-4)}: ${error instanceof Error ? error.message : 'Please try again or check if this is a valid address.'}`
       }));
     }
   };
@@ -605,7 +629,7 @@ const Pools = () => {
               <div className="flex justify-between items-center" style={{ marginBottom: 'var(--space-6)' }}>
                 <div>
                   <h3 style={{ margin: 0, marginBottom: 'var(--space-2)' }}>
-                    Portfolio Summary
+                    {searchAddress ? `${searchAddress.slice(0, 6)}...${searchAddress.slice(-4)} Pool Analysis` : 'Pool Analysis'}
                   </h3>
                   <div style={{
                     fontSize: 'var(--font-size-3xl)',
