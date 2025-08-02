@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import WalletBalance from '../../components/WalletBalance';
 
 interface ClientWallet {
   id: string;
@@ -15,48 +14,13 @@ interface ClientWallet {
   performance24h: number;
 }
 
-interface SelectedWalletDetails {
-  address: string;
-  clientName: string;
-  totalValue: number;
-  positions: Array<{
-    protocol: string;
-    type: string;
-    tokens: string;
-    value: number;
-    apr: number;
-    healthFactor?: number;
-    status: 'healthy' | 'warning' | 'critical';
-    entryPrice?: number;
-    currentPrice?: number;
-    quantity?: number;
-    pnl?: number;
-    pnlPercentage?: number;
-    change24h?: number;
-    entryDate?: string;
-    lastUpdated?: string;
-  }>;
-  alerts: Array<{
-    type: 'critical' | 'warning' | 'info';
-    message: string;
-    timestamp: string;
-  }>;
-  totalPnL?: number;
-  totalPnLPercentage?: number;
-  performance24h?: number;
-}
-
 export default function AdminPortfoliosPage() {
   const [wallets, setWallets] = useState<ClientWallet[]>([]);
-  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
-  const [walletDetails, setWalletDetails] = useState<SelectedWalletDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'warning' | 'critical'>('all');
   const [userEmail, setUserEmail] = useState<string>('');
-  const [userWorkspaces, setUserWorkspaces] = useState<any[]>([]);
-  const [currentWorkspace, setCurrentWorkspace] = useState<any>(null);
-  const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
+  const [userRole, setUserRole] = useState<string>('');
+  const [fullName, setFullName] = useState<string>('');
+  const [companyName, setCompanyName] = useState<string>('');
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
@@ -82,30 +46,13 @@ export default function AdminPortfoliosPage() {
       color: '#666666',
       marginBottom: '2rem'
     },
-    loginForm: {
+    loginPrompt: {
       background: '#f0f7ff',
       border: '3px solid #2563eb',
       borderRadius: '1rem',
       padding: '2rem',
-      marginBottom: '2rem',
-      textAlign: 'center' as const
-    },
-    workspaceSelector: {
-      background: '#f0f7ff',
-      border: '3px solid #2563eb',
-      borderRadius: '1rem',
-      padding: '2rem',
+      textAlign: 'center' as const,
       marginBottom: '2rem'
-    },
-    input: {
-      padding: '0.75rem',
-      border: '2px solid #000000',
-      borderRadius: '0.5rem',
-      fontSize: '1rem',
-      color: '#000000',
-      background: '#ffffff',
-      width: '300px',
-      marginRight: '1rem'
     },
     button: {
       background: '#2563eb',
@@ -121,7 +68,8 @@ export default function AdminPortfoliosPage() {
       background: '#ffffff',
       border: '3px solid #000000',
       borderRadius: '1rem',
-      padding: '1.5rem'
+      padding: '1.5rem',
+      marginBottom: '2rem'
     },
     table: {
       width: '100%',
@@ -146,193 +94,98 @@ export default function AdminPortfoliosPage() {
       padding: '2rem',
       maxWidth: '500px',
       width: '90%'
+    },
+    input: {
+      padding: '0.75rem',
+      border: '2px solid #000000',
+      borderRadius: '0.5rem',
+      fontSize: '1rem',
+      color: '#000000',
+      background: '#ffffff',
+      width: '100%',
+      marginBottom: '1rem'
     }
   };
 
   useEffect(() => {
-    // Check for saved user session
-    const savedEmail = localStorage.getItem('userEmail');
-    const savedWorkspaceId = localStorage.getItem('currentWorkspaceId');
+    // Check for user session
+    if (typeof window === 'undefined') return;
     
-    if (savedEmail) {
+    const savedEmail = localStorage.getItem('userEmail');
+    const savedRole = localStorage.getItem('userRole');
+    const savedFullName = localStorage.getItem('fullName');
+    const savedCompanyName = localStorage.getItem('companyName');
+    
+    if (savedEmail && savedRole) {
       setUserEmail(savedEmail);
-      loadUserWorkspaces(savedEmail, savedWorkspaceId || undefined);
+      setUserRole(savedRole);
+      setFullName(savedFullName || '');
+      setCompanyName(savedCompanyName || '');
+      loadAccountWallets(savedEmail);
     } else {
-      setIsLoading(false); // Show login form
+      setIsLoading(false);
     }
   }, []);
 
-  // 👤 USER LOGIN
-  const handleUserLogin = (email: string) => {
-    if (!email || !email.includes('@')) {
-      alert('Please enter a valid email address');
-      return;
-    }
-    
-    setUserEmail(email);
-    localStorage.setItem('userEmail', email);
-    loadUserWorkspaces(email);
-  };
-
-  const handleLogout = () => {
-    setUserEmail('');
-    setUserWorkspaces([]);
-    setCurrentWorkspace(null);
-    setWallets([]);
-    setSelectedWallet(null);
-    setWalletDetails(null);
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('currentWorkspaceId');
-  };
-
-  const loadUserWorkspaces = async (email: string, workspaceId?: string) => {
+  const loadAccountWallets = async (email: string) => {
     setIsLoading(true);
     try {
-      console.log(`🔗 Loading workspaces for user: ${email}`);
+      console.log(`🔗 Loading wallets for account: ${email}`);
       
-      // Mock user workspaces based on email
-      const workspaces = getUserMockWorkspaces(email);
-      setUserWorkspaces(workspaces);
+      // Use account-based mock data
+      const accountWallets = getAccountMockWallets(email);
+      setWallets(accountWallets);
       
-      if (workspaces.length > 0) {
-        // Select saved workspace or first available
-        const selectedWorkspace = workspaceId 
-          ? workspaces.find(ws => ws.id === workspaceId) || workspaces[0]
-          : workspaces[0];
-        
-        setCurrentWorkspace(selectedWorkspace);
-        localStorage.setItem('currentWorkspaceId', selectedWorkspace.id);
-        loadWorkspaceWallets(selectedWorkspace.id);
-      } else {
-        setIsLoading(false);
-      }
-      
-      console.log(`✅ Found ${workspaces.length} workspaces for ${email}`);
+      console.log(`✅ Loaded ${accountWallets.length} wallets for account`);
     } catch (error) {
-      console.error('❌ Error loading user workspaces:', error);
-      setUserWorkspaces([]);
-      setIsLoading(false);
-    }
-  };
-
-  const loadWorkspaceWallets = async (workspaceId: string) => {
-    try {
-      console.log(`💼 Loading wallets for workspace: ${workspaceId}`);
-      
-      const workspaceWallets = getWorkspaceMockWallets(workspaceId);
-      setWallets(workspaceWallets);
-      
-      console.log(`✅ Loaded ${workspaceWallets.length} wallets for workspace`);
-    } catch (error) {
-      console.error('❌ Error loading workspace wallets:', error);
+      console.error('❌ Error loading account wallets:', error);
       setWallets([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleWorkspaceSwitch = (workspace: any) => {
-    setCurrentWorkspace(workspace);
-    localStorage.setItem('currentWorkspaceId', workspace.id);
-    loadWorkspaceWallets(workspace.id);
+  const handleLogout = () => {
+    if (typeof window === 'undefined') return;
+    
+    setUserEmail('');
+    setUserRole('');
+    setFullName('');
+    setCompanyName('');
+    setWallets([]);
+    localStorage.clear();
+    window.location.href = '/auth/login';
   };
 
-  const handleInviteMember = async (inviteeEmail: string, role: 'ADMIN' | 'GUEST') => {
+  const handleInviteTeamMember = async (inviteeEmail: string, role: 'ADMIN' | 'USER') => {
     try {
       setShowInviteModal(false);
       
-      console.log(`📧 Sending invitation to ${inviteeEmail} as ${role} for ${currentWorkspace.name}`);
+      console.log(`📧 Inviting ${inviteeEmail} as ${role} to ${companyName}`);
       
-      const response = await fetch('/api/workspaces/invite', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          workspaceId: currentWorkspace.id,
-          inviterEmail: userEmail,
-          inviteeEmail: inviteeEmail,
-          role: role
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Show success message with invitation details
-        alert(`✅ Invitation sent successfully!
-        
+      // In production, this would call the invitation API
+      alert(`✅ Invitation sent successfully!
+      
 📧 Email: ${inviteeEmail}
-🏢 Workspace: ${currentWorkspace.name}
+🏢 Company: ${companyName}
 👤 Role: ${role}
-⏰ Expires: ${new Date(data.invitation.expiresAt).toLocaleDateString()}
 
-The invitation email has been sent. ${inviteeEmail} can click the link to join the workspace using Privy authentication.`);
-        
-        console.log(`✅ Invitation sent successfully:`, data);
-      } else {
-        const error = await response.json();
-        alert(`❌ Failed to send invitation: ${error.error}`);
-        console.error('❌ Invitation failed:', error);
-      }
+${inviteeEmail} will receive an email invitation to join your account.`);
+      
     } catch (error) {
       console.error('❌ Error sending invitation:', error);
       alert('❌ Failed to send invitation. Please try again.');
     }
   };
 
-  // 🏢 MOCK WORKSPACE DATA
-  const getUserMockWorkspaces = (email: string): any[] => {
-    if (email === 'john@company.com') {
-      return [
-        {
-          id: 'ws_xtc_company',
-          name: 'XTC Company',
-          role: 'OWNER',
-          memberCount: 2,
-          plan: 'PRO',
-          permissions: ['manage_workspace', 'invite_members', 'manage_wallets', 'manage_pools', 'view_reports']
-        }
-      ];
-    }
-    
-    if (email === 'jane@email.com') {
-      return [
-        {
-          id: 'ws_xtc_company',
-          name: 'XTC Company',
-          role: 'ADMIN',
-          memberCount: 2,
-          plan: 'PRO',
-          permissions: ['manage_wallets', 'manage_pools', 'view_reports'],
-          invitedBy: 'john@company.com'
-        }
-      ];
-    }
-    
-    if (email === 'test@example.com') {
-      return [
-        {
-          id: 'ws_personal_test',
-          name: 'Personal Workspace',
-          role: 'OWNER',
-          memberCount: 1,
-          plan: 'BASIC',
-          permissions: ['manage_workspace', 'invite_members', 'manage_wallets', 'manage_pools', 'view_reports']
-        }
-      ];
-    }
-    
-    return []; // No workspaces for unknown users
-  };
-
-  const getWorkspaceMockWallets = (workspaceId: string): ClientWallet[] => {
-    const workspaceWalletData: { [key: string]: ClientWallet[] } = {
-      'ws_xtc_company': [
+  // 🏢 ACCOUNT-BASED MOCK DATA
+  const getAccountMockWallets = (email: string): ClientWallet[] => {
+    const accountWalletData: { [key: string]: ClientWallet[] } = {
+      'john@company.com': [
         {
           id: '1',
           address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-          clientName: 'XTC Client - Alice Johnson',
+          clientName: 'Client Portfolio - Alice Johnson',
           totalValue: 245823.12,
           lastUpdated: '2 mins ago',
           status: 'active',
@@ -344,7 +197,7 @@ The invitation email has been sent. ${inviteeEmail} can click the link to join t
         {
           id: '2',
           address: '0x456789abcdef0123456789abcdef0123456789ab',
-          clientName: 'XTC Client - Bob Smith (added by Jane)',
+          clientName: 'Client Portfolio - Bob Smith',
           totalValue: 156789.45,
           lastUpdated: '5 mins ago',
           status: 'active',
@@ -354,11 +207,11 @@ The invitation email has been sent. ${inviteeEmail} can click the link to join t
           performance24h: 1.89
         }
       ],
-      'ws_personal_test': [
+      'jane@email.com': [
         {
           id: '3',
           address: '0x1234567890abcdef1234567890abcdef12345678',
-          clientName: 'Personal Client - Charlie Brown',
+          clientName: 'Jane Client - Charlie Brown',
           totalValue: 89123.45,
           lastUpdated: '10 mins ago',
           status: 'active',
@@ -370,313 +223,257 @@ The invitation email has been sent. ${inviteeEmail} can click the link to join t
       ]
     };
 
-    return workspaceWalletData[workspaceId] || [];
+    return accountWalletData[email] || [];
   };
 
-  // If not logged in, show simple email login
+  // If not logged in, show login prompt
   if (!userEmail) {
     return (
-      <div style={styles.page}>
-        <div style={styles.container}>
-          <h1 style={styles.title}>🏢 Portfolio Management</h1>
-          <p style={styles.subtitle}>Enter your email to access your workspaces</p>
-          
-          <div style={styles.loginForm}>
-            <h3 style={{ marginBottom: '1.5rem', color: '#2563eb' }}>Login to LiquidFlow</h3>
+      <>
+        <Head>
+          <title>Portfolio Management - LiquidFlow</title>
+        </Head>
+        <div style={styles.page}>
+          <div style={styles.container}>
+            <h1 style={styles.title}>🏢 Portfolio Management</h1>
+            <p style={styles.subtitle}>Please sign in to access your account</p>
             
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target as HTMLFormElement);
-              const email = formData.get('email') as string;
-              handleUserLogin(email);
-            }}>
-              <input
-                type="email"
-                name="email"
-                placeholder="your.email@company.com"
-                style={styles.input}
-                required
-              />
-              <button type="submit" style={styles.button}>
-                Access My Workspaces
-              </button>
-            </form>
-            
-            <div style={{ marginTop: '1rem', padding: '1rem', background: '#fef3c7', borderRadius: '0.5rem' }}>
-              <div style={{ fontSize: '0.875rem', color: '#92400e' }}>
-                <strong>🏢 Collaborative Workspaces:</strong> Create companies, invite team members, and manage shared portfolios together.
+            <div style={styles.loginPrompt}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔐</div>
+              <h3 style={{ marginBottom: '1rem', color: '#2563eb' }}>Authentication Required</h3>
+              <p style={{ marginBottom: '2rem', color: '#666' }}>
+                You need to sign in to access your portfolio management dashboard.
+              </p>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                <button 
+                  onClick={() => window.location.href = '/auth/login'}
+                  style={styles.button}
+                >
+                  🔑 Sign In
+                </button>
+                <button 
+                  onClick={() => window.location.href = '/auth/register'}
+                  style={{ ...styles.button, background: '#16a34a' }}
+                >
+                  📝 Create Account
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    );
-  }
-
-  // If no workspaces, show workspace creation
-  if (userWorkspaces.length === 0 && !isLoading) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.container}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-            <div>
-              <h1 style={styles.title}>🏢 Portfolio Management</h1>
-              <p style={styles.subtitle}>Welcome {userEmail}! Create your first workspace to get started.</p>
-            </div>
-            <button onClick={handleLogout} style={{ ...styles.button, background: '#dc2626' }}>
-              🚪 Logout
-            </button>
-          </div>
-
-          <div style={styles.card}>
-            <div style={{ textAlign: 'center', padding: '3rem' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
-              <h3>Create Your First Workspace</h3>
-              <p style={{ marginBottom: '2rem', color: '#666' }}>
-                Workspaces let you organize portfolios and collaborate with team members.
-              </p>
-              <button style={styles.button} onClick={() => setShowCreateWorkspace(true)}>
-                ➕ Create Workspace
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
-        {/* Header with Workspace Selector */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <h1 style={styles.title}>🏢 Portfolio Management</h1>
-            <p style={styles.subtitle}>
-              {userEmail} • {currentWorkspace?.name} ({currentWorkspace?.role}) • {wallets.length} wallet{wallets.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            {/* Workspace Switcher */}
-            {userWorkspaces.length > 1 && (
-              <select 
-                value={currentWorkspace?.id || ''} 
-                onChange={(e) => {
-                  const workspace = userWorkspaces.find(ws => ws.id === e.target.value);
-                  if (workspace) handleWorkspaceSwitch(workspace);
-                }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  border: '2px solid #000000',
-                  borderRadius: '0.5rem',
-                  fontSize: '0.875rem'
-                }}
-              >
-                {userWorkspaces.map(ws => (
-                  <option key={ws.id} value={ws.id}>
-                    {ws.name} ({ws.role})
-                  </option>
-                ))}
-              </select>
-            )}
-            
-            {/* Invite Button (only for owners/admins) */}
-            {currentWorkspace?.permissions.includes('invite_members') && (
-              <button onClick={() => setShowInviteModal(true)} style={styles.button}>
-                👥 Invite Member
+    <>
+      <Head>
+        <title>{companyName} Portfolio Management - LiquidFlow</title>
+      </Head>
+      <div style={styles.page}>
+        <div style={styles.container}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div>
+              <h1 style={styles.title}>🏢 Portfolio Management</h1>
+              <p style={styles.subtitle}>
+                {fullName} ({userRole.replace('_', ' ')}) • {companyName} • {wallets.length} client wallet{wallets.length !== 1 ? 's' : ''}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              {(userRole === 'PRIMARY_ADMIN' || userRole === 'ADMIN') && (
+                <button onClick={() => setShowInviteModal(true)} style={styles.button}>
+                  👥 Invite Team Member
+                </button>
+              )}
+              <button onClick={handleLogout} style={{ ...styles.button, background: '#dc2626' }}>
+                🚪 Logout
               </button>
-            )}
-            
-            <button onClick={handleLogout} style={{ ...styles.button, background: '#dc2626' }}>
-              🚪 Logout
-            </button>
+            </div>
           </div>
-        </div>
 
-        {/* Workspace Info Banner */}
-        <div style={{
-          background: '#eff6ff',
-          border: '2px solid #3b82f6',
-          borderRadius: '0.5rem',
-          padding: '1rem',
-          marginBottom: '2rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div>
-            <strong>🏢 {currentWorkspace?.name}</strong> • 
-            <span style={{ marginLeft: '0.5rem' }}>Your Role: <strong>{currentWorkspace?.role}</strong></span> •
-            <span style={{ marginLeft: '0.5rem' }}>{currentWorkspace?.memberCount} member{currentWorkspace?.memberCount !== 1 ? 's' : ''}</span> •
-            <span style={{ marginLeft: '0.5rem' }}>Plan: <strong>{currentWorkspace?.plan}</strong></span>
-          </div>
-          {currentWorkspace?.invitedBy && (
+          {/* Account Info Banner */}
+          <div style={{
+            background: '#eff6ff',
+            border: '2px solid #3b82f6',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <strong>🏢 {companyName}</strong> • 
+              <span style={{ marginLeft: '0.5rem' }}>Your Role: <strong>{userRole.replace('_', ' ')}</strong></span> •
+              <span style={{ marginLeft: '0.5rem' }}>Account Owner: {userRole === 'PRIMARY_ADMIN' ? 'You' : 'Primary Admin'}</span>
+            </div>
             <div style={{ fontSize: '0.875rem', color: '#666' }}>
-              Invited by: {currentWorkspace.invitedBy}
+              Account ID: {localStorage.getItem('accountId')?.slice(0, 12)}...
+            </div>
+          </div>
+
+          {/* Loading State */}
+          {isLoading ? (
+            <div style={styles.card}>
+              <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+                <h3>Loading Your Portfolio...</h3>
+                <p>Fetching client wallets for {companyName}</p>
+              </div>
+            </div>
+          ) : wallets.length === 0 ? (
+            // Empty State
+            <div style={styles.card}>
+              <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
+                <h3>No Client Wallets Yet</h3>
+                <p style={{ marginBottom: '2rem', color: '#666' }}>
+                  Start by adding your first client wallet to begin portfolio management.
+                </p>
+                {(userRole === 'PRIMARY_ADMIN' || userRole === 'ADMIN') ? (
+                  <button style={styles.button}>
+                    ➕ Add First Client Wallet
+                  </button>
+                ) : (
+                  <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                    Contact your admin to add client wallets.
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            // Wallets Table
+            <div style={styles.card}>
+              <h3 style={{ marginBottom: '1.5rem' }}>
+                👥 {companyName} Client Portfolios ({wallets.length})
+              </h3>
+              
+              <table style={styles.table}>
+                <thead>
+                  <tr>
+                    <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'left' }}>Client Portfolio</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'right' }}>Total Value</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'center' }}>Status</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'right' }}>24h Change</th>
+                    <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {wallets.map((wallet) => (
+                    <tr key={wallet.id}>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #ccc' }}>
+                        <div>
+                          <div style={{ fontWeight: 'bold' }}>{wallet.clientName}</div>
+                          <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} • {wallet.positions} positions
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #ccc', textAlign: 'right' }}>
+                        <div style={{ fontWeight: 'bold' }}>
+                          ${wallet.totalValue.toLocaleString()}
+                        </div>
+                        <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                          {wallet.protocols.join(', ')}
+                        </div>
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #ccc', textAlign: 'center' }}>
+                        <span style={{
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          background: wallet.status === 'active' ? '#dcfce7' : wallet.status === 'warning' ? '#fef3c7' : '#fef2f2',
+                          color: wallet.status === 'active' ? '#166534' : wallet.status === 'warning' ? '#92400e' : '#dc2626'
+                        }}>
+                          {wallet.status.toUpperCase()}
+                        </span>
+                      </td>
+                      <td style={{ 
+                        padding: '0.75rem', 
+                        borderBottom: '1px solid #ccc', 
+                        textAlign: 'right',
+                        color: wallet.performance24h >= 0 ? '#16a34a' : '#dc2626',
+                        fontWeight: 'bold'
+                      }}>
+                        {wallet.performance24h >= 0 ? '+' : ''}{wallet.performance24h}%
+                      </td>
+                      <td style={{ padding: '0.75rem', borderBottom: '1px solid #ccc', textAlign: 'center' }}>
+                        <button style={{
+                          background: '#000000',
+                          color: '#ffffff',
+                          padding: '0.5rem 1rem',
+                          border: 'none',
+                          borderRadius: '0.25rem',
+                          fontSize: '0.875rem',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}>
+                          {userRole === 'USER' ? 'View' : 'Manage'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Team Invitation Modal */}
+          {showInviteModal && (
+            <div style={styles.modal}>
+              <div style={styles.modalContent}>
+                <h3 style={{ marginBottom: '1.5rem' }}>👥 Invite Team Member to {companyName}</h3>
+                
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.target as HTMLFormElement);
+                  const email = formData.get('email') as string;
+                  const role = formData.get('role') as 'ADMIN' | 'USER';
+                  handleInviteTeamMember(email, role);
+                }}>
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      Email Address:
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="colleague@company.com"
+                      style={styles.input}
+                      required
+                    />
+                  </div>
+                  
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                      Role:
+                    </label>
+                    <select name="role" style={styles.input} required>
+                      <option value="ADMIN">Admin (can manage portfolios & invite others)</option>
+                      <option value="USER">User (view-only access to portfolios)</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowInviteModal(false)}
+                      style={{ ...styles.button, background: '#6b7280' }}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" style={styles.button}>
+                      📧 Send Invitation
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
         </div>
-
-        {/* Loading State */}
-        {isLoading ? (
-          <div style={styles.card}>
-            <div style={{ textAlign: 'center', padding: '3rem' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-              <h3>Loading Workspace...</h3>
-              <p>Fetching portfolios for {currentWorkspace?.name}</p>
-            </div>
-          </div>
-        ) : wallets.length === 0 ? (
-          // Empty State
-          <div style={styles.card}>
-            <div style={{ textAlign: 'center', padding: '3rem' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
-              <h3>{currentWorkspace?.name} is Empty</h3>
-              <p style={{ marginBottom: '2rem', color: '#666' }}>
-                No client wallets in this workspace yet. Start by adding your first client wallet.
-              </p>
-              {currentWorkspace?.permissions.includes('manage_wallets') ? (
-                <button style={styles.button}>
-                  ➕ Add First Client Wallet
-                </button>
-              ) : (
-                <p style={{ color: '#666', fontSize: '0.875rem' }}>
-                  You need wallet management permissions to add clients.
-                </p>
-              )}
-            </div>
-          </div>
-        ) : (
-          // Wallets Table
-          <div style={styles.card}>
-            <h3 style={{ marginBottom: '1.5rem' }}>
-              👥 {currentWorkspace?.name} Client Wallets ({wallets.length})
-            </h3>
-            
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'left' }}>Client</th>
-                  <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'right' }}>Portfolio Value</th>
-                  <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'center' }}>Status</th>
-                  <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'right' }}>24h Change</th>
-                  <th style={{ padding: '0.75rem', borderBottom: '2px solid #000', textAlign: 'center' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {wallets.map((wallet) => (
-                  <tr key={wallet.id}>
-                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #ccc' }}>
-                      <div>
-                        <div style={{ fontWeight: 'bold' }}>{wallet.clientName}</div>
-                        <div style={{ fontSize: '0.875rem', color: '#666' }}>
-                          {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #ccc', textAlign: 'right' }}>
-                      <div style={{ fontWeight: 'bold' }}>
-                        ${wallet.totalValue.toLocaleString()}
-                      </div>
-                      <div style={{ fontSize: '0.875rem', color: '#666' }}>
-                        {wallet.positions} positions
-                      </div>
-                    </td>
-                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #ccc', textAlign: 'center' }}>
-                      <span style={{
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                        background: wallet.status === 'active' ? '#dcfce7' : wallet.status === 'warning' ? '#fef3c7' : '#fef2f2',
-                        color: wallet.status === 'active' ? '#166534' : wallet.status === 'warning' ? '#92400e' : '#dc2626'
-                      }}>
-                        {wallet.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ 
-                      padding: '0.75rem', 
-                      borderBottom: '1px solid #ccc', 
-                      textAlign: 'right',
-                      color: wallet.performance24h >= 0 ? '#16a34a' : '#dc2626',
-                      fontWeight: 'bold'
-                    }}>
-                      {wallet.performance24h >= 0 ? '+' : ''}{wallet.performance24h}%
-                    </td>
-                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #ccc', textAlign: 'center' }}>
-                      <button style={{
-                        background: '#000000',
-                        color: '#ffffff',
-                        padding: '0.5rem 1rem',
-                        border: 'none',
-                        borderRadius: '0.25rem',
-                        fontSize: '0.875rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                      }}>
-                        {currentWorkspace?.permissions.includes('manage_wallets') ? 'Manage' : 'View'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Invite Modal */}
-        {showInviteModal && (
-          <div style={styles.modal}>
-            <div style={styles.modalContent}>
-              <h3 style={{ marginBottom: '1.5rem' }}>👥 Invite Member to {currentWorkspace?.name}</h3>
-              
-              <form onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
-                const email = formData.get('email') as string;
-                const role = formData.get('role') as 'ADMIN' | 'GUEST';
-                handleInviteMember(email, role);
-              }}>
-                <div style={{ marginBottom: '1rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    Email Address:
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="jane@email.com"
-                    style={styles.input}
-                    required
-                  />
-                </div>
-                
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                    Role:
-                  </label>
-                  <select name="role" style={styles.input} required>
-                    <option value="ADMIN">Admin (can manage wallets & pools)</option>
-                    <option value="GUEST">Guest (view-only access)</option>
-                  </select>
-                </div>
-                
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setShowInviteModal(false)}
-                    style={{ ...styles.button, background: '#6b7280' }}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" style={styles.button}>
-                    📧 Send Invitation
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
+    </>
   );
 } 
