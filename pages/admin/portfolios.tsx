@@ -1,87 +1,103 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { usePrivy } from '@privy-io/react-auth';
 
-interface ClientWallet {
+interface ManagedWallet {
   id: string;
   address: string;
   clientName: string;
+  accessType: 'view_only' | 'managed' | 'full_access';
+  hasPrivateKey: boolean;
+  dateAdded: string;
+  lastActivity: string;
   totalValue: number;
-  lastUpdated: string;
-  status: 'active' | 'warning' | 'critical';
-  positions: number;
-  protocols: string[];
-  alerts: number;
-  performance24h: number;
+  status: 'active' | 'inactive' | 'suspended';
+  notes?: string;
 }
 
-export default function AdminPortfoliosPage() {
-  const [wallets, setWallets] = useState<ClientWallet[]>([]);
+interface PoolData {
+  id: string;
+  clientName: string;
+  address: string;
+  protocol: string;
+  pair: string;
+  totalValue: number;
+  change24h: number;
+  status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  pairAddress: string;
+}
+
+export default function PortfoliosPage() {
+  const { ready, authenticated, user, login, logout } = usePrivy();
+  const [pools, setPools] = useState<PoolData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { login, logout, ready, authenticated, user } = usePrivy();
 
   useEffect(() => {
-    loadWallets();
+    if (typeof window !== 'undefined') {
+      loadPoolsFromWallets();
+    }
   }, []);
 
-  const loadWallets = async () => {
+  const loadPoolsFromWallets = () => {
     setIsLoading(true);
-    
     try {
-      // Sample portfolio data
-      const sampleWallets: ClientWallet[] = [
-        {
-          id: '1',
-          address: '0x1234...5678',
-          clientName: 'DeFi Portfolio Alpha',
-          totalValue: 125000,
-          lastUpdated: new Date().toISOString(),
-          status: 'active',
-          positions: 8,
-          protocols: ['Uniswap', 'Aave', 'Compound'],
-          alerts: 0,
-          performance24h: 2.5
-        },
-        {
-          id: '2',
-          address: '0x9876...4321',
-          clientName: 'Yield Farming Pro',
-          totalValue: 89000,
-          lastUpdated: new Date().toISOString(),
-          status: 'active',
-          positions: 12,
-          protocols: ['Curve', 'Convex', 'Yearn'],
-          alerts: 1,
-          performance24h: -0.8
-        },
-        {
-          id: '3',
-          address: '0xabcd...efgh',
-          clientName: 'Multi-Chain Strategy',
-          totalValue: 203000,
-          lastUpdated: new Date().toISOString(),
-          status: 'active',
-          positions: 15,
-          protocols: ['Raydium', 'Jupiter', 'Orca'],
-          alerts: 0,
-          performance24h: 4.2
-        }
-      ];
-      
-      setWallets(sampleWallets);
+      // Load wallets from localStorage (same source as Wallet Management)
+      const savedWallets = localStorage.getItem('managedWallets');
+      let wallets: ManagedWallet[] = [];
+
+      if (savedWallets) {
+        wallets = JSON.parse(savedWallets);
+      }
+
+      // Generate pool data for each wallet
+      const poolsData: PoolData[] = wallets.map((wallet, index) => {
+        // Generate realistic pool data based on wallet
+        const protocols = ['Uniswap V3', 'Raydium', 'Aave V3', 'Compound', 'SushiSwap', 'PancakeSwap'];
+        const pairs = ['ETH/USDC', 'SOL/USDC', 'WBTC/ETH', 'USDT/USDC', 'AVAX/USDT', 'MATIC/ETH'];
+        const statuses: ('HEALTHY' | 'WARNING' | 'CRITICAL')[] = ['HEALTHY', 'HEALTHY', 'HEALTHY', 'WARNING', 'CRITICAL'];
+        
+        return {
+          id: wallet.id,
+          clientName: wallet.clientName,
+          address: wallet.address,
+          protocol: protocols[index % protocols.length],
+          pair: pairs[index % pairs.length],
+          totalValue: wallet.totalValue > 0 ? wallet.totalValue : Math.random() * 100000 + 10000,
+          change24h: (Math.random() - 0.5) * 10, // Random between -5% and +5%
+          status: statuses[index % statuses.length],
+          pairAddress: generateMockPairAddress(wallet.address, index)
+        };
+      });
+
+      setPools(poolsData);
     } catch (error) {
-      console.error('Error loading wallets:', error);
+      console.error('Error loading pools from wallets:', error);
+      setPools([]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const generateMockPairAddress = (walletAddress: string, index: number): string => {
+    // Generate a mock pair address based on wallet address
+    const base = walletAddress.substring(0, 10);
+    const suffix = (1000 + index).toString();
+    return base + suffix.padStart(32, '0');
+  };
+
   const handleAuthenticatedAction = (actionName: string, action: () => void) => {
-    if (!ready) return;
-    
     if (!authenticated) {
-      const shouldRegister = confirm(`🔐 Account Required\n\nTo ${actionName.toLowerCase()}, please sign in with Privy.\n\n✅ Sign in to:\n   • Add your wallet addresses\n   • Track real positions\n   • Manage settings & alerts\n   • Invite collaborators\n   • Export your data\n\n❌ Cancel: Continue viewing demo\n\nSign in now?`);
-      if (shouldRegister) {
+      const shouldLogin = confirm(
+        `To ${actionName.toLowerCase()}, you need to create an account.\n\n` +
+        `Benefits of registering:\n` +
+        `• Add unlimited wallet addresses\n` +
+        `• Generate detailed reports\n` +
+        `• Invite team members\n` +
+        `• Save your analysis\n\n` +
+        `Would you like to create an account now?`
+      );
+      
+      if (shouldLogin) {
         login();
       }
     } else {
@@ -310,41 +326,7 @@ export default function AdminPortfoliosPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    {
-                      id: '1',
-                      clientName: 'Alice Johnson',
-                      address: '0x742d35Cc6e4C2eA4C59d7c8Dc0cd7d6e5e0f4F3a',
-                      protocol: 'Uniswap V3',
-                      pair: 'ETH/USDC',
-                      totalValue: 94312.66,
-                      change24h: 2.3,
-                      status: 'HEALTHY' as const,
-                      pairAddress: '0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640'
-                    },
-                    {
-                      id: '2', 
-                      clientName: 'Bob Chen',
-                      address: '0x8ba1f109551bD432803012645Hac136c86745d3B',
-                      protocol: 'Raydium',
-                      pair: 'SOL/USDC',
-                      totalValue: 67890.12,
-                      change24h: -1.8,
-                      status: 'WARNING' as const,
-                      pairAddress: 'HWHvQhFmJB6r7tTiYNwMdL7PjmQMGdP3R1jFhd8Q2K3w'
-                    },
-                    {
-                      id: '3',
-                      clientName: 'Corporate Treasury',
-                      address: '0x463D7E7cE1d8A52FDBD5C3B0bcB6B7e8a32b72b6',
-                      protocol: 'Aave V3',
-                      pair: 'WBTC/ETH',
-                      totalValue: 125000.00,
-                      change24h: 4.2,
-                      status: 'HEALTHY' as const,
-                      pairAddress: '0x4585FE77225b41b697C938B018E2Ac67Ac5a20c0'
-                    }
-                  ].map((pool) => (
+                  {pools.map((pool) => (
                     <tr key={pool.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                       <td style={{ padding: '1rem' }}>
                         <div>

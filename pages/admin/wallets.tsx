@@ -248,49 +248,59 @@ export default function AdminWalletsPage() {
   const loadWallets = async () => {
     setIsLoading(true);
     try {
-      // In production, this would call your wallet management API
-      // For now, simulate loading from multiple sources
+      // Load from localStorage first, then add default wallets if none exist
+      const savedWallets = localStorage.getItem('managedWallets');
       
-      const mockWallets: ManagedWallet[] = [
-        {
-          id: '1',
-          address: '0x4f02bb03',
-          clientName: 'Your Connected Wallet',
-          accessType: 'view_only',
-          hasPrivateKey: false,
-          dateAdded: '2024-01-20T10:00:00Z',
-          lastActivity: '2024-01-20T18:30:00Z',
-          totalValue: 8.69,
-          status: 'active',
-          notes: 'Main admin wallet - connected via Privy'
-        },
-        {
-          id: '2',
-          address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-          clientName: 'Alice Johnson',
-          accessType: 'managed',
-          hasPrivateKey: false,
-          dateAdded: '2024-01-18T14:30:00Z',
-          lastActivity: '2024-01-20T16:45:00Z',
-          totalValue: 0,
-          status: 'active',
-          notes: 'Portfolio management client'
-        },
-        {
-          id: '3',
-          address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
-          clientName: 'Bob Chen',
-          accessType: 'full_access',
-          hasPrivateKey: true,
-          dateAdded: '2024-01-19T09:15:00Z',
-          lastActivity: '2024-01-20T12:20:00Z',
-          totalValue: 0,
-          status: 'active',
-          notes: 'Full trading access with stored private key'
-        }
-      ];
+      let walletsToLoad: ManagedWallet[] = [];
       
-      setWallets(mockWallets);
+      if (savedWallets) {
+        walletsToLoad = JSON.parse(savedWallets);
+      } else {
+        // Default wallets for first-time users
+        walletsToLoad = [
+          {
+            id: '1',
+            address: '0x4f02bb03',
+            clientName: 'Your Connected Wallet',
+            accessType: 'view_only',
+            hasPrivateKey: false,
+            dateAdded: '2024-01-20T10:00:00Z',
+            lastActivity: '2024-01-20T18:30:00Z',
+            totalValue: 8.69,
+            status: 'active',
+            notes: 'Main admin wallet - connected via Privy'
+          },
+          {
+            id: '2',
+            address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
+            clientName: 'Alice Johnson',
+            accessType: 'managed',
+            hasPrivateKey: false,
+            dateAdded: '2024-01-18T14:30:00Z',
+            lastActivity: '2024-01-20T16:45:00Z',
+            totalValue: 0,
+            status: 'active',
+            notes: 'Portfolio management client'
+          },
+          {
+            id: '3',
+            address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
+            clientName: 'Bob Chen',
+            accessType: 'full_access',
+            hasPrivateKey: true,
+            dateAdded: '2024-01-19T09:15:00Z',
+            lastActivity: '2024-01-20T12:20:00Z',
+            totalValue: 0,
+            status: 'active',
+            notes: 'Full trading access with stored private key'
+          }
+        ];
+        
+        // Save default wallets to localStorage
+        localStorage.setItem('managedWallets', JSON.stringify(walletsToLoad));
+      }
+      
+      setWallets(walletsToLoad);
     } catch (error) {
       console.error('Error loading wallets:', error);
     } finally {
@@ -326,8 +336,10 @@ export default function AdminWalletsPage() {
       notes: newWallet.notes
     };
 
-    // In production, save to database and optionally store encrypted private key
-    setWallets(prev => [...prev, wallet]);
+    // Save to localStorage and update state
+    const updatedWallets = [...wallets, wallet];
+    setWallets(updatedWallets);
+    localStorage.setItem('managedWallets', JSON.stringify(updatedWallets));
     
     // Reset form
     setNewWallet({
@@ -347,8 +359,10 @@ export default function AdminWalletsPage() {
     if (!wallet) return;
 
     if (confirm(`Are you sure you want to remove wallet for ${wallet.clientName}? This cannot be undone.`)) {
-      // In production, remove from database and delete any stored private keys
-      setWallets(prev => prev.filter(w => w.id !== walletId));
+      // Remove from localStorage and update state
+      const updatedWallets = wallets.filter(w => w.id !== walletId);
+      setWallets(updatedWallets);
+      localStorage.setItem('managedWallets', JSON.stringify(updatedWallets));
       alert(`🗑️ Removed wallet for ${wallet.clientName}`);
     }
   };
