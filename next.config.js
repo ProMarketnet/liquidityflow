@@ -1,42 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  
-  // Force cache busting for CSS and static assets
   generateBuildId: async () => {
-    return `build-${Date.now()}`
+    // Force new build ID every time
+    return `build-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
   },
-  
-  // Add cache-busting headers
-  async headers() {
-    return [
-      {
-        source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
-          },
-        ],
-      },
-      {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
-          },
-        ],
-      },
-    ]
-  },
-  
-  // Force new CSS compilation
+  // Disable all caching during deployment issues
   experimental: {
-    forceSwcTransforms: true,
+    isrMemoryCacheSize: 0,
   },
 }
 
-// Cache bust: ${Date.now()}
 module.exports = nextConfig
