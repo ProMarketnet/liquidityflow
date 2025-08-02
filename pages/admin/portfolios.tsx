@@ -237,10 +237,48 @@ export default function AdminPortfoliosPage() {
     loadWorkspaceWallets(workspace.id);
   };
 
-  const handleInviteMember = (inviteeEmail: string, role: 'ADMIN' | 'GUEST') => {
-    // In production, this would call the invitation API
-    alert(`📧 Invitation sent to ${inviteeEmail} as ${role} for ${currentWorkspace.name}`);
-    setShowInviteModal(false);
+  const handleInviteMember = async (inviteeEmail: string, role: 'ADMIN' | 'GUEST') => {
+    try {
+      setShowInviteModal(false);
+      
+      console.log(`📧 Sending invitation to ${inviteeEmail} as ${role} for ${currentWorkspace.name}`);
+      
+      const response = await fetch('/api/workspaces/invite', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          workspaceId: currentWorkspace.id,
+          inviterEmail: userEmail,
+          inviteeEmail: inviteeEmail,
+          role: role
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Show success message with invitation details
+        alert(`✅ Invitation sent successfully!
+        
+📧 Email: ${inviteeEmail}
+🏢 Workspace: ${currentWorkspace.name}
+👤 Role: ${role}
+⏰ Expires: ${new Date(data.invitation.expiresAt).toLocaleDateString()}
+
+The invitation email has been sent. ${inviteeEmail} can click the link to join the workspace using Privy authentication.`);
+        
+        console.log(`✅ Invitation sent successfully:`, data);
+      } else {
+        const error = await response.json();
+        alert(`❌ Failed to send invitation: ${error.error}`);
+        console.error('❌ Invitation failed:', error);
+      }
+    } catch (error) {
+      console.error('❌ Error sending invitation:', error);
+      alert('❌ Failed to send invitation. Please try again.');
+    }
   };
 
   // 🏢 MOCK WORKSPACE DATA
