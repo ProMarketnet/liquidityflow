@@ -59,23 +59,36 @@ const Pools = () => {
     }
   }, [router.query]);
 
-  // Separate useEffect for auto-search functionality
+  // Auto-search useEffect - this is the key fix for user's issue
   useEffect(() => {
     const { address, search } = router.query;
     
-    console.log('🔍 Auto-search useEffect triggered:', { address, search, hasSearched, routerReady: router.isReady });
+    console.log('🔍 Auto-search useEffect triggered:', { 
+      address, 
+      search, 
+      hasSearched, 
+      routerReady: router.isReady,
+      searchAddress 
+    });
     
-    // Only proceed if router is ready and we have the required parameters
+    // KEY FIX: Only proceed if router is ready, we have address, search=true, and haven't searched yet
     if (router.isReady && address && typeof address === 'string' && search === 'true' && !hasSearched) {
-      console.log('🚀 Auto-search conditions met, triggering search for:', address);
+      console.log('🚀 AUTO-SEARCH CONDITIONS MET! Starting immediate search for:', address);
+      
+      // Set the search address in the input field
+      setSearchAddress(address);
+      
+      // Trigger the search immediately
       loadDeFiPositions(address);
     } else {
-      console.log('❌ Auto-search conditions NOT met:', {
+      console.log('❌ Auto-search conditions not met:', {
         routerReady: router.isReady,
         hasAddress: !!address,
         isString: typeof address === 'string',
+        searchParam: search,
         searchTrue: search === 'true',
-        notSearched: !hasSearched
+        notSearchedYet: !hasSearched,
+        currentSearchAddress: searchAddress
       });
     }
   }, [router.query, router.isReady, hasSearched]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -153,10 +166,9 @@ const Pools = () => {
   };
 
   const loadDeFiPositions = async (address: string) => {
-    console.log('🔍🔍🔍 === LOAD DEFI POSITIONS STARTED ===');
+    console.log('🔍🔍🔍 === SMART ADDRESS DETECTION STARTED ===');
     console.log('🔍 Input address:', address);
-    console.log('🔍 Current state - hasSearched:', hasSearched);
-    console.log('🔍 Current searchAddress:', searchAddress);
+    console.log('🔍 Will detect: Token → Find trading pools | Pool → Show pool data | Wallet → Show DeFi positions');
     
     setPoolsData(prev => ({ ...prev, isLoading: true, error: null }));
     setHasSearched(true);
@@ -164,20 +176,20 @@ const Pools = () => {
     try {
       console.log('🔍 Loading data for address:', address);
       
-      // Step 1: PRIORITY - Try to find pools where this token trades (for token addresses like WXM)
-      console.log('🔎 PRIORITY: Trying token pools search first (for tokens like WXM)...');
+      // STEP 1: PRIORITY - Try Moralis Token Pools API (most reliable for tokens like WXM)
+      console.log('🎯 STEP 1: Checking if this is a TOKEN with trading pools...');
       
       try {
-        let tokenPoolsResponse = await fetch(`/api/pools/dex-screener-all-pools?address=${address}`);
+        const tokenPoolsResponse = await fetch(`/api/pools/token-pools?address=${address}`);
         
         if (tokenPoolsResponse.ok) {
           const tokenPoolsData = await tokenPoolsResponse.json();
           
           if (tokenPoolsData.success && tokenPoolsData.allPools && tokenPoolsData.allPools.length > 0) {
-            console.log(`✅ TOKEN POOLS FOUND! ${tokenPoolsData.allPools.length} pools across ${tokenPoolsData.summary.chainsFound.length} chains`);
-            console.log('🎯 This means the address is a TOKEN that trades in these pools:', tokenPoolsData.allPools);
+            console.log(`✅ TOKEN DETECTED! Found ${tokenPoolsData.allPools.length} trading pools across ${tokenPoolsData.summary.chainsFound.length} chains`);
+            console.log('🎯 This is exactly what user wanted for WXM:', tokenPoolsData.allPools);
             
-            // Process multiple pools data - this is what user wants for WXM
+            // Process token pools data
             const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
             let totalValue = 0;
             
@@ -225,53 +237,118 @@ const Pools = () => {
               error: null
             });
             
-            console.log('🎯 SUCCESS: Showing pools where token trades - exactly what user wanted!');
+            console.log('🎯 SUCCESS: Token pools displayed - perfect UX!');
             return;
           } else {
-            console.log('❌ No pools found for this token address, trying other methods...');
+            console.log('⚠️ Not a token with trading pools, trying next method...');
           }
         }
       } catch (error) {
-        console.warn('⚠️ Token pools search failed:', error);
+        console.warn('⚠️ Token pools API failed:', error);
       }
       
-      // Step 2: If not a token with trading pools, try as specific pair/pool address
-      console.log('🔄 Trying as specific pair address...');
-      const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
-      const chain = isEVMAddress ? 'eth' : 'solana';
+      // STEP 2: Try DexScreener for broader token coverage
+      console.log('🎯 STEP 2: Trying DexScreener token search...');
       
       try {
-        let pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
-        let pairData;
+        const dexScreenerResponse = await fetch(`/api/pools/dex-screener-all-pools?address=${address}`);
+        
+        if (dexScreenerResponse.ok) {
+          const dexScreenerData = await dexScreenerResponse.json();
+          
+          if (dexScreenerData.success && dexScreenerData.allPools && dexScreenerData.allPools.length > 0) {
+            console.log(`✅ DEXSCREENER TOKEN FOUND! ${dexScreenerData.allPools.length} pools`);
+            
+            // Same processing logic as above
+            const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+            let totalValue = 0;
+            
+            dexScreenerData.allPools.forEach((pool: any) => {
+              const protocolName = `${pool.dex} (${pool.chain})`;
+              
+              if (!protocolPositions[protocolName]) {
+                protocolPositions[protocolName] = [];
+              }
+              
+              const poolValue = parseFloat(pool.liquidity || '0');
+              totalValue += poolValue;
+              
+              protocolPositions[protocolName].push({
+                position_type: 'liquidity_pool',
+                position_id: pool.pairAddress || pool.address,
+                position_token_data: [
+                  { symbol: pool.baseToken?.symbol || 'TOKEN0' },
+                  { symbol: pool.pairedToken?.symbol || pool.quoteToken?.symbol || 'TOKEN1' }
+                ],
+                total_usd_value: poolValue,
+                apr: pool.apr || pool.apy,
+                rawData: pool
+              });
+            });
+            
+            const activeProtocols = Object.entries(protocolPositions).map(([name, positions]) => {
+              const protocolValue = positions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0);
+              return {
+                protocol_name: name,
+                protocol_id: name.toLowerCase().replace(/\s+/g, '-'),
+                total_usd_value: protocolValue,
+                relative_portfolio_percentage: totalValue > 0 ? (protocolValue / totalValue) * 100 : 0
+              };
+            });
+            
+            setPoolsData({
+              summary: {
+                total_usd_value: totalValue,
+                active_protocols: activeProtocols
+              },
+              protocolPositions,
+              isLoading: false,
+              error: null
+            });
+            
+            console.log('🎯 SUCCESS: DexScreener found token pools!');
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ DexScreener failed:', error);
+      }
+      
+      // STEP 3: Try as specific pool/pair address  
+      console.log('🎯 STEP 3: Checking if this is a POOL/PAIR address...');
+      
+      try {
+        const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
+        const chain = isEVMAddress ? 'eth' : 'solana';
+        
+        const pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
         
         if (pairResponse.ok) {
-          pairData = await pairResponse.json();
-          console.log('📊 Pair data received:', pairData);
+          const pairData = await pairResponse.json();
           
-          // Check if this is pair/pool data and process it
           if (pairData.success && (pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool)) {
-            console.log('🏊‍♂️ Processing specific pair/pool data...');
+            console.log('✅ POOL/PAIR DETECTED! Showing direct pool data');
             
-            const specificPairData = pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool || pairData;
-            const protocol = specificPairData.dex || specificPairData.protocol || 'Unknown DEX';
-            const pairChain = specificPairData.chain || (address.startsWith('0x') ? 'Ethereum' : 'Solana');
+            const poolInfo = pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool || pairData;
+            const protocol = poolInfo.dex || poolInfo.protocol || 'Unknown DEX';
+            const poolChain = poolInfo.chain || (address.startsWith('0x') ? 'Ethereum' : 'Solana');
             
-            const protocolName = `${protocol} (${pairChain})`;
+            const protocolName = `${protocol} (${poolChain})`;
             const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
             
             protocolPositions[protocolName] = [{
               position_type: 'liquidity_pool',
               position_id: address,
               position_token_data: [
-                { symbol: specificPairData.token0?.symbol || specificPairData.baseToken?.symbol || 'TOKEN0' },
-                { symbol: specificPairData.token1?.symbol || specificPairData.quoteToken?.symbol || 'TOKEN1' }
+                { symbol: poolInfo.token0?.symbol || poolInfo.baseToken?.symbol || 'TOKEN0' },
+                { symbol: poolInfo.token1?.symbol || poolInfo.quoteToken?.symbol || 'TOKEN1' }
               ],
-              total_usd_value: parseFloat(specificPairData.liquidity || specificPairData.liquidityUSD || specificPairData.tvl || '0'),
-              apr: specificPairData.apr || specificPairData.apy,
-              rawData: specificPairData
+              total_usd_value: parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0'),
+              apr: poolInfo.apr || poolInfo.apy,
+              rawData: poolInfo
             }];
             
-            const totalValue = parseFloat(specificPairData.liquidity || specificPairData.liquidityUSD || specificPairData.tvl || '0');
+            const totalValue = parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0');
             
             setPoolsData({
               summary: {
@@ -288,29 +365,30 @@ const Pools = () => {
               error: null
             });
             
+            console.log('🎯 SUCCESS: Pool/pair data displayed!');
             return;
           }
         }
       } catch (error) {
-        console.warn('⚠️ Pair lookup API failed:', error);
+        console.warn('⚠️ Pair lookup failed:', error);
       }
       
-      // Step 3: Final fallback to wallet DeFi positions
-      console.log('🔄 Final attempt: Trying as wallet address for DeFi positions...');
+      // STEP 4: Final fallback - try as wallet address for DeFi positions
+      console.log('🎯 STEP 4: Final attempt - checking if this is a WALLET with DeFi positions...');
       
       try {
         const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
         
-        if (!walletResponse.ok) {
-          console.warn(`⚠️ Wallet DeFi API returned ${walletResponse.status}: ${walletResponse.statusText}`);
-        } else {
+        if (walletResponse.ok) {
           const walletData = await walletResponse.json();
-          console.log('📊 Wallet data received:', walletData);
+          console.log('📊 Wallet DeFi data received:', walletData);
           
-          // Process the data based on type
-          const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
-          
-          if (walletData.positions && Array.isArray(walletData.positions)) {
+          if (walletData.positions && Array.isArray(walletData.positions) && walletData.positions.length > 0) {
+            console.log('✅ WALLET WITH DEFI POSITIONS DETECTED!');
+            
+            // Process wallet DeFi positions
+            const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+            
             walletData.positions.forEach((pos: any) => {
               const protocolName = `${pos.protocol} (${pos.chain})`;
               
@@ -327,36 +405,37 @@ const Pools = () => {
                 rawData: pos
               });
             });
+            
+            setPoolsData({
+              summary: {
+                total_usd_value: walletData.totalValue || 0,
+                active_protocols: walletData.protocolBreakdown ? Object.entries(walletData.protocolBreakdown).map(([name, value]) => ({
+                  protocol_name: name,
+                  protocol_id: name.toLowerCase(),
+                  total_usd_value: value as number,
+                  relative_portfolio_percentage: walletData.totalValue > 0 ? ((value as number) / walletData.totalValue) * 100 : 0
+                })) : []
+              },
+              protocolPositions,
+              isLoading: false,
+              error: null
+            });
+            
+            console.log('🎯 SUCCESS: Wallet DeFi positions displayed!');
+            return;
           }
-          
-          setPoolsData({
-            summary: {
-              total_usd_value: walletData.totalValue || 0,
-              active_protocols: walletData.protocolBreakdown ? Object.entries(walletData.protocolBreakdown).map(([name, value]) => ({
-                protocol_name: name,
-                protocol_id: name.toLowerCase(),
-                total_usd_value: value as number,
-                relative_portfolio_percentage: walletData.totalValue > 0 ? ((value as number) / walletData.totalValue) * 100 : 0
-              })) : []
-            },
-            protocolPositions,
-            isLoading: false,
-            error: null
-          });
-          
-          return;
         }
       } catch (error) {
         console.warn('⚠️ Wallet DeFi API failed:', error);
       }
 
-      // If all methods failed, show helpful message
-      console.log('⚠️ All search methods failed, showing helpful message');
+      // If all detection methods failed
+      console.log('⚠️ All smart detection methods failed - address type unknown');
       setPoolsData({
         summary: null,
         protocolPositions: {},
         isLoading: false,
-        error: `No DeFi positions or trading pools found for ${address.slice(0, 6)}...${address.slice(-4)}. This address might not be a token with active liquidity pools, a pool/pair address, or a wallet with DeFi positions on supported protocols.`
+        error: `Unable to analyze ${address.slice(0, 6)}...${address.slice(-4)}. This address might be:\n• A token without active trading pools\n• A pool/pair not indexed by our APIs\n• A wallet without DeFi positions\n• An invalid or unsupported address type\n\nTry searching for a different address or check if the address is correct.`
       });
       
     } catch (error) {
