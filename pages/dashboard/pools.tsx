@@ -63,10 +63,22 @@ const Pools = () => {
   useEffect(() => {
     const { address, search } = router.query;
     
-    if (address && typeof address === 'string' && search === 'true' && !hasSearched) {
+    console.log('🔍 Auto-search useEffect triggered:', { address, search, hasSearched, routerReady: router.isReady });
+    
+    // Only proceed if router is ready and we have the required parameters
+    if (router.isReady && address && typeof address === 'string' && search === 'true' && !hasSearched) {
+      console.log('🚀 Auto-search conditions met, triggering search for:', address);
       loadDeFiPositions(address);
+    } else {
+      console.log('❌ Auto-search conditions NOT met:', {
+        routerReady: router.isReady,
+        hasAddress: !!address,
+        isString: typeof address === 'string',
+        searchTrue: search === 'true',
+        notSearched: !hasSearched
+      });
     }
-  }, [router.query, hasSearched]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [router.query, router.isReady, hasSearched]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -141,6 +153,11 @@ const Pools = () => {
   };
 
   const loadDeFiPositions = async (address: string) => {
+    console.log('🔍🔍🔍 === LOAD DEFI POSITIONS STARTED ===');
+    console.log('🔍 Input address:', address);
+    console.log('🔍 Current state - hasSearched:', hasSearched);
+    console.log('🔍 Current searchAddress:', searchAddress);
+    
     setPoolsData(prev => ({ ...prev, isLoading: true, error: null }));
     setHasSearched(true);
     

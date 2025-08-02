@@ -218,7 +218,7 @@ export default function AdminReportsPage() {
       return;
     }
     
-    loadManagedWallets(currentWorkspaceId || undefined);
+    loadManagedWallets();
   }, []);
 
   useEffect(() => {
@@ -227,64 +227,46 @@ export default function AdminReportsPage() {
     }
   }, [selectedWallet, reportPeriod, reportType, managedWallets]);
 
-  const loadManagedWallets = async (workspaceId?: string) => {
+  const loadManagedWallets = async () => {
+    if (typeof window === 'undefined') return;
+    
     setIsLoadingWallets(true);
     try {
-      // Add client-side check for SSR compatibility
-      if (typeof window === 'undefined') {
-        setIsLoadingWallets(false);
-        return;
-      }
+      console.log('🔍 Loading managed wallets from localStorage...');
       
-      // Get current user's email (consistent with portfolio system)
-      const userEmail = localStorage.getItem('userEmail');
+      // Load from localStorage (same source as Wallet Management and Active Pairs/Pools)
+      const savedWallets = localStorage.getItem('managedWallets');
       
-      if (!userEmail) {
-        console.warn('⚠️ No user email found. Redirecting to portfolio management...');
-        setIsLoadingWallets(false);
-        return;
-      }
-
-      console.log(`🔗 Loading managed wallets for user: ${userEmail}, workspace: ${workspaceId || 'default'}`);
-      
-      const queryParams = new URLSearchParams({
-        email: userEmail
-      });
-      
-      if (workspaceId) {
-        queryParams.append('workspace', workspaceId);
-      }
-      
-      const response = await fetch(`/api/admin/all-wallets?${queryParams}`, {
-        headers: {
-          'x-user-email': userEmail,
-          ...(workspaceId && { 'x-workspace-id': workspaceId })
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setManagedWallets(data.wallets || []);
-        console.log(`✅ Loaded ${data.wallets?.length || 0} wallets for reports`);
-        
-        // Show workspace context in UI
-        if (data.currentWorkspace) {
-          console.log(`📊 Reports system connected to: ${data.currentWorkspace.workspaceId} (${data.currentWorkspace.role})`);
-        }
+      if (savedWallets) {
+        const wallets = JSON.parse(savedWallets);
+        console.log(`✅ Loaded ${wallets.length} wallets from localStorage:`, wallets.map((w: any) => ({ name: w.clientName, address: w.address })));
+        setManagedWallets(wallets);
       } else {
-        // Use same mock data as portfolio management for consistency
-        const mockWallets = getWorkspaceMockWallets(workspaceId || 'ws_personal_test');
-        setManagedWallets(mockWallets);
-        console.log(`✅ Using ${mockWallets.length} mock wallets for workspace reports`);
+        console.log('❌ No wallets found in localStorage');
+        // Set default wallets if none exist
+        const defaultWallets = [
+          {
+            id: '1',
+            address: '0x4f02bb03',
+            clientName: 'Your Connected Wallet',
+            accessType: 'view_only',
+            hasPrivateKey: false,
+            dateAdded: '2024-01-20T10:00:00Z',
+            lastActivity: '2024-01-20T18:30:00Z',
+            totalValue: 8.69,
+            status: 'active',
+            notes: 'Main admin wallet - connected via Privy'
+          }
+        ];
+        
+        // Save defaults to localStorage and set state
+        localStorage.setItem('managedWallets', JSON.stringify(defaultWallets));
+        setManagedWallets(defaultWallets);
+        console.log('✅ Created default wallet in localStorage');
       }
     } catch (error) {
-      console.error('❌ Error loading managed wallets for reports:', error);
-      // Fallback to workspace-specific mock data
-      if (typeof window !== 'undefined') {
-        const workspaceId = localStorage.getItem('currentWorkspaceId') || 'ws_personal_test';
-        const mockWallets = getWorkspaceMockWallets(workspaceId);
-        setManagedWallets(mockWallets);
-      }
+      console.error('❌ Error loading managed wallets from localStorage:', error);
+      setManagedWallets([]);
     } finally {
       setIsLoadingWallets(false);
     }

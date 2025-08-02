@@ -241,16 +241,22 @@ async function fetchSolanaTokenInfo(address: string) {
   }
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { address, chain = 'eth' } = req.query;
+  
+  console.log('🔍 === PAIR-INFO API CALLED ===');
+  console.log('🔍 Input address:', address);
+  console.log('🔍 Input chain:', chain);
+  console.log('🔍 Moralis API Key available:', !!process.env.MORALIS_API_KEY);
+  
+  if (!address) {
+    return res.status(400).json({
+      success: false,
+      error: 'Address parameter is required'
+    });
   }
 
   try {
-    const { address, chain } = req.query;
     const pairAddress = Array.isArray(address) ? address[0] : address;
 
     if (!pairAddress) {
