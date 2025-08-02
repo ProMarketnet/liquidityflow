@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 
+// 💳 WALLET MANAGEMENT INTERFACE
 interface ManagedWallet {
   id: string;
   address: string;
@@ -11,7 +12,13 @@ interface ManagedWallet {
   lastActivity: string;
   totalValue: number;
   status: 'active' | 'inactive' | 'suspended';
-  notes?: string;
+  notes: string;
+  // 🌐 NEW: Chain detection fields
+  addressType?: 'evm' | 'solana' | 'unknown';
+  supportedChains?: string[];
+  primaryChain?: string;
+  chainDetectionDate?: string;
+  detectionStatus?: 'pending' | 'completed' | 'failed';
 }
 
 export default function AdminWalletsPage() {
@@ -238,6 +245,19 @@ export default function AdminWalletsPage() {
       padding: '1rem',
       color: '#92400e',
       marginBottom: '1rem'
+    },
+    tableHeader: {
+      background: '#f3f4f6',
+      color: '#000000',
+      fontWeight: 'bold',
+      padding: '1rem',
+      textAlign: 'left' as const,
+      border: '1px solid #000000'
+    },
+    tableHeaderCell: {
+      padding: '1rem',
+      border: '1px solid #000000',
+      color: '#000000'
     }
   };
 
@@ -310,48 +330,82 @@ export default function AdminWalletsPage() {
 
   const addWallet = async () => {
     if (!newWallet.address || !newWallet.clientName) {
-      alert('Please fill in wallet address and client name');
+      alert('⚠️ Please fill in all required fields');
       return;
     }
 
-    // Validate wallet address format
-    const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(newWallet.address);
-    const isSolanaAddress = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(newWallet.address);
-    
-    if (!isEVMAddress && !isSolanaAddress) {
-      alert('Invalid wallet address format. Please enter a valid Ethereum (0x...) or Solana address.');
-      return;
+    try {
+      setIsLoading(true);
+
+      // 🌐 STEP 1: Detect chains using Moralis API
+      console.log('🔍 Starting chain detection for:', newWallet.address);
+      
+      const chainDetectionResponse = await fetch('/api/wallet/detect-chains', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          address: newWallet.address
+        })
+      });
+
+      let chainData = null;
+      if (chainDetectionResponse.ok) {
+        chainData = await chainDetectionResponse.json();
+        console.log('✅ Chain detection completed:', chainData);
+      } else {
+        console.warn('⚠️ Chain detection failed, proceeding without chain data');
+      }
+
+      // 🔧 STEP 2: Create wallet with chain information
+      const wallet: ManagedWallet = {
+        id: Date.now().toString(),
+        address: newWallet.address,
+        clientName: newWallet.clientName,
+        accessType: newWallet.accessType,
+        hasPrivateKey: newWallet.accessType === 'full_access',
+        dateAdded: new Date().toISOString(),
+        lastActivity: new Date().toISOString(),
+        totalValue: 0,
+        status: 'active',
+        notes: newWallet.notes,
+        
+        // 🌐 NEW: Chain detection data
+        addressType: chainData?.addressType || 'unknown',
+        supportedChains: chainData?.recommendedChains || [],
+        primaryChain: chainData?.primaryChain || null,
+        chainDetectionDate: chainData ? new Date().toISOString() : undefined,
+        detectionStatus: chainData ? 'completed' : 'failed'
+      };
+
+      // Save to localStorage and update state
+      const updatedWallets = [...wallets, wallet];
+      setWallets(updatedWallets);
+      localStorage.setItem('managedWallets', JSON.stringify(updatedWallets));
+      
+      // Reset form
+      setNewWallet({
+        address: '',
+        clientName: '',
+        accessType: 'view_only',
+        privateKey: '',
+        notes: ''
+      });
+
+      // 🎯 Show success message with chain info
+      if (chainData && chainData.recommendedChains?.length > 0) {
+        alert(`✅ Wallet added successfully!\n\n📊 Chain Detection Results:\n• Address Type: ${chainData.addressType.toUpperCase()}\n• Active Chains: ${chainData.recommendedChains.join(', ')}\n• Primary Chain: ${chainData.primaryChain}\n• Detection Time: ${chainData.detectionTime}`);
+      } else {
+        alert(`✅ Wallet added successfully!\n\n⚠️ Chain detection failed - you can manually specify chains later.`);
+      }
+
+    } catch (error) {
+      console.error('❌ Error adding wallet:', error);
+      alert('❌ Error adding wallet. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
-
-    const wallet: ManagedWallet = {
-      id: Date.now().toString(),
-      address: newWallet.address,
-      clientName: newWallet.clientName,
-      accessType: newWallet.accessType,
-      hasPrivateKey: newWallet.privateKey.length > 0,
-      dateAdded: new Date().toISOString(),
-      lastActivity: new Date().toISOString(),
-      totalValue: 0,
-      status: 'active',
-      notes: newWallet.notes
-    };
-
-    // Save to localStorage and update state
-    const updatedWallets = [...wallets, wallet];
-    setWallets(updatedWallets);
-    localStorage.setItem('managedWallets', JSON.stringify(updatedWallets));
-    
-    // Reset form
-    setNewWallet({
-      address: '',
-      clientName: '',
-      accessType: 'view_only',
-      privateKey: '',
-      notes: ''
-    });
-    setShowAddForm(false);
-    
-    alert(`✅ Added wallet for ${newWallet.clientName}`);
   };
 
   const removeWallet = async (walletId: string) => {
@@ -513,15 +567,15 @@ export default function AdminWalletsPage() {
               <div style={{ overflowX: 'auto' }}>
                 <table style={styles.table}>
                   <thead>
-                    <tr>
-                      <th style={styles.th}>Client Name</th>
-                      <th style={styles.th}>Wallet Address</th>
-                      <th style={styles.th}>Access Type</th>
-                      <th style={styles.th}>Private Key</th>
-                      <th style={styles.th}>Portfolio Value</th>
-                      <th style={styles.th}>Status</th>
-                      <th style={styles.th}>Date Added</th>
-                      <th style={styles.th}>Actions</th>
+                    <tr style={styles.tableHeader}>
+                      <th style={styles.tableHeaderCell}>Client</th>
+                      <th style={styles.tableHeaderCell}>Address</th>
+                      <th style={styles.tableHeaderCell}>Access Level</th>
+                      <th style={styles.tableHeaderCell}>Chains</th>
+                      <th style={styles.tableHeaderCell}>Value</th>
+                      <th style={styles.tableHeaderCell}>Status</th>
+                      <th style={styles.tableHeaderCell}>Added</th>
+                      <th style={styles.tableHeaderCell}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -551,11 +605,15 @@ export default function AdminWalletsPage() {
                           </span>
                         </td>
                         <td style={styles.td}>
-                          {wallet.hasPrivateKey ? (
-                            <span style={{ color: '#dc2626', fontWeight: 'bold' }}>🔑 STORED</span>
-                          ) : (
-                            <span style={{ color: '#6b7280' }}>❌ None</span>
-                          )}
+                          <div style={{ fontSize: '0.875rem' }}>
+                            {wallet.addressType && (
+                              <>
+                                <strong>Type:</strong> {wallet.addressType.toUpperCase()}<br />
+                                <strong>Primary:</strong> {wallet.primaryChain || 'N/A'}<br />
+                                <strong>Supported:</strong> {wallet.supportedChains?.join(', ') || 'N/A'}
+                              </>
+                            )}
+                          </div>
                         </td>
                         <td style={styles.td}>
                           <span style={{ fontWeight: 'bold', color: '#16a34a' }}>
