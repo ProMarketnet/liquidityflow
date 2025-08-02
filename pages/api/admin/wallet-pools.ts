@@ -46,30 +46,71 @@ async function fetchWalletDeFiData(address: string, clientName: string): Promise
   }
 
   try {
-    console.log(`🔍 Fetching DeFi data for ${clientName} (${address})`);
+    console.log(`🔍 Fetching data for ${clientName} (${address})`);
     
-    const isEVM = isValidEVMAddress(address);
-    const isSolana = isValidSolanaAddress(address);
+    // 🎯 STEP 1: First try to detect if this is a POOL address (like WXM)
+    console.log(`🎯 Checking if ${address} is a pool address...`);
     
-    if (!isEVM && !isSolana) {
-      console.warn(`Invalid address format: ${address}`);
-      return [];
-    }
-
-    const pools: PoolData[] = [];
-    let poolIndex = 0;
-
-    // Fetch EVM chain data
-    if (isEVM) {
-      const evmChains = ['ethereum', 'arbitrum', 'base', 'optimism'];
-      
-      for (const chainName of evmChains) {
-        const chain = SUPPORTED_CHAINS[chainName as keyof typeof SUPPORTED_CHAINS].moralisId;
+    const evmChains = ['arbitrum', 'eth', 'base', 'optimism', 'polygon', 'bsc'];
+    
+    // Try each chain to see if this is a pool
+    for (const chain of evmChains) {
+      try {
+        console.log(`🔍 Trying ${chain} for pool detection...`);
         
+        const poolResponse = await fetch(`${process.env.NEXTAUTH_URL || 'https://liquidityflow-production.up.railway.app'}/api/pools/pair-info?address=${address}&chain=${chain}`, {
+          method: 'GET',
+          headers: {
+            'accept': 'application/json'
+          }
+        });
+
+        if (poolResponse.ok) {
+          const poolData = await poolResponse.json();
+          
+          if (poolData.success && (poolData.pairInfo || poolData.poolInfo || poolData.pair || poolData.pool)) {
+            console.log(`✅ POOL DETECTED on ${chain.toUpperCase()}!`, poolData);
+            
+            const poolInfo = poolData.pairInfo || poolData.poolInfo || poolData.pair || poolData.pool || poolData;
+            const protocol = poolInfo.dex || poolInfo.protocol || 'Unknown DEX';
+            const poolChain = poolInfo.chain || chain;
+            
+            // Convert pool data to PoolData format
+            const pool: PoolData = {
+              id: address,
+              clientName: clientName,
+              address: address,
+              protocol: formatProtocolName(protocol),
+              pair: `${poolInfo.baseToken?.symbol || poolInfo.token0?.symbol || 'TOKEN0'}/${poolInfo.quoteToken?.symbol || poolInfo.token1?.symbol || 'TOKEN1'}`,
+              totalValue: parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0'),
+              change24h: parseFloat(poolInfo.priceChange24h || poolInfo.change24h || '0'),
+              status: determineStatus(parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0')),
+              pairAddress: address
+            };
+            
+            console.log(`🎯 SUCCESS: Found pool data for ${clientName}:`, pool);
+            return [pool];
+          }
+        }
+      } catch (chainError) {
+        console.warn(`⚠️ ${chain} pool detection failed:`, chainError);
+      }
+    }
+    
+    console.log(`⚠️ Not a pool address, trying as wallet for DeFi positions...`);
+    
+    // 🔧 STEP 2: If not a pool, treat as wallet and look for DeFi positions
+    const pools: PoolData[] = [];
+
+    // Check EVM chains for DeFi positions
+    const evmChainsList = Object.values(SUPPORTED_CHAINS).filter(chain => chain.id !== 'solana');
+    
+    for (const chain of evmChainsList) {
+      if (isValidEVMAddress(address)) {
+        console.log(`🔍 Checking ${chain.name} for DeFi positions...`);
         try {
-          // Get DeFi summary for this chain
-          const summaryResponse = await fetch(
-            `https://deep-index.moralis.io/api/v2.2/wallets/${address}/defi/summary?chain=${chain}`,
+          const response = await fetch(
+            `https://deep-index.moralis.io/api/v2.2/wallets/${address}/defi/summary?chain=${chain.moralisId}`,
             {
               headers: {
                 'X-API-Key': apiKey,
@@ -78,64 +119,43 @@ async function fetchWalletDeFiData(address: string, clientName: string): Promise
             }
           );
 
-          if (summaryResponse.ok) {
-            const summary = await summaryResponse.json();
-            
-            if (summary.total_usd_value && parseFloat(summary.total_usd_value) > 0) {
-              // Get protocol-specific positions
-              const protocols = CHAIN_PROTOCOLS[chainName as keyof typeof CHAIN_PROTOCOLS] || [];
-              
-              for (const protocol of protocols.slice(0, 2)) { // Limit to 2 protocols per chain for performance
-                try {
-                  const protocolResponse = await fetch(
-                    `https://deep-index.moralis.io/api/v2.2/wallets/${address}/defi/${protocol}/positions?chain=${chain}`,
-                    {
-                      headers: {
-                        'X-API-Key': apiKey,
-                        'accept': 'application/json'
-                      }
-                    }
-                  );
+          if (response.ok) {
+            const data = await response.json();
+            console.log(`📊 ${chain.name} DeFi data:`, data);
 
-                  if (protocolResponse.ok) {
-                    const positions = await protocolResponse.json();
-                    
-                    if (Array.isArray(positions) && positions.length > 0) {
-                      // Take first position as representative
-                      const position = positions[0];
-                      
-                      pools.push({
-                        id: `${address}-${poolIndex++}`,
-                        clientName,
-                        address,
-                        protocol: formatProtocolName(protocol),
-                        pair: extractPairName(position) || 'TOKEN/TOKEN',
-                        totalValue: parseFloat(position.usd_value || summary.total_usd_value || '0'),
-                        change24h: extractChange24h(position),
-                        status: determineStatus(parseFloat(position.usd_value || '0')),
-                        pairAddress: position.position_id || position.pair_address || generatePairAddress(address, poolIndex)
-                      });
-                      
-                      break; // Only one pool per protocol for cleaner display
-                    }
-                  }
-                } catch (error) {
-                  console.warn(`Failed to fetch ${protocol} on ${chain}:`, error);
-                }
-              }
+            if (data && typeof data === 'object' && data.total_usd_value > 0) {
+              // Process DeFi positions
+              const protocols = data.active_protocols || [];
+              
+              protocols.forEach((protocol: any, index: number) => {
+                const pool: PoolData = {
+                  id: `${address}_${chain.moralisId}_${index}`,
+                  clientName: clientName,
+                  address: address,
+                  protocol: formatProtocolName(protocol.protocol_name || 'Unknown'),
+                  pair: extractPairName(protocol) || 'DeFi Position',
+                  totalValue: protocol.total_usd_value || 0,
+                  change24h: extractChange24h(protocol),
+                  status: determineStatus(protocol.total_usd_value || 0),
+                  pairAddress: generatePairAddress(address, index)
+                };
+                
+                pools.push(pool);
+              });
             }
           }
         } catch (error) {
-          console.warn(`Failed to fetch summary for ${chain}:`, error);
+          console.error(`❌ Error fetching ${chain.name} DeFi data:`, error);
         }
       }
     }
 
-    // Fetch Solana data
-    if (isSolana) {
+    // Check Solana if it's a Solana address
+    if (isValidSolanaAddress(address)) {
+      console.log(`🔍 Checking Solana for ${clientName}...`);
       try {
         const response = await fetch(
-          `https://solana-gateway.moralis.io/account/mainnet/${address}/defi/positions`,
+          `https://solana-gateway.moralis.io/account/mainnet/${address}/portfolio`,
           {
             headers: {
               'X-API-Key': apiKey,
@@ -146,42 +166,34 @@ async function fetchWalletDeFiData(address: string, clientName: string): Promise
 
         if (response.ok) {
           const data = await response.json();
-          
-          if (data && data.result && Array.isArray(data.result)) {
-            // Group by protocol and take one position per protocol
-            const protocolGroups: Record<string, any> = {};
-            data.result.forEach((position: any) => {
-              const protocol = position.protocol_name || position.dex || 'Unknown';
-              if (!protocolGroups[protocol]) {
-                protocolGroups[protocol] = position;
-              }
-            });
+          console.log(`📊 Solana data:`, data);
 
-            Object.entries(protocolGroups).forEach(([protocolName, position]) => {
-              pools.push({
-                id: `${address}-${poolIndex++}`,
-                clientName,
-                address,
-                protocol: protocolName,
-                pair: extractPairName(position) || 'SOL/TOKEN',
-                totalValue: parseFloat(position.usd_value || position.value || '0'),
-                change24h: extractChange24h(position),
-                status: determineStatus(parseFloat(position.usd_value || position.value || '0')),
-                pairAddress: position.position_id || position.pair_address || generatePairAddress(address, poolIndex)
-              });
-            });
+          if (data && data.total_value_usd > 0) {
+            const pool: PoolData = {
+              id: `${address}_solana`,
+              clientName: clientName,
+              address: address,
+              protocol: 'Solana DeFi',
+              pair: 'Multiple Positions',
+              totalValue: data.total_value_usd || 0,
+              change24h: 0,
+              status: determineStatus(data.total_value_usd || 0),
+              pairAddress: address
+            };
+            
+            pools.push(pool);
           }
         }
       } catch (error) {
-        console.warn(`Failed to fetch Solana data:`, error);
+        console.error(`❌ Error fetching Solana data:`, error);
       }
     }
 
-    console.log(`✅ Found ${pools.length} pools for ${clientName}`);
+    console.log(`✅ Found ${pools.length} positions for ${clientName}`);
     return pools;
 
   } catch (error) {
-    console.error(`❌ Error fetching DeFi data for ${clientName}:`, error);
+    console.error(`❌ Error fetching data for ${clientName}:`, error);
     return [];
   }
 }
