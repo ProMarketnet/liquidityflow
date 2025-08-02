@@ -212,7 +212,7 @@ export default function AdminAnalyticsPage() {
             </a>
             <span style={{ color: '#2563eb', fontWeight: '600' }}>📈 Analytics</span>
             <a href="/dashboard" style={{ color: '#4a5568', textDecoration: 'none' }}>
-              ⬅️ Back to Dashboard
+              ⬅️ Back to My Wallet
             </a>
             
             {/* Time Range Selector */}

@@ -261,7 +261,7 @@ export default function SettingsPage() {
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>LiquidFlow</div>
                                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                               <a href="/admin/portfolios" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
-              <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
+              <a href="/dashboard" style={styles.navLink}>← Back to My Wallet</a>
               <a href="/dashboard/alerts" style={styles.navLink}>Alerts</a>
               <a href="/dashboard/pools" style={styles.navLink}>Pools</a>
               <button 

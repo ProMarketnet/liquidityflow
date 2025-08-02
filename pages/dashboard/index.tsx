@@ -132,7 +132,7 @@ export default function DashboardPage() {
             <a href="/admin/portfolios" style={{ color: 'var(--color-success)', fontWeight: '600', textDecoration: 'none' }}>
               🏠 Home
             </a>
-            <span style={{ color: 'var(--color-primary)', fontWeight: '600' }}>📊 Dashboard</span>
+            <span style={{ color: 'var(--color-primary)', fontWeight: '600' }}>💳 My Wallet</span>
             <button 
               onClick={() => {
                 localStorage.removeItem('connectedWallet');
@@ -161,7 +161,7 @@ export default function DashboardPage() {
       }}>
         <div style={{ marginBottom: 'var(--space-8)' }}>
           <h1 style={{ marginBottom: 'var(--space-2)', color: 'var(--color-text-primary)' }}>
-            Portfolio Dashboard
+            My Wallet
           </h1>
           <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
             Connected: <span style={{ 

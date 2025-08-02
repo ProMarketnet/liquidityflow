@@ -432,7 +432,7 @@ export default function AdminWalletsPage() {
                               <a href="/admin/portfolios" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
               <a href="/admin/portfolios" style={styles.navLink}>💼 Portfolios</a>
               <a href="/admin/analytics" style={styles.navLink}>📊 Analytics</a>
-              <a href="/dashboard" style={styles.navLink}>← Dashboard</a>
+              <a href="/dashboard" style={styles.navLink}>← My Wallet</a>
               <button 
                 onClick={() => {
                   localStorage.removeItem('connectedWallet');
