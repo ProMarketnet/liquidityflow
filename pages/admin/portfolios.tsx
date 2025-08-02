@@ -110,14 +110,48 @@ export default function AdminPortfoliosPage() {
               color: '#1f2937',
               marginBottom: '0.5rem'
             }}>
-              ✨ Portfolio Management [SIMPLIFIED VERSION]
+              ✨ Portfolio Management [DEMO MODE]
             </h1>
             <p style={{ 
               color: '#6b7280', 
-              fontSize: '1.1rem'
+              fontSize: '1.1rem',
+              marginBottom: '1rem'
             }}>
-              Clean, simple portfolio view - NO AUTHENTICATION REQUIRED
+              Viewing sample DeFi portfolios • To manage your own wallets and add collaborators, please register
             </p>
+            
+            {/* Registration CTA */}
+            <div style={{
+              background: '#f0f7ff',
+              border: '2px solid #3b82f6',
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <strong style={{ color: '#1f2937' }}>👀 Demo Access</strong>
+                  <p style={{ margin: '0.25rem 0 0 0', color: '#6b7280', fontSize: '0.9rem' }}>
+                    Register to add your wallets, manage portfolios, and invite team members
+                  </p>
+                </div>
+                <button 
+                  onClick={() => window.location.href = '/auth/register'}
+                  style={{
+                    background: '#3b82f6',
+                    color: '#ffffff',
+                    padding: '0.75rem 1.5rem',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  🚀 Get Full Access
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Quick Actions */}
@@ -132,10 +166,9 @@ export default function AdminPortfoliosPage() {
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button 
                 onClick={() => {
-                  const address = prompt('Enter wallet address to track:');
-                  if (address) {
-                    alert(`✅ Wallet ${address.slice(0,6)}...${address.slice(-4)} added to tracking!`);
-                    // In production: call API to add wallet
+                  const shouldRegister = confirm(`🔐 Account Required\n\nThis is demo data. To manage your own portfolios:\n\n✅ Register to:\n   • Add your wallet addresses\n   • Track real positions\n   • Manage settings & alerts\n   • Invite collaborators\n   • Export your data\n\n❌ Cancel: Continue viewing demo\n\nCreate account now?`);
+                  if (shouldRegister) {
+                    window.location.href = '/auth/register';
                   }
                 }}
                 style={{
@@ -152,10 +185,10 @@ export default function AdminPortfoliosPage() {
               </button>
               <button 
                 onClick={() => {
-                  const reportType = confirm('Generate PDF report? OK = PDF, Cancel = CSV');
-                  const format = reportType ? 'PDF' : 'CSV';
-                  alert(`📊 ${format} report generated! Check your downloads folder.`);
-                  // In production: call API to generate actual report
+                  const shouldRegister = confirm(`📊 Account Required for Reports\n\nTo generate reports on your own portfolios, please register.\n\n✅ With an account you can:\n   • Export your portfolio data\n   • Generate PDF/CSV reports\n   • Set up automated reports\n   • Share reports with collaborators\n\nWould you like to create an account?`);
+                  if (shouldRegister) {
+                    window.location.href = '/auth/register';
+                  }
                 }}
                 style={{
                   background: '#10b981',
@@ -246,11 +279,9 @@ export default function AdminPortfoliosPage() {
                     <td style={{ padding: '1rem', textAlign: 'center' }}>
                       <button 
                         onClick={() => {
-                          const action = confirm(`Manage ${wallet.clientName}?\n\nOK = View Details\nCancel = Edit Settings`);
-                          if (action) {
-                            alert(`📊 Viewing details for ${wallet.clientName}\n\n💰 Total Value: $${wallet.totalValue.toLocaleString()}\n🔗 Positions: ${wallet.positions}\n📈 24h: ${wallet.performance24h >= 0 ? '+' : ''}${wallet.performance24h}%\n🛠️ Protocols: ${wallet.protocols.join(', ')}`);
-                          } else {
-                            alert(`⚙️ Opening settings for ${wallet.clientName}\n\n• Add/Remove positions\n• Set alerts\n• Configure notifications\n• Export data`);
+                          const shouldRegister = confirm(`🔐 Account Required\n\nThis is demo data. To manage your own portfolios:\n\n✅ Register to:\n   • Add your wallet addresses\n   • Track real positions\n   • Manage settings & alerts\n   • Invite collaborators\n   • Export your data\n\n❌ Cancel: Continue viewing demo\n\nCreate account now?`);
+                          if (shouldRegister) {
+                            window.location.href = '/auth/register';
                           }
                         }}
                         style={{
