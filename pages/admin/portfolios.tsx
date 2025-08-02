@@ -464,7 +464,7 @@ export default function PortfoliosPage() {
                               display: 'inline-block'
                             }}
                           >
-                            🔍 Analyze Pools
+                            ⚙️ Manage Pool
                           </a>
                         </div>
                       </td>
