@@ -2,13 +2,15 @@
 const nextConfig = {
   reactStrictMode: true,
   generateBuildId: async () => {
-    // Force new build ID every time
-    return `build-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    // Force completely new build ID every single time
+    return `liquidflow-rebuild-${Date.now()}-${Math.random().toString(36).substr(2, 15)}-force`
   },
-  // Disable all caching during deployment issues
+  // Disable ALL caching to force fresh build
   experimental: {
     isrMemoryCacheSize: 0,
   },
+  // Force complete rebuild
+  swcMinify: false,
 }
 
 module.exports = nextConfig
