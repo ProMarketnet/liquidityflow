@@ -387,27 +387,10 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 
-                <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
-                  <div style={{
-                    fontSize: 'var(--font-size-4xl)',
-                    marginBottom: 'var(--space-4)'
-                  }}>🔍</div>
-                  <p style={{ 
-                    margin: 0,
-                    color: 'var(--color-text-secondary)',
-                    fontSize: 'var(--font-size-sm)'
-                  }}>
-                    No major token holdings found
-                  </p>
-                  <p style={{ 
-                    margin: 0,
-                    color: 'var(--color-text-tertiary)',
-                    fontSize: 'var(--font-size-xs)',
-                    marginTop: 'var(--space-2)'
-                  }}>
-                    Tokens will appear here when detected
-                  </p>
-                </div>
+                {/* Real Token Holdings Component */}
+                {walletAddress && (
+                  <TopTokenHoldings walletAddress={walletAddress} maxTokens={5} />
+                )}
               </div>
 
               {/* DeFi Positions */}
@@ -434,27 +417,10 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 
-                <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
-                  <div style={{
-                    fontSize: 'var(--font-size-4xl)',
-                    marginBottom: 'var(--space-4)'
-                  }}>🔎</div>
-                  <p style={{ 
-                    margin: 0,
-                    color: 'var(--color-text-secondary)',
-                    fontSize: 'var(--font-size-sm)'
-                  }}>
-                    No DeFi positions found
-                  </p>
-                  <p style={{ 
-                    margin: 0,
-                    color: 'var(--color-text-tertiary)',
-                    fontSize: 'var(--font-size-xs)',
-                    marginTop: 'var(--space-2)'
-                  }}>
-                    LP tokens, lending, staking will show here
-                  </p>
-                </div>
+                {/* Real DeFi Positions Component */}
+                {walletAddress && (
+                  <DeFiPositions walletAddress={walletAddress} maxPositions={5} />
+                )}
               </div>
             </div>
 
@@ -504,6 +470,14 @@ export default function DashboardPage() {
           </div>
         )}
       </main>
+      <footer style={{
+        textAlign: 'center',
+        padding: 'var(--space-4)',
+        color: 'var(--color-text-secondary)',
+        fontSize: 'var(--font-size-sm)'
+      }}>
+        &copy; 2025 LiquidFlow. All rights reserved.
+      </footer>
     </div>
   );
 }

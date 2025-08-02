@@ -20,312 +20,400 @@ export default function AdminAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7d');
 
-  // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
-  const styles = {
-    page: {
-      minHeight: '100vh',
-      background: '#ffffff',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      color: '#000000',
-      padding: '2rem 1rem'
-    },
-    container: {
-      maxWidth: '1400px',
-      margin: '0 auto'
-    },
-    title: {
-      fontSize: '2.5rem',
-      fontWeight: 'bold',
-      color: '#000000',
-      marginBottom: '0.5rem'
-    },
-    subtitle: {
-      color: '#666666',
-      marginBottom: '2rem'
-    },
-    nav: {
-      background: '#ffffff',
-      borderBottom: '2px solid #000000',
-      padding: '1rem 0',
-      marginBottom: '2rem'
-    },
-    navContainer: {
-      maxWidth: '1400px',
-      margin: '0 auto',
-      padding: '0 1rem',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    },
-    navLink: {
-      color: '#000000',
-      textDecoration: 'none',
-      fontWeight: '500',
-      marginRight: '2rem'
-    },
-    card: {
-      background: '#ffffff',
-      border: '3px solid #000000',
-      borderRadius: '1rem',
-      padding: '1.5rem',
-      marginBottom: '1.5rem'
-    },
-    cardTitle: {
-      fontSize: '1.25rem',
-      fontWeight: 'bold',
-      color: '#000000',
-      marginBottom: '1rem'
-    },
-    grid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-      gap: '1.5rem',
-      marginBottom: '2rem'
-    },
-    bigNumber: {
-      fontSize: '2.5rem',
-      fontWeight: 'bold',
-      color: '#000000',
-      marginBottom: '0.5rem'
-    },
-    metric: {
-      color: '#666',
-      fontSize: '0.875rem'
-    },
-    table: {
-      width: '100%',
-      borderCollapse: 'collapse' as const,
-      marginTop: '1rem'
-    },
-    th: {
-      borderBottom: '2px solid #000000',
-      padding: '0.75rem',
-      textAlign: 'left' as const,
-      fontWeight: 'bold',
-      color: '#000000'
-    },
-    td: {
-      borderBottom: '1px solid #ccc',
-      padding: '0.75rem',
-      color: '#000000'
-    },
-    select: {
-      padding: '0.5rem',
-      border: '2px solid #000000',
-      borderRadius: '0.5rem',
-      fontSize: '1rem',
-      color: '#000000',
-      background: '#ffffff'
-    },
-    loadingCard: {
-      background: '#ffffff',
-      border: '3px solid #000000',
-      borderRadius: '1rem',
-      padding: '3rem',
-      textAlign: 'center' as const
-    }
-  };
-
   useEffect(() => {
-    loadPlatformAnalytics();
+    loadAnalytics();
   }, [timeRange]);
 
-  const loadPlatformAnalytics = async () => {
+  const loadAnalytics = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/admin/platform-analytics?timeRange=${timeRange}`);
+      const response = await fetch(`/api/admin/platform-analytics?range=${timeRange}`);
       if (response.ok) {
         const data = await response.json();
         setAnalytics(data);
       } else {
-        // Mock data for demonstration
+        // Fallback to mock data for demo
         setAnalytics({
-          totalUsers: 47,
-          totalValueLocked: 2847392.45,
-          totalPositions: 312,
+          totalUsers: 1247,
+          totalValueLocked: 8925463.78,
+          totalPositions: 3892,
           topProtocols: [
-            { name: 'Uniswap V3', tvl: 1247832.12, users: 28 },
-            { name: 'Aave V3', tvl: 892341.33, users: 19 },
-            { name: 'Compound', tvl: 456234.89, users: 15 },
-            { name: 'Curve', tvl: 234567.11, users: 12 },
-            { name: 'Balancer', tvl: 16417.00, users: 8 }
+            { name: 'Uniswap V3', tvl: 3245000, users: 456 },
+            { name: 'Aave V3', tvl: 2156000, users: 324 },
+            { name: 'Raydium', tvl: 1890000, users: 289 },
+            { name: 'Curve', tvl: 1634463.78, users: 178 }
           ],
           recentConnections: [
-            { address: '0x742d...35C2', timestamp: '2 hours ago', tvl: 45823.12 },
-            { address: '0x1a2b...7d8e', timestamp: '4 hours ago', tvl: 123456.78 },
-            { address: '0x9f8e...2a1b', timestamp: '6 hours ago', tvl: 87234.56 },
-            { address: '0x3c4d...9e0f', timestamp: '8 hours ago', tvl: 234567.89 },
-            { address: '0x5e6f...1c2d', timestamp: '12 hours ago', tvl: 156789.23 }
+            { address: '0x742d35Cc66335C0532925a3b8C0d2c35ad81C35C2', timestamp: '2 mins ago', tvl: 125000 },
+            { address: '0x8ba1f109551bD432803012645Hac085c32c4a9b8', timestamp: '5 mins ago', tvl: 87500 },
+            { address: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', timestamp: '12 mins ago', tvl: 245000 }
           ],
           alertsSummary: {
-            critical: 3,
-            warning: 12,
-            info: 28
+            critical: 0,
+            warning: 0,
+            info: 0
           },
           dailyActivity: [
-            { date: '2024-01-20', newUsers: 8, totalTvl: 2847392.45 },
-            { date: '2024-01-19', newUsers: 5, totalTvl: 2543221.33 },
-            { date: '2024-01-18', newUsers: 12, totalTvl: 2234567.89 },
-            { date: '2024-01-17', newUsers: 3, totalTvl: 1987654.32 },
-            { date: '2024-01-16', newUsers: 7, totalTvl: 1845623.11 },
-            { date: '2024-01-15', newUsers: 9, totalTvl: 1687432.22 },
-            { date: '2024-01-14', newUsers: 6, totalTvl: 1523456.78 }
+            { date: '2025-01-01', newUsers: 23, totalTvl: 8925463.78 },
+            { date: '2024-12-31', newUsers: 45, totalTvl: 8756234.12 },
+            { date: '2024-12-30', newUsers: 38, totalTvl: 8634567.89 }
           ]
         });
       }
     } catch (error) {
-      console.error('Error loading platform analytics:', error);
+      console.error('Error loading analytics:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+  const formatCurrency = (amount: number): string => {
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `$${(amount / 1000).toFixed(0)}K`;
+    } else {
+      return `$${amount.toFixed(2)}`;
+    }
   };
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
+  const formatAddress = (address: string): string => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   return (
-    <>
+    <div style={{ minHeight: '100vh' }}>
       <Head>
         <title>Platform Analytics - LiquidFlow Admin</title>
-        <meta name="description" content="Platform-wide analytics and user metrics" />
+        <meta name="description" content="Comprehensive analytics dashboard for LiquidFlow platform administrators" />
       </Head>
-      
-      <div style={styles.page}>
-        <nav style={styles.nav}>
-          <div style={styles.navContainer}>
-            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#000000' }}>
-              🏢 LiquidFlow Admin
-            </div>
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <a href="/" style={{ ...styles.navLink, color: '#16a34a', fontWeight: 'bold' }}>🏠 Home</a>
-            <a href="/admin/wallets" style={styles.navLink}>💳 Manage Wallets</a>
-            <a href="/admin/portfolios" style={styles.navLink}>💼 Portfolios</a>
-            <a href="/dashboard" style={styles.navLink}>← Back to Dashboard</a>
-            <select 
-              value={timeRange} 
+
+      {/* Premium Navigation */}
+      <nav className="nav" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+        padding: 'var(--space-4) 0'
+      }}>
+        <div className="container flex justify-between items-center">
+          <div style={{
+            fontSize: 'var(--font-size-2xl)',
+            fontWeight: '800',
+            color: 'var(--color-text-primary)',
+            letterSpacing: '-0.025em'
+          }}>
+            🏢 LiquidFlow Admin
+          </div>
+          
+          <div className="flex gap-6 items-center">
+            {/* Admin Navigation */}
+            <a href="/" className="nav-link" style={{ color: 'var(--color-success)', fontWeight: '600' }}>
+              🏠 Home
+            </a>
+            <a href="/admin/wallets" className="nav-link">
+              💳 Manage Wallets
+            </a>
+            <a href="/admin/portfolios" className="nav-link">
+              🏢 Portfolios
+            </a>
+            <a href="/dashboard" className="nav-link">
+              ⬅️ Back to Dashboard
+            </a>
+            
+            {/* Time Range Selector */}
+            <select
+              value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
-              style={styles.select}
+              className="input"
+              style={{ width: 'auto', padding: 'var(--space-2) var(--space-3)' }}
             >
-              <option value="24h">Last 24 Hours</option>
               <option value="7d">Last 7 Days</option>
               <option value="30d">Last 30 Days</option>
               <option value="90d">Last 90 Days</option>
             </select>
+            
+            {/* Logout */}
             <button 
               onClick={() => {
-                localStorage.removeItem('connectedWallet');
-                localStorage.removeItem('walletType');
-                localStorage.removeItem('liquidflow_admin');
-                localStorage.removeItem('admin_session');
+                localStorage.removeItem('adminSession');
                 window.location.href = '/';
               }}
+              className="btn btn-sm"
               style={{
-                background: '#dc2626',
+                background: 'var(--color-error)',
                 color: '#ffffff',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
+                borderColor: 'var(--color-error)'
               }}
             >
               🚪 Logout
             </button>
           </div>
-          </div>
-        </nav>
+        </div>
+      </nav>
 
-        <div style={styles.container}>
-          <h1 style={styles.title}>📊 Platform Analytics</h1>
-          <p style={styles.subtitle}>
+      {/* Main Content */}
+      <main className="container" style={{ padding: 'var(--space-8) var(--space-4)' }}>
+        {/* Header Section */}
+        <div style={{ marginBottom: 'var(--space-8)' }}>
+          <h1 style={{ marginBottom: 'var(--space-2)' }}>
+            📊 Platform Analytics
+          </h1>
+          <p style={{ margin: 0 }}>
             Comprehensive view of all connected wallets and platform activity
           </p>
+        </div>
 
-          {isLoading ? (
-            <div style={styles.loadingCard}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
-              <h3 style={{ color: '#000000' }}>Loading Platform Analytics...</h3>
-              <p style={{ color: '#666' }}>Aggregating data from all connected wallets</p>
-            </div>
-          ) : analytics && (
-            <>
-              {/* Key Metrics */}
-              <div style={styles.grid}>
-                <div style={styles.card}>
-                  <h3 style={styles.cardTitle}>👥 Total Users</h3>
-                  <div style={styles.bigNumber}>{formatNumber(analytics.totalUsers)}</div>
-                  <div style={styles.metric}>Connected wallets</div>
+        {isLoading ? (
+          <div className="grid grid-cols-4" style={{ gap: 'var(--space-6)' }}>
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="card" style={{ 
+                padding: 'var(--space-6)',
+                height: '150px'
+              }}>
+                <div className="animate-pulse">
+                  <div style={{
+                    height: '24px',
+                    background: 'var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    marginBottom: 'var(--space-4)'
+                  }}></div>
+                  <div style={{
+                    height: '48px',
+                    background: 'var(--color-border)',
+                    borderRadius: 'var(--radius-sm)'
+                  }}></div>
                 </div>
-
-                <div style={styles.card}>
-                  <h3 style={styles.cardTitle}>💰 Total Value Locked</h3>
-                  <div style={styles.bigNumber}>{formatCurrency(analytics.totalValueLocked)}</div>
-                  <div style={styles.metric}>Across all positions</div>
+              </div>
+            ))}
+          </div>
+        ) : analytics ? (
+          <div className="grid" style={{ gap: 'var(--space-8)' }}>
+            {/* Key Metrics */}
+            <div className="grid grid-cols-4" style={{ gap: 'var(--space-6)' }}>
+              {/* Total Users */}
+              <div className="card" style={{ padding: 'var(--space-6)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--color-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--font-size-lg)',
+                    color: '#ffffff'
+                  }}>
+                    👥
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)' }}>
+                      Total Users
+                    </h3>
+                    <span className="badge badge-info">Connected wallets</span>
+                  </div>
                 </div>
-
-                <div style={styles.card}>
-                  <h3 style={styles.cardTitle}>📊 Total Positions</h3>
-                  <div style={styles.bigNumber}>{formatNumber(analytics.totalPositions)}</div>
-                  <div style={styles.metric}>DeFi positions monitored</div>
+                <div style={{
+                  fontSize: 'var(--font-size-3xl)',
+                  fontWeight: '800',
+                  color: 'var(--color-primary)',
+                  lineHeight: '1'
+                }}>
+                  {analytics.totalUsers.toLocaleString()}
                 </div>
+              </div>
 
-                <div style={styles.card}>
-                  <h3 style={styles.cardTitle}>🚨 Active Alerts</h3>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>
-                        {analytics.alertsSummary.critical}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}>Critical</div>
+              {/* Total Value Locked */}
+              <div className="card" style={{ padding: 'var(--space-6)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--color-success)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--font-size-lg)',
+                    color: '#ffffff'
+                  }}>
+                    💰
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)' }}>
+                      Total Value Locked
+                    </h3>
+                    <span className="badge badge-success">Across all positions</span>
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: 'var(--font-size-3xl)',
+                  fontWeight: '800',
+                  color: 'var(--color-success)',
+                  lineHeight: '1'
+                }}>
+                  {formatCurrency(analytics.totalValueLocked)}
+                </div>
+              </div>
+
+              {/* Total Positions */}
+              <div className="card" style={{ padding: 'var(--space-6)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--color-info)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--font-size-lg)',
+                    color: '#ffffff'
+                  }}>
+                    📊
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)' }}>
+                      Total Positions
+                    </h3>
+                    <span className="badge badge-info">DeFi positions monitored</span>
+                  </div>
+                </div>
+                <div style={{
+                  fontSize: 'var(--font-size-3xl)',
+                  fontWeight: '800',
+                  color: 'var(--color-info)',
+                  lineHeight: '1'
+                }}>
+                  {analytics.totalPositions.toLocaleString()}
+                </div>
+              </div>
+
+              {/* Active Alerts */}
+              <div className="card" style={{ padding: 'var(--space-6)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: analytics.alertsSummary.critical > 0 ? 'var(--color-error)' : 'var(--color-success)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--font-size-lg)',
+                    color: '#ffffff'
+                  }}>
+                    🚨
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)' }}>
+                      Active Alerts
+                    </h3>
+                    <span className={`badge ${analytics.alertsSummary.critical > 0 ? 'badge-error' : 'badge-success'}`}>
+                      {analytics.alertsSummary.critical > 0 ? 'Action needed' : 'All clear'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      fontSize: 'var(--font-size-xl)',
+                      fontWeight: '800',
+                      color: 'var(--color-error)'
+                    }}>
+                      {analytics.alertsSummary.critical}
                     </div>
-                    <div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f59e0b' }}>
-                        {analytics.alertsSummary.warning}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}>Warning</div>
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                      Critical
                     </div>
-                    <div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#3b82f6' }}>
-                        {analytics.alertsSummary.info}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#666' }}>Info</div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      fontSize: 'var(--font-size-xl)',
+                      fontWeight: '800',
+                      color: 'var(--color-warning)'
+                    }}>
+                      {analytics.alertsSummary.warning}
+                    </div>
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                      Warning
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      fontSize: 'var(--font-size-xl)',
+                      fontWeight: '800',
+                      color: 'var(--color-info)'
+                    }}>
+                      {analytics.alertsSummary.info}
+                    </div>
+                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                      Info
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Top Protocols */}
-              <div style={styles.card}>
-                <h3 style={styles.cardTitle}>🏆 Top Protocols by TVL</h3>
-                <table style={styles.table}>
+            {/* Top Protocols Table */}
+            <div className="card" style={{ padding: 'var(--space-6)' }}>
+              <h3 style={{ marginBottom: 'var(--space-6)' }}>
+                🏆 Top Protocols by TVL
+              </h3>
+              
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr>
-                      <th style={styles.th}>Protocol</th>
-                      <th style={styles.th}>Total Value Locked</th>
-                      <th style={styles.th}>Users</th>
-                      <th style={styles.th}>% of Platform</th>
+                    <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <th style={{ 
+                        textAlign: 'left', 
+                        padding: 'var(--space-3)', 
+                        fontWeight: '600',
+                        color: 'var(--color-text-secondary)'
+                      }}>
+                        Protocol
+                      </th>
+                      <th style={{ 
+                        textAlign: 'right', 
+                        padding: 'var(--space-3)', 
+                        fontWeight: '600',
+                        color: 'var(--color-text-secondary)'
+                      }}>
+                        Total Value Locked
+                      </th>
+                      <th style={{ 
+                        textAlign: 'right', 
+                        padding: 'var(--space-3)', 
+                        fontWeight: '600',
+                        color: 'var(--color-text-secondary)'
+                      }}>
+                        Users
+                      </th>
+                      <th style={{ 
+                        textAlign: 'right', 
+                        padding: 'var(--space-3)', 
+                        fontWeight: '600',
+                        color: 'var(--color-text-secondary)'
+                      }}>
+                        % of Platform
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {analytics.topProtocols.map((protocol, index) => (
-                      <tr key={protocol.name}>
-                        <td style={styles.td}>
-                          <strong>{index + 1}. {protocol.name}</strong>
+                      <tr key={index} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
+                        <td style={{ padding: 'var(--space-3)' }}>
+                          <div style={{ fontWeight: '600' }}>{protocol.name}</div>
                         </td>
-                        <td style={styles.td}>{formatCurrency(protocol.tvl)}</td>
-                        <td style={styles.td}>{protocol.users}</td>
-                        <td style={styles.td}>
+                        <td style={{ padding: 'var(--space-3)', textAlign: 'right' }}>
+                          <div style={{ fontWeight: '700', color: 'var(--color-success)' }}>
+                            {formatCurrency(protocol.tvl)}
+                          </div>
+                        </td>
+                        <td style={{ padding: 'var(--space-3)', textAlign: 'right' }}>
+                          {protocol.users}
+                        </td>
+                        <td style={{ padding: 'var(--space-3)', textAlign: 'right' }}>
                           {((protocol.tvl / analytics.totalValueLocked) * 100).toFixed(1)}%
                         </td>
                       </tr>
@@ -333,88 +421,87 @@ export default function AdminAnalyticsPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
 
-              {/* Recent Connections */}
-              <div style={styles.card}>
-                <h3 style={styles.cardTitle}>🔗 Recent Wallet Connections</h3>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.th}>Wallet Address</th>
-                      <th style={styles.th}>Connected</th>
-                      <th style={styles.th}>Portfolio Value</th>
-                      <th style={styles.th}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {analytics.recentConnections.map((connection, index) => (
-                      <tr key={connection.address}>
-                        <td style={styles.td}>
-                          <code style={{ background: '#f3f4f6', padding: '0.25rem', borderRadius: '0.25rem' }}>
-                            {connection.address}
-                          </code>
-                        </td>
-                        <td style={styles.td}>{connection.timestamp}</td>
-                        <td style={styles.td}>{formatCurrency(connection.tvl)}</td>
-                        <td style={styles.td}>
-                          <span style={{ 
-                            background: '#dcfce7', 
-                            color: '#166534', 
-                            padding: '0.25rem 0.5rem', 
-                            borderRadius: '0.25rem',
-                            fontSize: '0.875rem',
-                            fontWeight: 'bold'
-                          }}>
-                            ✅ Active
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {/* Recent Wallet Connections */}
+            <div className="card" style={{ padding: 'var(--space-6)' }}>
+              <h3 style={{ marginBottom: 'var(--space-6)' }}>
+                🔗 Recent Wallet Connections
+              </h3>
+              
+              <div className="grid" style={{ gap: 'var(--space-4)' }}>
+                {analytics.recentConnections.map((connection, index) => (
+                  <div key={index} className="card" style={{ 
+                    padding: 'var(--space-4)',
+                    background: 'var(--color-background)'
+                  }}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div style={{ 
+                          fontFamily: 'monospace',
+                          fontWeight: '600',
+                          marginBottom: 'var(--space-1)'
+                        }}>
+                          {formatAddress(connection.address)}
+                        </div>
+                        <div style={{ 
+                          fontSize: 'var(--font-size-sm)',
+                          color: 'var(--color-text-tertiary)'
+                        }}>
+                          Connected {connection.timestamp}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{
+                          fontWeight: '700',
+                          color: 'var(--color-success)',
+                          fontSize: 'var(--font-size-lg)'
+                        }}>
+                          {formatCurrency(connection.tvl)}
+                        </div>
+                        <div style={{ 
+                          fontSize: 'var(--font-size-sm)',
+                          color: 'var(--color-text-tertiary)'
+                        }}>
+                          Portfolio Value
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="card" style={{ padding: 'var(--space-8)', textAlign: 'center' }}>
+            <div style={{ fontSize: 'var(--font-size-4xl)', marginBottom: 'var(--space-4)' }}>⚠️</div>
+            <h3 style={{ marginBottom: 'var(--space-2)' }}>
+              Unable to Load Analytics
+            </h3>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
+              There was an error loading the platform analytics. Please try again later.
+            </p>
+          </div>
+        )}
+      </main>
 
-              {/* Daily Activity */}
-              <div style={styles.card}>
-                <h3 style={styles.cardTitle}>📈 Daily Activity</h3>
-                <table style={styles.table}>
-                  <thead>
-                    <tr>
-                      <th style={styles.th}>Date</th>
-                      <th style={styles.th}>New Users</th>
-                      <th style={styles.th}>Total TVL</th>
-                      <th style={styles.th}>Growth</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {analytics.dailyActivity.map((day, index) => {
-                      const prevDay = analytics.dailyActivity[index + 1];
-                      const growth = prevDay ? 
-                        ((day.totalTvl - prevDay.totalTvl) / prevDay.totalTvl * 100) : 0;
-                      
-                      return (
-                        <tr key={day.date}>
-                          <td style={styles.td}>{day.date}</td>
-                          <td style={styles.td}>+{day.newUsers}</td>
-                          <td style={styles.td}>{formatCurrency(day.totalTvl)}</td>
-                          <td style={styles.td}>
-                            <span style={{ 
-                              color: growth >= 0 ? '#16a34a' : '#dc2626',
-                              fontWeight: 'bold'
-                            }}>
-                              {growth >= 0 ? '+' : ''}{growth.toFixed(2)}%
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+      {/* Footer */}
+      <footer style={{
+        background: 'var(--color-surface)',
+        borderTop: '1px solid var(--color-border)',
+        padding: 'var(--space-8) 0',
+        marginTop: 'var(--space-16)'
+      }}>
+        <div className="container" style={{ textAlign: 'center' }}>
+          <p style={{ 
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-tertiary)',
+            margin: 0
+          }}>
+            © 2025 LiquidFlow. Professional DeFi portfolio management platform.
+          </p>
         </div>
-      </div>
-    </>
+      </footer>
+    </div>
   );
 } 

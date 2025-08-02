@@ -455,7 +455,7 @@ export default function Home() {
               color: 'var(--color-text-tertiary)',
               margin: 0
             }}>
-              © 2024 LiquidFlow. Professional DeFi portfolio management platform.
+              © 2025 LiquidFlow. Professional DeFi portfolio management platform.
             </p>
           </div>
         </div>
