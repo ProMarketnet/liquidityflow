@@ -102,7 +102,7 @@ export default function AdminPortfoliosPage() {
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
-          {/* Header - NO AUTH COMPLEXITY */}
+          {/* Header - Clean and Simple */}
           <div style={{ marginBottom: '2rem' }}>
             <h1 style={{ 
               fontSize: '2.5rem', 
@@ -110,48 +110,14 @@ export default function AdminPortfoliosPage() {
               color: '#1f2937',
               marginBottom: '0.5rem'
             }}>
-              ✨ Portfolio Management [DEMO MODE]
+              Portfolio Management
             </h1>
             <p style={{ 
               color: '#6b7280', 
-              fontSize: '1.1rem',
-              marginBottom: '1rem'
+              fontSize: '1.1rem'
             }}>
-              Viewing sample DeFi portfolios • To manage your own wallets and add collaborators, please register
+              Overview of managed DeFi portfolios and positions
             </p>
-            
-            {/* Registration CTA */}
-            <div style={{
-              background: '#f0f7ff',
-              border: '2px solid #3b82f6',
-              borderRadius: '0.5rem',
-              padding: '1rem',
-              marginBottom: '1rem'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong style={{ color: '#1f2937' }}>👀 Demo Access</strong>
-                  <p style={{ margin: '0.25rem 0 0 0', color: '#6b7280', fontSize: '0.9rem' }}>
-                    Register to add your wallets, manage portfolios, and invite team members
-                  </p>
-                </div>
-                <button 
-                  onClick={() => window.location.href = '/auth/register'}
-                  style={{
-                    background: '#3b82f6',
-                    color: '#ffffff',
-                    padding: '0.75rem 1.5rem',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem'
-                  }}
-                >
-                  🚀 Get Full Access
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Quick Actions */}
