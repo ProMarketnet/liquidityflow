@@ -189,18 +189,18 @@ export default function AdminPortfoliosPage() {
           {/* Header */}
           <div style={{ marginBottom: '2rem' }}>
             <h1 style={{ 
-              fontSize: '2.5rem', 
+              fontSize: '2rem', 
               fontWeight: 'bold', 
               color: '#1f2937',
               marginBottom: '0.5rem'
             }}>
-              Portfolio Overview
+              Active Pairs / Pools
             </h1>
             <p style={{ 
               color: '#6b7280', 
               fontSize: '1.1rem'
             }}>
-              {authenticated ? 'Managing your DeFi portfolios and positions' : 'Sample DeFi portfolio overview'}
+              Manage and monitor liquidity pools from tracked wallet addresses
             </p>
           </div>
 
@@ -276,89 +276,151 @@ export default function AdminPortfoliosPage() {
             </a>
           </div>
 
-          {/* Portfolios Table */}
-          <div style={{ 
-            background: '#ffffff',
-            borderRadius: '0.75rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            overflow: 'hidden'
-          }}>
+          {/* Active Pairs/Pools Table */}
+          <div style={{ background: '#ffffff', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', overflow: 'hidden' }}>
             <div style={{ padding: '1.5rem', borderBottom: '1px solid #e5e7eb' }}>
-              <h2 style={{ margin: 0, color: '#1f2937' }}>Active Portfolios ({wallets.length})</h2>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', margin: 0, color: '#1f2937' }}>💧 Active Pairs / Pools</h2>
             </div>
-            
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ background: '#f9fafb' }}>
-                  <th style={{ padding: '0.75rem', textAlign: 'left', fontWeight: '600', color: '#374151' }}>Portfolio</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '600', color: '#374151' }}>Total Value</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151' }}>Status</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '600', color: '#374151' }}>24h Change</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'center', fontWeight: '600', color: '#374151' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {wallets.map((wallet) => (
-                  <tr key={wallet.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                    <td style={{ padding: '1rem' }}>
-                      <div>
-                        <div style={{ fontWeight: '600', color: '#1f2937' }}>{wallet.clientName}</div>
-                        <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                          {wallet.address} • {wallet.positions} positions
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
-                          {wallet.protocols.join(', ')}
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                      <div style={{ fontWeight: '600', fontSize: '1.1rem', color: '#1f2937' }}>
-                        ${wallet.totalValue.toLocaleString()}
-                      </div>
-                    </td>
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>
-                      <span style={{
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '1rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        background: wallet.status === 'active' ? '#dcfce7' : '#fef3c7',
-                        color: wallet.status === 'active' ? '#166534' : '#92400e'
-                      }}>
-                        {wallet.status.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={{ 
-                      padding: '1rem', 
-                      textAlign: 'right',
-                      fontWeight: '600',
-                      color: wallet.performance24h >= 0 ? '#059669' : '#dc2626'
-                    }}>
-                      {wallet.performance24h >= 0 ? '+' : ''}{wallet.performance24h}%
-                    </td>
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>
-                      <button 
-                        onClick={() => handleAuthenticatedAction('Manage Portfolio', () => {
-                          window.location.href = `/portfolio/${wallet.id}`;
-                        })}
-                        style={{
-                          background: '#374151',
-                          color: '#ffffff',
-                          padding: '0.5rem 1rem',
-                          border: 'none',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.875rem',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Manage
-                      </button>
-                    </td>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ background: '#f9fafb' }}>
+                  <tr>
+                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Wallet/Address
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Protocol
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: '600', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Pair/Pool
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', textAlign: 'right', fontSize: '0.75rem', fontWeight: '600', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Total Value
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      24h Change
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Status
+                    </th>
+                    <th style={{ padding: '0.75rem 1rem', textAlign: 'center', fontSize: '0.75rem', fontWeight: '600', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {[
+                    {
+                      id: '1',
+                      clientName: 'Alice Johnson',
+                      address: '0x742d35Cc6e4C2eA4C59d7c8Dc0cd7d6e5e0f4F3a',
+                      protocol: 'Uniswap V3',
+                      pair: 'ETH/USDC',
+                      totalValue: 94312.66,
+                      change24h: 2.3,
+                      status: 'HEALTHY' as const,
+                      pairAddress: '0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640'
+                    },
+                    {
+                      id: '2', 
+                      clientName: 'Bob Chen',
+                      address: '0x8ba1f109551bD432803012645Hac136c86745d3B',
+                      protocol: 'Raydium',
+                      pair: 'SOL/USDC',
+                      totalValue: 67890.12,
+                      change24h: -1.8,
+                      status: 'WARNING' as const,
+                      pairAddress: 'HWHvQhFmJB6r7tTiYNwMdL7PjmQMGdP3R1jFhd8Q2K3w'
+                    },
+                    {
+                      id: '3',
+                      clientName: 'Corporate Treasury',
+                      address: '0x463D7E7cE1d8A52FDBD5C3B0bcB6B7e8a32b72b6',
+                      protocol: 'Aave V3',
+                      pair: 'WBTC/ETH',
+                      totalValue: 125000.00,
+                      change24h: 4.2,
+                      status: 'HEALTHY' as const,
+                      pairAddress: '0x4585FE77225b41b697C938B018E2Ac67Ac5a20c0'
+                    }
+                  ].map((pool) => (
+                    <tr key={pool.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '1rem' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', color: '#1f2937' }}>{pool.clientName}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>
+                            {pool.address.substring(0, 6)}...{pool.address.substring(pool.address.length - 4)}
+                          </div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <span style={{ 
+                          background: '#dbeafe', 
+                          color: '#1e40af', 
+                          padding: '0.25rem 0.75rem', 
+                          borderRadius: '9999px', 
+                          fontSize: '0.75rem', 
+                          fontWeight: '600' 
+                        }}>
+                          {pool.protocol}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: '600', color: '#1f2937' }}>{pool.pair}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'monospace' }}>
+                          {pool.pairAddress.substring(0, 6)}...{pool.pairAddress.substring(pool.pairAddress.length - 4)}
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'right' }}>
+                        <div style={{ fontWeight: '700', color: '#059669' }}>
+                          ${pool.totalValue.toLocaleString()}
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <span style={{ 
+                          color: pool.change24h >= 0 ? '#059669' : '#dc2626', 
+                          fontWeight: '600' 
+                        }}>
+                          {pool.change24h >= 0 ? '+' : ''}{pool.change24h}%
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <span style={{ 
+                          background: pool.status === 'HEALTHY' ? '#dcfce7' : pool.status === 'WARNING' ? '#fef3c7' : '#fee2e2',
+                          color: pool.status === 'HEALTHY' ? '#166534' : pool.status === 'WARNING' ? '#92400e' : '#991b1b',
+                          padding: '0.25rem 0.75rem', 
+                          borderRadius: '9999px', 
+                          fontSize: '0.75rem', 
+                          fontWeight: '600' 
+                        }}>
+                          {pool.status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                          <a
+                            href={`/dashboard/pools?address=${pool.address}&search=true`}
+                            style={{
+                              background: '#3b82f6',
+                              color: '#ffffff',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '0.375rem',
+                              textDecoration: 'none',
+                              fontSize: '0.875rem',
+                              fontWeight: '600',
+                              display: 'inline-block'
+                            }}
+                          >
+                            🔍 Analyze Pools
+                          </a>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

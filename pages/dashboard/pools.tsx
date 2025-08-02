@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 
 // 🏊‍♂️ INTERFACES FOR DEFI POSITIONS DATA
 interface DeFiPositionSummary {
@@ -31,6 +32,7 @@ interface LiquidityPoolsData {
 }
 
 const Pools = () => {
+  const router = useRouter();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [poolsData, setPoolsData] = useState<LiquidityPoolsData>({
@@ -46,11 +48,25 @@ const Pools = () => {
       const wallet = localStorage.getItem('connectedWallet');
       setWalletAddress(wallet);
       
-      if (wallet) {
+      // Check URL parameters for pre-filled address
+      const { address } = router.query;
+      
+      if (address && typeof address === 'string') {
+        setSearchAddress(address);
+      } else if (wallet) {
         setSearchAddress(wallet);
       }
     }
-  }, []);
+  }, [router.query]);
+
+  // Separate useEffect for auto-search functionality
+  useEffect(() => {
+    const { address, search } = router.query;
+    
+    if (address && typeof address === 'string' && search === 'true' && !hasSearched) {
+      loadDeFiPositions(address);
+    }
+  }, [router.query, hasSearched]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -410,7 +426,7 @@ const Pools = () => {
           
           <div className="flex gap-6 items-center">
             {/* Main Navigation */}
-            <a href="/" className="nav-link" style={{ color: 'var(--color-success)', fontWeight: '600' }}>
+            <a href="/admin/portfolios" className="nav-link" style={{ color: 'var(--color-success)', fontWeight: '600' }}>
               🏠 Home
             </a>
             <a href="/dashboard" className="nav-link">
