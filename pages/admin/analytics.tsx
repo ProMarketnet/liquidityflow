@@ -198,7 +198,7 @@ export default function AdminAnalyticsPage() {
           </div>
           
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-            <a href="/" style={{ color: '#059669', fontWeight: '600', textDecoration: 'none' }}>
+                          <a href="/admin/portfolios" style={{ color: '#059669', fontWeight: '600', textDecoration: 'none' }}>
               🏠 Home
             </a>
             <a href="/admin/wallets" style={{ color: '#4a5568', textDecoration: 'none' }}>

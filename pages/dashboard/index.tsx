@@ -129,7 +129,7 @@ export default function DashboardPage() {
           </div>
           
           <div style={{ display: 'flex', gap: 'var(--space-6)', alignItems: 'center' }}>
-            <a href="/" style={{ color: 'var(--color-success)', fontWeight: '600', textDecoration: 'none' }}>
+            <a href="/admin/portfolios" style={{ color: 'var(--color-success)', fontWeight: '600', textDecoration: 'none' }}>
               🏠 Home
             </a>
             <span style={{ color: 'var(--color-primary)', fontWeight: '600' }}>📊 Dashboard</span>
