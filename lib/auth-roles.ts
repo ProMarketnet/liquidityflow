@@ -1,158 +1,300 @@
-// 👤 User-based multi-tenant authentication system for LiquidFlow
+// 🏢 Collaborative workspace authentication system for LiquidFlow
 
 export interface User {
   id: string;
   email: string;
   name?: string;
-  walletAddress?: string;
-  role: 'USER' | 'ADMIN' | 'SUPER_ADMIN';
+  role: 'USER' | 'SUPER_ADMIN';
   permissions: string[];
-  
-  // 🏢 User's Own Workspace
-  userWorkspaceId: string; // Unique workspace for this user
   createdAt?: string;
 }
 
-export interface UserWorkspace {
+export interface Workspace {
   id: string;
-  userEmail: string;
-  userName?: string;
-  walletCount: number;
-  poolCount: number;
+  name: string; // "XTC Company", "ABC Corp", etc.
+  slug: string; // "xtc-company", "abc-corp"
+  ownerId: string; // User ID who created the workspace
+  ownerEmail: string;
+  plan: 'BASIC' | 'PRO' | 'ENTERPRISE';
+  maxWallets: number;
+  maxPools: number;
+  isActive: boolean;
   createdAt: string;
   lastAccessed: string;
 }
 
-// 🔐 SIMPLE EMAIL-BASED AUTHENTICATION (In production, use proper auth service)
+export interface WorkspaceMember {
+  id: string;
+  workspaceId: string;
+  userId: string;
+  userEmail: string;
+  role: 'OWNER' | 'ADMIN' | 'GUEST'; // Role within this specific workspace
+  permissions: string[];
+  invitedBy: string; // Email of who invited them
+  joinedAt: string;
+  lastAccessed: string;
+}
+
+// 🔐 SIMPLE EMAIL-BASED AUTHENTICATION
 export function getUserFromEmail(email: string): User | null {
   if (!email || !email.includes('@')) {
-    return null; // Invalid email
+    return null;
   }
 
-  // Generate consistent user ID from email
   const userId = `user_${btoa(email).replace(/[^a-zA-Z0-9]/g, '').substring(0, 10)}`;
-  const workspaceId = `workspace_${userId}`;
 
   return {
     id: userId,
     email: email.toLowerCase(),
     name: extractNameFromEmail(email),
-    role: 'USER', // All users are regular users by default
-    userWorkspaceId: workspaceId,
+    role: 'USER',
     permissions: [
-      'view_own_portfolios',
-      'manage_own_wallets',
-      'manage_own_pools',
-      'view_own_analytics',
-      'generate_own_reports',
-      'manage_own_alerts'
+      'create_workspace',
+      'join_workspace',
+      'manage_own_profile'
     ]
   };
 }
 
-// 🏢 SUPER ADMIN ACCESS (LiquidFlow platform admins)
-export function getSuperAdminFromEmail(email: string): User | null {
-  const superAdminEmails = [
-    'admin@liquidflow.com',
-    'support@liquidflow.com'
-  ];
-
-  if (superAdminEmails.includes(email.toLowerCase())) {
-    return {
-      id: 'super_admin',
-      email: email.toLowerCase(),
-      name: 'LiquidFlow Admin',
-      role: 'SUPER_ADMIN',
-      userWorkspaceId: 'all_workspaces',
-      permissions: [
-        'view_all_users',
-        'manage_all_data',
-        'platform_analytics',
-        'user_management'
-      ]
-    };
-  }
-
-  return null;
-}
-
-export function authenticateUser(email: string, password?: string): User | null {
-  // Check if super admin first
-  const superAdmin = getSuperAdminFromEmail(email);
-  if (superAdmin) return superAdmin;
-
-  // Regular user authentication
-  return getUserFromEmail(email);
-}
-
-// 🔐 USER WORKSPACE ACCESS CONTROL
-export function canAccessWorkspace(user: User, workspaceId: string): boolean {
-  // Super admins can access all workspaces
-  if (user.role === 'SUPER_ADMIN') return true;
-  
-  // Users can only access their own workspace
-  return user.userWorkspaceId === workspaceId;
-}
-
-export function getUserWorkspace(user: User): UserWorkspace {
-  return {
-    id: user.userWorkspaceId,
-    userEmail: user.email,
-    userName: user.name,
-    walletCount: getUserWalletCount(user.userWorkspaceId),
-    poolCount: getUserPoolCount(user.userWorkspaceId),
-    createdAt: new Date().toISOString(),
-    lastAccessed: new Date().toISOString()
+// 🏢 WORKSPACE MANAGEMENT
+export function getUserWorkspaces(userEmail: string): WorkspaceMember[] {
+  // In production: SELECT * FROM workspace_members WHERE user_email = ?
+  const userWorkspaces: { [key: string]: WorkspaceMember[] } = {
+    'john@company.com': [
+      {
+        id: 'member_1',
+        workspaceId: 'ws_xtc_company',
+        userId: 'user_amRvbkBjb21w',
+        userEmail: 'john@company.com',
+        role: 'OWNER',
+        permissions: ['manage_workspace', 'invite_members', 'manage_wallets', 'manage_pools', 'view_reports'],
+        invitedBy: 'self',
+        joinedAt: '2024-01-15T10:00:00Z',
+        lastAccessed: new Date().toISOString()
+      }
+    ],
+    'jane@email.com': [
+      {
+        id: 'member_2',
+        workspaceId: 'ws_xtc_company',
+        userId: 'user_amFuZUBlbWFp',
+        userEmail: 'jane@email.com',
+        role: 'ADMIN',
+        permissions: ['manage_wallets', 'manage_pools', 'view_reports'],
+        invitedBy: 'john@company.com',
+        joinedAt: '2024-01-16T14:30:00Z',
+        lastAccessed: new Date().toISOString()
+      }
+    ],
+    'test@example.com': [
+      {
+        id: 'member_3',
+        workspaceId: 'ws_personal_test',
+        userId: 'user_dGVzdEBleGFt',
+        userEmail: 'test@example.com',
+        role: 'OWNER',
+        permissions: ['manage_workspace', 'invite_members', 'manage_wallets', 'manage_pools', 'view_reports'],
+        invitedBy: 'self',
+        joinedAt: '2024-01-10T09:00:00Z',
+        lastAccessed: new Date().toISOString()
+      }
+    ]
   };
+
+  return userWorkspaces[userEmail] || [];
 }
 
-// 📊 USER-SPECIFIC DATA ACCESS
-export function getUserWallets(userWorkspaceId: string): any[] {
-  // In production, query database: SELECT * FROM wallets WHERE user_workspace_id = ?
-  const userWalletData: { [key: string]: any[] } = {
-    'workspace_user_dGVzdEBleGFtcGxl': [ // test@example.com
+export function getWorkspaceDetails(workspaceId: string): Workspace | null {
+  // In production: SELECT * FROM workspaces WHERE id = ?
+  const workspaces: { [key: string]: Workspace } = {
+    'ws_xtc_company': {
+      id: 'ws_xtc_company',
+      name: 'XTC Company',
+      slug: 'xtc-company',
+      ownerId: 'user_amRvbkBjb21w',
+      ownerEmail: 'john@company.com',
+      plan: 'PRO',
+      maxWallets: 25,
+      maxPools: 50,
+      isActive: true,
+      createdAt: '2024-01-15T10:00:00Z',
+      lastAccessed: new Date().toISOString()
+    },
+    'ws_personal_test': {
+      id: 'ws_personal_test',
+      name: 'Test Personal Workspace',
+      slug: 'test-personal',
+      ownerId: 'user_dGVzdEBleGFt',
+      ownerEmail: 'test@example.com',
+      plan: 'BASIC',
+      maxWallets: 10,
+      maxPools: 20,
+      isActive: true,
+      createdAt: '2024-01-10T09:00:00Z',
+      lastAccessed: new Date().toISOString()
+    }
+  };
+
+  return workspaces[workspaceId] || null;
+}
+
+export function getWorkspaceMembers(workspaceId: string): WorkspaceMember[] {
+  // In production: SELECT * FROM workspace_members WHERE workspace_id = ?
+  const workspaceMembers: { [key: string]: WorkspaceMember[] } = {
+    'ws_xtc_company': [
+      {
+        id: 'member_1',
+        workspaceId: 'ws_xtc_company',
+        userId: 'user_amRvbkBjb21w',
+        userEmail: 'john@company.com',
+        role: 'OWNER',
+        permissions: ['manage_workspace', 'invite_members', 'manage_wallets', 'manage_pools', 'view_reports'],
+        invitedBy: 'self',
+        joinedAt: '2024-01-15T10:00:00Z',
+        lastAccessed: new Date().toISOString()
+      },
+      {
+        id: 'member_2',
+        workspaceId: 'ws_xtc_company',
+        userId: 'user_amFuZUBlbWFp',
+        userEmail: 'jane@email.com',
+        role: 'ADMIN',
+        permissions: ['manage_wallets', 'manage_pools', 'view_reports'],
+        invitedBy: 'john@company.com',
+        joinedAt: '2024-01-16T14:30:00Z',
+        lastAccessed: new Date().toISOString()
+      }
+    ],
+    'ws_personal_test': [
+      {
+        id: 'member_3',
+        workspaceId: 'ws_personal_test',
+        userId: 'user_dGVzdEBleGFt',
+        userEmail: 'test@example.com',
+        role: 'OWNER',
+        permissions: ['manage_workspace', 'invite_members', 'manage_wallets', 'manage_pools', 'view_reports'],
+        invitedBy: 'self',
+        joinedAt: '2024-01-10T09:00:00Z',
+        lastAccessed: new Date().toISOString()
+      }
+    ]
+  };
+
+  return workspaceMembers[workspaceId] || [];
+}
+
+// 🔐 WORKSPACE ACCESS CONTROL
+export function canAccessWorkspace(userEmail: string, workspaceId: string): boolean {
+  const userWorkspaces = getUserWorkspaces(userEmail);
+  return userWorkspaces.some(membership => membership.workspaceId === workspaceId);
+}
+
+export function getUserRoleInWorkspace(userEmail: string, workspaceId: string): WorkspaceMember | null {
+  const userWorkspaces = getUserWorkspaces(userEmail);
+  return userWorkspaces.find(membership => membership.workspaceId === workspaceId) || null;
+}
+
+export function hasWorkspacePermission(userEmail: string, workspaceId: string, permission: string): boolean {
+  const membership = getUserRoleInWorkspace(userEmail, workspaceId);
+  return membership ? membership.permissions.includes(permission) : false;
+}
+
+// 📊 WORKSPACE DATA ACCESS
+export function getWorkspaceWallets(workspaceId: string): any[] {
+  // In production: SELECT * FROM wallets WHERE workspace_id = ?
+  const workspaceWalletData: { [key: string]: any[] } = {
+    'ws_xtc_company': [
       {
         id: '1',
         address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-        clientName: 'Alice Johnson',
+        clientName: 'XTC Client - Alice Johnson',
         totalValue: 245823.12,
-        status: 'active'
-      }
-    ],
-    'workspace_user_amRvZUBjb21wYW55': [ // jdoe@company.com  
+        status: 'active',
+        addedBy: 'john@company.com',
+        createdAt: '2024-01-15T11:00:00Z'
+      },
       {
         id: '2',
         address: '0x456789abcdef0123456789abcdef0123456789ab',
-        clientName: 'John Client',
+        clientName: 'XTC Client - Bob Smith (added by Jane)',
         totalValue: 156789.45,
-        status: 'active'
+        status: 'active',
+        addedBy: 'jane@email.com',
+        createdAt: '2024-01-16T15:00:00Z'
+      }
+    ],
+    'ws_personal_test': [
+      {
+        id: '3',
+        address: '0x1234567890abcdef1234567890abcdef12345678',
+        clientName: 'Personal Client - Charlie Brown',
+        totalValue: 89123.45,
+        status: 'active',
+        addedBy: 'test@example.com',
+        createdAt: '2024-01-10T10:00:00Z'
       }
     ]
   };
 
-  return userWalletData[userWorkspaceId] || [];
+  return workspaceWalletData[workspaceId] || [];
 }
 
-export function getUserPools(userWorkspaceId: string): any[] {
-  // In production, query database: SELECT * FROM pools WHERE user_workspace_id = ?
-  const userPoolData: { [key: string]: any[] } = {
-    'workspace_user_dGVzdEBleGFtcGxl': [
-      { id: 'pool_1', name: 'ETH/USDC', dex: 'Uniswap V3' }
+export function getWorkspacePools(workspaceId: string): any[] {
+  // In production: SELECT * FROM pools WHERE workspace_id = ?
+  const workspacePoolData: { [key: string]: any[] } = {
+    'ws_xtc_company': [
+      { id: 'pool_1', name: 'ETH/USDC', dex: 'Uniswap V3', addedBy: 'john@company.com' },
+      { id: 'pool_2', name: 'BTC/ETH', dex: 'Sushiswap', addedBy: 'jane@email.com' }
     ],
-    'workspace_user_amRvZUBjb21wYW55': [
-      { id: 'pool_2', name: 'BTC/ETH', dex: 'Sushiswap' }
+    'ws_personal_test': [
+      { id: 'pool_3', name: 'WETH/DAI', dex: 'Curve', addedBy: 'test@example.com' }
     ]
   };
 
-  return userPoolData[userWorkspaceId] || [];
+  return workspacePoolData[workspaceId] || [];
 }
 
-function getUserWalletCount(workspaceId: string): number {
-  return getUserWallets(workspaceId).length;
+// 🎯 INVITATION SYSTEM
+export interface WorkspaceInvitation {
+  id: string;
+  workspaceId: string;
+  workspaceName: string;
+  inviterEmail: string;
+  inviterName: string;
+  inviteeEmail: string;
+  role: 'ADMIN' | 'GUEST';
+  permissions: string[];
+  status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED';
+  invitedAt: string;
+  expiresAt: string;
 }
 
-function getUserPoolCount(workspaceId: string): number {
-  return getUserPools(workspaceId).length;
+export function createWorkspaceInvitation(
+  workspaceId: string, 
+  inviterEmail: string, 
+  inviteeEmail: string, 
+  role: 'ADMIN' | 'GUEST'
+): WorkspaceInvitation {
+  const workspace = getWorkspaceDetails(workspaceId);
+  const inviter = getUserFromEmail(inviterEmail);
+  
+  const permissions = role === 'ADMIN' 
+    ? ['manage_wallets', 'manage_pools', 'view_reports']
+    : ['view_wallets', 'view_pools', 'view_reports'];
+
+  return {
+    id: `inv_${Date.now()}`,
+    workspaceId,
+    workspaceName: workspace?.name || 'Unknown Workspace',
+    inviterEmail,
+    inviterName: inviter?.name || 'Unknown User',
+    inviteeEmail,
+    role,
+    permissions,
+    status: 'PENDING',
+    invitedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+  };
 }
 
 function extractNameFromEmail(email: string): string {
@@ -164,18 +306,18 @@ function extractNameFromEmail(email: string): string {
 }
 
 // 🔍 SESSION MANAGEMENT
-export function createUserSession(user: User): string {
+export function createUserSession(user: User, workspaceId?: string): string {
   return btoa(JSON.stringify({
     userId: user.id,
     email: user.email,
     role: user.role,
-    workspaceId: user.userWorkspaceId,
+    currentWorkspaceId: workspaceId,
     permissions: user.permissions,
     expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
   }));
 }
 
-export function validateUserSession(sessionToken: string): User | null {
+export function validateUserSession(sessionToken: string): { user: User; workspaceId?: string } | null {
   try {
     const session = JSON.parse(atob(sessionToken));
     
@@ -184,20 +326,15 @@ export function validateUserSession(sessionToken: string): User | null {
     }
     
     return {
-      id: session.userId,
-      email: session.email,
-      role: session.role,
-      userWorkspaceId: session.workspaceId,
-      permissions: session.permissions
+      user: {
+        id: session.userId,
+        email: session.email,
+        role: session.role,
+        permissions: session.permissions
+      },
+      workspaceId: session.currentWorkspaceId
     };
   } catch {
     return null; // Invalid session
   }
-}
-
-// 🔒 PRODUCTION NOTES:
-// 1. Replace email-based auth with proper authentication service (Auth0, Firebase, etc.)
-// 2. Store user workspaces in database with proper foreign keys
-// 3. Implement proper password hashing and JWT tokens
-// 4. Add rate limiting and audit logging
-// 5. Use proper database queries instead of mock data 
+} 

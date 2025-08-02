@@ -54,6 +54,10 @@ export default function AdminPortfoliosPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'warning' | 'critical'>('all');
   const [userEmail, setUserEmail] = useState<string>('');
+  const [userWorkspaces, setUserWorkspaces] = useState<any[]>([]);
+  const [currentWorkspace, setCurrentWorkspace] = useState<any>(null);
+  const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
   const styles = {
@@ -86,6 +90,13 @@ export default function AdminPortfoliosPage() {
       marginBottom: '2rem',
       textAlign: 'center' as const
     },
+    workspaceSelector: {
+      background: '#f0f7ff',
+      border: '3px solid #2563eb',
+      borderRadius: '1rem',
+      padding: '2rem',
+      marginBottom: '2rem'
+    },
     input: {
       padding: '0.75rem',
       border: '2px solid #000000',
@@ -115,16 +126,37 @@ export default function AdminPortfoliosPage() {
     table: {
       width: '100%',
       borderCollapse: 'collapse' as const
+    },
+    modal: {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    },
+    modalContent: {
+      background: '#ffffff',
+      border: '3px solid #000000',
+      borderRadius: '1rem',
+      padding: '2rem',
+      maxWidth: '500px',
+      width: '90%'
     }
   };
 
   useEffect(() => {
     // Check for saved user session
     const savedEmail = localStorage.getItem('userEmail');
+    const savedWorkspaceId = localStorage.getItem('currentWorkspaceId');
     
     if (savedEmail) {
       setUserEmail(savedEmail);
-      loadUserWallets(savedEmail);
+      loadUserWorkspaces(savedEmail, savedWorkspaceId || undefined);
     } else {
       setIsLoading(false); // Show login form
     }
@@ -139,47 +171,130 @@ export default function AdminPortfoliosPage() {
     
     setUserEmail(email);
     localStorage.setItem('userEmail', email);
-    loadUserWallets(email);
+    loadUserWorkspaces(email);
   };
 
   const handleLogout = () => {
     setUserEmail('');
+    setUserWorkspaces([]);
+    setCurrentWorkspace(null);
     setWallets([]);
     setSelectedWallet(null);
     setWalletDetails(null);
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('currentWorkspaceId');
   };
 
-  const loadUserWallets = async (email: string) => {
+  const loadUserWorkspaces = async (email: string, workspaceId?: string) => {
     setIsLoading(true);
     try {
-      console.log(`🔗 Loading wallets for user: ${email}`);
+      console.log(`🔗 Loading workspaces for user: ${email}`);
       
-      // For now, use mock data based on email
-      const userWallets = getUserMockWallets(email);
-      setWallets(userWallets);
+      // Mock user workspaces based on email
+      const workspaces = getUserMockWorkspaces(email);
+      setUserWorkspaces(workspaces);
       
-      console.log(`✅ Loaded ${userWallets.length} wallets for ${email}`);
+      if (workspaces.length > 0) {
+        // Select saved workspace or first available
+        const selectedWorkspace = workspaceId 
+          ? workspaces.find(ws => ws.id === workspaceId) || workspaces[0]
+          : workspaces[0];
+        
+        setCurrentWorkspace(selectedWorkspace);
+        localStorage.setItem('currentWorkspaceId', selectedWorkspace.id);
+        loadWorkspaceWallets(selectedWorkspace.id);
+      } else {
+        setIsLoading(false);
+      }
+      
+      console.log(`✅ Found ${workspaces.length} workspaces for ${email}`);
     } catch (error) {
-      console.error('❌ Error loading user wallets:', error);
+      console.error('❌ Error loading user workspaces:', error);
+      setUserWorkspaces([]);
+      setIsLoading(false);
+    }
+  };
+
+  const loadWorkspaceWallets = async (workspaceId: string) => {
+    try {
+      console.log(`💼 Loading wallets for workspace: ${workspaceId}`);
+      
+      const workspaceWallets = getWorkspaceMockWallets(workspaceId);
+      setWallets(workspaceWallets);
+      
+      console.log(`✅ Loaded ${workspaceWallets.length} wallets for workspace`);
+    } catch (error) {
+      console.error('❌ Error loading workspace wallets:', error);
       setWallets([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 👤 USER-SPECIFIC MOCK DATA
-  const getUserMockWallets = (email: string): ClientWallet[] => {
-    // Generate consistent mock data based on email
-    const emailHash = btoa(email).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
+  const handleWorkspaceSwitch = (workspace: any) => {
+    setCurrentWorkspace(workspace);
+    localStorage.setItem('currentWorkspaceId', workspace.id);
+    loadWorkspaceWallets(workspace.id);
+  };
+
+  const handleInviteMember = (inviteeEmail: string, role: 'ADMIN' | 'GUEST') => {
+    // In production, this would call the invitation API
+    alert(`📧 Invitation sent to ${inviteeEmail} as ${role} for ${currentWorkspace.name}`);
+    setShowInviteModal(false);
+  };
+
+  // 🏢 MOCK WORKSPACE DATA
+  const getUserMockWorkspaces = (email: string): any[] => {
+    if (email === 'john@company.com') {
+      return [
+        {
+          id: 'ws_xtc_company',
+          name: 'XTC Company',
+          role: 'OWNER',
+          memberCount: 2,
+          plan: 'PRO',
+          permissions: ['manage_workspace', 'invite_members', 'manage_wallets', 'manage_pools', 'view_reports']
+        }
+      ];
+    }
     
-    // Each user gets their own unique wallets
+    if (email === 'jane@email.com') {
+      return [
+        {
+          id: 'ws_xtc_company',
+          name: 'XTC Company',
+          role: 'ADMIN',
+          memberCount: 2,
+          plan: 'PRO',
+          permissions: ['manage_wallets', 'manage_pools', 'view_reports'],
+          invitedBy: 'john@company.com'
+        }
+      ];
+    }
+    
     if (email === 'test@example.com') {
       return [
         {
+          id: 'ws_personal_test',
+          name: 'Personal Workspace',
+          role: 'OWNER',
+          memberCount: 1,
+          plan: 'BASIC',
+          permissions: ['manage_workspace', 'invite_members', 'manage_wallets', 'manage_pools', 'view_reports']
+        }
+      ];
+    }
+    
+    return []; // No workspaces for unknown users
+  };
+
+  const getWorkspaceMockWallets = (workspaceId: string): ClientWallet[] => {
+    const workspaceWalletData: { [key: string]: ClientWallet[] } = {
+      'ws_xtc_company': [
+        {
           id: '1',
           address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-          clientName: 'My Client - Alice Johnson',
+          clientName: 'XTC Client - Alice Johnson',
           totalValue: 245823.12,
           lastUpdated: '2 mins ago',
           status: 'active',
@@ -187,16 +302,11 @@ export default function AdminPortfoliosPage() {
           protocols: ['Uniswap V3', 'Aave V3'],
           alerts: 0,
           performance24h: 2.45
-        }
-      ];
-    }
-    
-    if (email === 'john@company.com') {
-      return [
+        },
         {
           id: '2',
           address: '0x456789abcdef0123456789abcdef0123456789ab',
-          clientName: 'John Client - David Brown',
+          clientName: 'XTC Client - Bob Smith (added by Jane)',
           totalValue: 156789.45,
           lastUpdated: '5 mins ago',
           status: 'active',
@@ -205,11 +315,24 @@ export default function AdminPortfoliosPage() {
           alerts: 1,
           performance24h: 1.89
         }
-      ];
-    }
-    
-    // For any other email, return empty (they see nothing until they create wallets)
-    return [];
+      ],
+      'ws_personal_test': [
+        {
+          id: '3',
+          address: '0x1234567890abcdef1234567890abcdef12345678',
+          clientName: 'Personal Client - Charlie Brown',
+          totalValue: 89123.45,
+          lastUpdated: '10 mins ago',
+          status: 'active',
+          positions: 5,
+          protocols: ['Uniswap V2'],
+          alerts: 0,
+          performance24h: 0.85
+        }
+      ]
+    };
+
+    return workspaceWalletData[workspaceId] || [];
   };
 
   // If not logged in, show simple email login
@@ -218,10 +341,10 @@ export default function AdminPortfoliosPage() {
       <div style={styles.page}>
         <div style={styles.container}>
           <h1 style={styles.title}>🏢 Portfolio Management</h1>
-          <p style={styles.subtitle}>Enter your email to access your portfolio workspace</p>
+          <p style={styles.subtitle}>Enter your email to access your workspaces</p>
           
           <div style={styles.loginForm}>
-            <h3 style={{ marginBottom: '1.5rem', color: '#2563eb' }}>Login to Your Workspace</h3>
+            <h3 style={{ marginBottom: '1.5rem', color: '#2563eb' }}>Login to LiquidFlow</h3>
             
             <form onSubmit={(e) => {
               e.preventDefault();
@@ -237,15 +360,46 @@ export default function AdminPortfoliosPage() {
                 required
               />
               <button type="submit" style={styles.button}>
-                Access My Workspace
+                Access My Workspaces
               </button>
             </form>
             
             <div style={{ marginTop: '1rem', padding: '1rem', background: '#fef3c7', borderRadius: '0.5rem' }}>
               <div style={{ fontSize: '0.875rem', color: '#92400e' }}>
-                <strong>🔐 Individual Workspaces:</strong> Each email gets their own isolated workspace. 
-                You can only see wallets and pools you personally created.
+                <strong>🏢 Collaborative Workspaces:</strong> Create companies, invite team members, and manage shared portfolios together.
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If no workspaces, show workspace creation
+  if (userWorkspaces.length === 0 && !isLoading) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div>
+              <h1 style={styles.title}>🏢 Portfolio Management</h1>
+              <p style={styles.subtitle}>Welcome {userEmail}! Create your first workspace to get started.</p>
+            </div>
+            <button onClick={handleLogout} style={{ ...styles.button, background: '#dc2626' }}>
+              🚪 Logout
+            </button>
+          </div>
+
+          <div style={styles.card}>
+            <div style={{ textAlign: 'center', padding: '3rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
+              <h3>Create Your First Workspace</h3>
+              <p style={{ marginBottom: '2rem', color: '#666' }}>
+                Workspaces let you organize portfolios and collaborate with team members.
+              </p>
+              <button style={styles.button} onClick={() => setShowCreateWorkspace(true)}>
+                ➕ Create Workspace
+              </button>
             </div>
           </div>
         </div>
@@ -256,17 +410,73 @@ export default function AdminPortfoliosPage() {
   return (
     <div style={styles.page}>
       <div style={styles.container}>
-        {/* Header */}
+        {/* Header with Workspace Selector */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <div>
             <h1 style={styles.title}>🏢 Portfolio Management</h1>
             <p style={styles.subtitle}>
-              Logged in as: <strong>{userEmail}</strong> • {wallets.length} wallet{wallets.length !== 1 ? 's' : ''} in your workspace
+              {userEmail} • {currentWorkspace?.name} ({currentWorkspace?.role}) • {wallets.length} wallet{wallets.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <button onClick={handleLogout} style={{ ...styles.button, background: '#dc2626' }}>
-            🚪 Logout
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            {/* Workspace Switcher */}
+            {userWorkspaces.length > 1 && (
+              <select 
+                value={currentWorkspace?.id || ''} 
+                onChange={(e) => {
+                  const workspace = userWorkspaces.find(ws => ws.id === e.target.value);
+                  if (workspace) handleWorkspaceSwitch(workspace);
+                }}
+                style={{
+                  padding: '0.5rem 1rem',
+                  border: '2px solid #000000',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.875rem'
+                }}
+              >
+                {userWorkspaces.map(ws => (
+                  <option key={ws.id} value={ws.id}>
+                    {ws.name} ({ws.role})
+                  </option>
+                ))}
+              </select>
+            )}
+            
+            {/* Invite Button (only for owners/admins) */}
+            {currentWorkspace?.permissions.includes('invite_members') && (
+              <button onClick={() => setShowInviteModal(true)} style={styles.button}>
+                👥 Invite Member
+              </button>
+            )}
+            
+            <button onClick={handleLogout} style={{ ...styles.button, background: '#dc2626' }}>
+              🚪 Logout
+            </button>
+          </div>
+        </div>
+
+        {/* Workspace Info Banner */}
+        <div style={{
+          background: '#eff6ff',
+          border: '2px solid #3b82f6',
+          borderRadius: '0.5rem',
+          padding: '1rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div>
+            <strong>🏢 {currentWorkspace?.name}</strong> • 
+            <span style={{ marginLeft: '0.5rem' }}>Your Role: <strong>{currentWorkspace?.role}</strong></span> •
+            <span style={{ marginLeft: '0.5rem' }}>{currentWorkspace?.memberCount} member{currentWorkspace?.memberCount !== 1 ? 's' : ''}</span> •
+            <span style={{ marginLeft: '0.5rem' }}>Plan: <strong>{currentWorkspace?.plan}</strong></span>
+          </div>
+          {currentWorkspace?.invitedBy && (
+            <div style={{ fontSize: '0.875rem', color: '#666' }}>
+              Invited by: {currentWorkspace.invitedBy}
+            </div>
+          )}
         </div>
 
         {/* Loading State */}
@@ -274,8 +484,8 @@ export default function AdminPortfoliosPage() {
           <div style={styles.card}>
             <div style={{ textAlign: 'center', padding: '3rem' }}>
               <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
-              <h3>Loading Your Workspace...</h3>
-              <p>Fetching your wallets and portfolio data.</p>
+              <h3>Loading Workspace...</h3>
+              <p>Fetching portfolios for {currentWorkspace?.name}</p>
             </div>
           </div>
         ) : wallets.length === 0 ? (
@@ -283,19 +493,27 @@ export default function AdminPortfoliosPage() {
           <div style={styles.card}>
             <div style={{ textAlign: 'center', padding: '3rem' }}>
               <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
-              <h3>Your Workspace is Empty</h3>
+              <h3>{currentWorkspace?.name} is Empty</h3>
               <p style={{ marginBottom: '2rem', color: '#666' }}>
-                You haven't created any client wallets yet. Start by adding your first client to begin portfolio management.
+                No client wallets in this workspace yet. Start by adding your first client wallet.
               </p>
-              <button style={styles.button}>
-                ➕ Add First Client Wallet
-              </button>
+              {currentWorkspace?.permissions.includes('manage_wallets') ? (
+                <button style={styles.button}>
+                  ➕ Add First Client Wallet
+                </button>
+              ) : (
+                <p style={{ color: '#666', fontSize: '0.875rem' }}>
+                  You need wallet management permissions to add clients.
+                </p>
+              )}
             </div>
           </div>
         ) : (
           // Wallets Table
           <div style={styles.card}>
-            <h3 style={{ marginBottom: '1.5rem' }}>👥 Your Client Wallets ({wallets.length})</h3>
+            <h3 style={{ marginBottom: '1.5rem' }}>
+              👥 {currentWorkspace?.name} Client Wallets ({wallets.length})
+            </h3>
             
             <table style={styles.table}>
               <thead>
@@ -358,13 +576,66 @@ export default function AdminPortfoliosPage() {
                         fontWeight: 'bold',
                         cursor: 'pointer'
                       }}>
-                        Manage
+                        {currentWorkspace?.permissions.includes('manage_wallets') ? 'Manage' : 'View'}
                       </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Invite Modal */}
+        {showInviteModal && (
+          <div style={styles.modal}>
+            <div style={styles.modalContent}>
+              <h3 style={{ marginBottom: '1.5rem' }}>👥 Invite Member to {currentWorkspace?.name}</h3>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const email = formData.get('email') as string;
+                const role = formData.get('role') as 'ADMIN' | 'GUEST';
+                handleInviteMember(email, role);
+              }}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    Email Address:
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="jane@email.com"
+                    style={styles.input}
+                    required
+                  />
+                </div>
+                
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                    Role:
+                  </label>
+                  <select name="role" style={styles.input} required>
+                    <option value="ADMIN">Admin (can manage wallets & pools)</option>
+                    <option value="GUEST">Guest (view-only access)</option>
+                  </select>
+                </div>
+                
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowInviteModal(false)}
+                    style={{ ...styles.button, background: '#6b7280' }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" style={styles.button}>
+                    📧 Send Invitation
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>
