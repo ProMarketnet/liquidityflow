@@ -213,7 +213,7 @@ export default function AdminReportsPage() {
       return;
     }
     
-    loadManagedWallets(currentWorkspaceId);
+    loadManagedWallets(currentWorkspaceId || undefined);
   }, []);
 
   useEffect(() => {
