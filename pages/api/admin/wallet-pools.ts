@@ -234,18 +234,23 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  console.log(`🔍 Wallet-pools API called with method: ${req.method}`);
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
     const { wallets } = req.body;
+    console.log(`🔍 Received wallets data:`, wallets);
 
     if (!Array.isArray(wallets) || wallets.length === 0) {
+      console.warn('⚠️ No wallets provided in request body');
       return res.status(400).json({ error: 'Wallets array is required' });
     }
 
     console.log(`🔍 Fetching pool data for ${wallets.length} wallets`);
+    console.log(`🔍 Moralis API Key available: ${!!process.env.MORALIS_API_KEY}`);
 
     // Fetch pool data for all wallets in parallel
     const poolPromises = wallets.map((wallet: any) => 
@@ -256,13 +261,19 @@ export default async function handler(
     const allPools = allPoolsArrays.flat();
 
     console.log(`✅ Total pools found: ${allPools.length}`);
+    console.log(`🔍 Pool details:`, allPools);
 
     res.status(200).json({
       success: true,
       pools: allPools,
       totalWallets: wallets.length,
       totalPools: allPools.length,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      debug: {
+        moralisApiKeyConfigured: !!process.env.MORALIS_API_KEY,
+        walletsReceived: wallets.length,
+        poolsFound: allPools.length
+      }
     });
 
   } catch (error) {
@@ -270,7 +281,11 @@ export default async function handler(
     res.status(500).json({ 
       success: false,
       error: 'Failed to fetch pool data',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      debug: {
+        moralisApiKeyConfigured: !!process.env.MORALIS_API_KEY,
+        timestamp: new Date().toISOString()
+      }
     });
   }
 } 

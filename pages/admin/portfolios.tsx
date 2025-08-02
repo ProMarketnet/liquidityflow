@@ -45,11 +45,16 @@ export default function PortfoliosPage() {
       const savedWallets = localStorage.getItem('managedWallets');
       let wallets: ManagedWallet[] = [];
 
+      console.log('🔍 Debug: Raw localStorage data:', savedWallets);
+
       if (savedWallets) {
         wallets = JSON.parse(savedWallets);
       }
 
+      console.log(`🔍 Debug: Parsed ${wallets.length} wallets:`, wallets.map(w => ({ name: w.clientName, address: w.address })));
+
       if (wallets.length === 0) {
+        console.warn('⚠️ No wallets found in localStorage');
         setPools([]);
         return;
       }
@@ -70,34 +75,42 @@ export default function PortfoliosPage() {
         })
       });
 
+      console.log(`🔍 Debug: API response status: ${response.status}`);
+
       if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`❌ API Error ${response.status}:`, errorText);
+        throw new Error(`API returned ${response.status}: ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log(`🔍 Debug: API response data:`, data);
 
       if (data.success && Array.isArray(data.pools)) {
         console.log(`✅ Received ${data.pools.length} real pools from Moralis API`);
+        console.log(`🔍 Debug: Pool details:`, data.pools);
         setPools(data.pools);
       } else {
-        console.warn('API returned no pools, falling back to placeholder data');
+        console.warn('⚠️ API returned no pools, falling back to placeholder data');
+        console.log('🔍 Debug: Fallback reason - data:', data);
         // Fallback to generate basic placeholder data if no real pools found
         const fallbackPools: PoolData[] = wallets.map((wallet, index) => ({
           id: wallet.id,
           clientName: wallet.clientName,
           address: wallet.address,
-          protocol: 'No DeFi Positions',
-          pair: 'Wallet Analysis',
+          protocol: 'No DeFi Positions Found',
+          pair: 'Try Refresh or Check Wallet',
           totalValue: wallet.totalValue || 0,
           change24h: 0,
-          status: 'HEALTHY' as const,
+          status: 'WARNING' as const,
           pairAddress: wallet.address
         }));
+        console.log('🔍 Debug: Setting fallback pools:', fallbackPools);
         setPools(fallbackPools);
       }
 
     } catch (error) {
-      console.error('Error loading real pool data:', error);
+      console.error('❌ Error loading real pool data:', error);
       
       // Fallback to localStorage wallets on error
       const savedWallets = localStorage.getItem('managedWallets');
@@ -107,13 +120,14 @@ export default function PortfoliosPage() {
           id: wallet.id,
           clientName: wallet.clientName,
           address: wallet.address,
-          protocol: 'API Error - Retry Later',
-          pair: 'Unable to fetch',
+          protocol: 'API Error - Check Console',
+          pair: `Error: ${error instanceof Error ? error.message.substring(0, 30) : 'Unknown'}`,
           totalValue: wallet.totalValue || 0,
           change24h: 0,
-          status: 'WARNING' as const,
+          status: 'CRITICAL' as const,
           pairAddress: wallet.address
         }));
+        console.log('🔍 Debug: Setting error fallback pools:', fallbackPools);
         setPools(fallbackPools);
       } else {
         setPools([]);
