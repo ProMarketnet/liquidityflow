@@ -164,23 +164,24 @@ const Pools = () => {
     try {
       console.log('🔍 Loading data for address:', address);
       
-      // Step 1: Try DexScreener-based token pools API first (no API key needed)
-      console.log('🔎 Trying DexScreener token pools search...');
+      // Step 1: PRIORITY - Try to find pools where this token trades (for token addresses like WXM)
+      console.log('🔎 PRIORITY: Trying token pools search first (for tokens like WXM)...');
       
       try {
-        let dexScreenerResponse = await fetch(`/api/pools/dex-screener-all-pools?address=${address}`);
+        let tokenPoolsResponse = await fetch(`/api/pools/dex-screener-all-pools?address=${address}`);
         
-        if (dexScreenerResponse.ok) {
-          const dexScreenerData = await dexScreenerResponse.json();
+        if (tokenPoolsResponse.ok) {
+          const tokenPoolsData = await tokenPoolsResponse.json();
           
-          if (dexScreenerData.success && dexScreenerData.allPools && dexScreenerData.allPools.length > 0) {
-            console.log(`✅ DexScreener found ${dexScreenerData.allPools.length} pools across ${dexScreenerData.summary.chainsFound.length} chains`);
+          if (tokenPoolsData.success && tokenPoolsData.allPools && tokenPoolsData.allPools.length > 0) {
+            console.log(`✅ TOKEN POOLS FOUND! ${tokenPoolsData.allPools.length} pools across ${tokenPoolsData.summary.chainsFound.length} chains`);
+            console.log('🎯 This means the address is a TOKEN that trades in these pools:', tokenPoolsData.allPools);
             
-            // Process multiple pools data
+            // Process multiple pools data - this is what user wants for WXM
             const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
             let totalValue = 0;
             
-            dexScreenerData.allPools.forEach((pool: any) => {
+            tokenPoolsData.allPools.forEach((pool: any) => {
               const protocolName = `${pool.dex} (${pool.chain})`;
               
               if (!protocolPositions[protocolName]) {
@@ -224,14 +225,17 @@ const Pools = () => {
               error: null
             });
             
+            console.log('🎯 SUCCESS: Showing pools where token trades - exactly what user wanted!');
             return;
+          } else {
+            console.log('❌ No pools found for this token address, trying other methods...');
           }
         }
       } catch (error) {
-        console.warn('⚠️ DexScreener API failed:', error);
+        console.warn('⚠️ Token pools search failed:', error);
       }
       
-      // Step 2: Try specific pair lookup (for pool/pair addresses)
+      // Step 2: If not a token with trading pools, try as specific pair/pool address
       console.log('🔄 Trying as specific pair address...');
       const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
       const chain = isEVMAddress ? 'eth' : 'solana';
@@ -291,69 +295,8 @@ const Pools = () => {
         console.warn('⚠️ Pair lookup API failed:', error);
       }
       
-      // Step 3: Try comprehensive token pools API (requires Moralis)
-      console.log('🔄 Trying Moralis token pools search...');
-      let tokenPoolsResponse = await fetch(`/api/pools/token-pools?address=${address}`);
-      
-      if (tokenPoolsResponse.ok) {
-        const tokenPoolsData = await tokenPoolsResponse.json();
-        
-        if (tokenPoolsData.success && tokenPoolsData.allPools && tokenPoolsData.allPools.length > 0) {
-          console.log(`✅ Moralis found ${tokenPoolsData.allPools.length} pools across ${tokenPoolsData.summary.chainsFound.length} chains`);
-          
-          // Process multiple pools data (same logic as above)
-          const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
-          let totalValue = 0;
-          
-          tokenPoolsData.allPools.forEach((pool: any) => {
-            const protocolName = `${pool.dex} (${pool.chain})`;
-            
-            if (!protocolPositions[protocolName]) {
-              protocolPositions[protocolName] = [];
-            }
-            
-            const poolValue = parseFloat(pool.liquidity || '0');
-            totalValue += poolValue;
-            
-            protocolPositions[protocolName].push({
-              position_type: 'liquidity_pool',
-              position_id: pool.pairAddress || pool.address,
-              position_token_data: [
-                { symbol: pool.baseToken?.symbol || 'TOKEN0' },
-                { symbol: pool.pairedToken?.symbol || pool.quoteToken?.symbol || 'TOKEN1' }
-              ],
-              total_usd_value: poolValue,
-              apr: pool.apr || pool.apy,
-              rawData: pool
-            });
-          });
-          
-          const activeProtocols = Object.entries(protocolPositions).map(([name, positions]) => {
-            const protocolValue = positions.reduce((sum, pos) => sum + (pos.total_usd_value || 0), 0);
-            return {
-              protocol_name: name,
-              protocol_id: name.toLowerCase().replace(/\s+/g, '-'),
-              total_usd_value: protocolValue,
-              relative_portfolio_percentage: totalValue > 0 ? (protocolValue / totalValue) * 100 : 0
-            };
-          });
-          
-          setPoolsData({
-            summary: {
-              total_usd_value: totalValue,
-              active_protocols: activeProtocols
-            },
-            protocolPositions,
-            isLoading: false,
-            error: null
-          });
-          
-          return;
-        }
-      }
-      
-      // Step 4: Final fallback to wallet DeFi positions
-      console.log('🔄 Trying as wallet address...');
+      // Step 3: Final fallback to wallet DeFi positions
+      console.log('🔄 Final attempt: Trying as wallet address for DeFi positions...');
       
       try {
         const walletResponse = await fetch(`/api/wallet/defi?address=${address}`);
@@ -407,13 +350,13 @@ const Pools = () => {
         console.warn('⚠️ Wallet DeFi API failed:', error);
       }
 
-      // If all APIs failed, show helpful message instead of error
-      console.log('⚠️ All APIs failed, showing helpful message');
+      // If all methods failed, show helpful message
+      console.log('⚠️ All search methods failed, showing helpful message');
       setPoolsData({
         summary: null,
         protocolPositions: {},
         isLoading: false,
-        error: `No DeFi positions found for ${address.slice(0, 6)}...${address.slice(-4)}. This address might not have active liquidity pools or DeFi positions on supported protocols.`
+        error: `No DeFi positions or trading pools found for ${address.slice(0, 6)}...${address.slice(-4)}. This address might not be a token with active liquidity pools, a pool/pair address, or a wallet with DeFi positions on supported protocols.`
       });
       
     } catch (error) {
