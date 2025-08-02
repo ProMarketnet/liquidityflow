@@ -91,9 +91,10 @@ export default function AdminPortfoliosPage() {
   return (
     <>
       <Head>
-        <title>Portfolio Management - LiquidFlow</title>
+        <title>Portfolio Management - LiquidFlow v3.0.{Date.now()}</title>
       </Head>
       
+      {/* TIMESTAMP: {new Date().toISOString()} - Simple Portfolio Management */}
       <div style={{
         minHeight: '100vh',
         background: '#f8fafc',
@@ -101,7 +102,7 @@ export default function AdminPortfoliosPage() {
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
-          {/* Header */}
+          {/* Header - NO AUTH COMPLEXITY */}
           <div style={{ marginBottom: '2rem' }}>
             <h1 style={{ 
               fontSize: '2.5rem', 
@@ -109,13 +110,13 @@ export default function AdminPortfoliosPage() {
               color: '#1f2937',
               marginBottom: '0.5rem'
             }}>
-              Portfolio Management
+              ✨ Portfolio Management [SIMPLIFIED VERSION]
             </h1>
             <p style={{ 
               color: '#6b7280', 
               fontSize: '1.1rem'
             }}>
-              Overview of all managed DeFi portfolios and positions
+              Clean, simple portfolio view - NO AUTHENTICATION REQUIRED
             </p>
           </div>
 
