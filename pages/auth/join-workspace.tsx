@@ -344,10 +344,10 @@ export default function JoinWorkspacePage() {
                   🔐 Sign In with Privy
                 </button>
               </>
-                         ) : (user && user.email?.address === email) ? (
-              <>
-                <p style={styles.subtitle}>
-                  ✅ Authenticated as <strong>{user.email.address}</strong>
+                                      ) : (user && user.email?.address === email) ? (
+               <>
+                 <p style={styles.subtitle}>
+                   ✅ Authenticated as <strong>{user.email?.address}</strong>
                   <br />
                   Ready to join the workspace!
                 </p>
