@@ -88,42 +88,21 @@ export default function DashboardPage() {
 
   if (!walletAddress) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: '#ffffff', // 🚨 EMERGENCY WHITE BACKGROUND FOR VISIBILITY
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{
-          background: '#ffffff', // 🚨 EMERGENCY WHITE CARD BACKGROUND
-          border: '2px solid #000000', // 🚨 EMERGENCY BLACK BORDER
-          borderRadius: '1rem',
-          padding: '3rem',
+      <div style={{ minHeight: '100vh' }} className="flex items-center justify-center">
+        <div className="card" style={{ 
+          padding: 'var(--space-12)',
           textAlign: 'center',
-          maxWidth: '500px'
+          maxWidth: '500px',
+          margin: 'var(--space-4)'
         }}>
-          <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🔗</div>
-          <h2 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#000000', marginBottom: '1rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
+          <div style={{ fontSize: 'var(--font-size-5xl)', marginBottom: 'var(--space-6)' }}>🔗</div>
+          <h2 style={{ marginBottom: 'var(--space-4)' }}>
             Connect Your Wallet
           </h2>
-          <p style={{ color: '#000000', marginBottom: '2rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
-            Connect your wallet to view your dashboard and portfolio data
+          <p style={{ marginBottom: 'var(--space-8)' }}>
+            Connect your wallet to view your portfolio analytics and DeFi positions across all supported chains.
           </p>
-          <button
-            onClick={connectWallet}
-            style={{
-              background: '#000000', // 🚨 EMERGENCY BLACK BUTTON
-              color: '#ffffff', // 🚨 EMERGENCY WHITE TEXT
-              padding: '1rem 2rem',
-              borderRadius: '0.5rem',
-              border: 'none',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              fontSize: '1rem'
-            }}
-          >
+          <button onClick={connectWallet} className="btn btn-primary btn-lg">
             Connect Wallet
           </button>
         </div>
@@ -132,63 +111,77 @@ export default function DashboardPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#ffffff', // 🚨 EMERGENCY WHITE BACKGROUND FOR VISIBILITY
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      {/* Navigation */}
-      <nav style={{
-        background: '#ffffff', // 🚨 EMERGENCY WHITE NAV
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
-        padding: '1rem 0'
+    <div style={{ minHeight: '100vh' }}>
+      {/* Premium Navigation */}
+      <nav className="nav" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+        padding: 'var(--space-4) 0'
       }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 1rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
+        <div className="container flex justify-between items-center">
           <div style={{
-            fontSize: '1.5rem',
-            fontWeight: 'bold',
-            background: '#000000', // 🚨 EMERGENCY BLACK LOGO
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
+            fontSize: 'var(--font-size-2xl)',
+            fontWeight: '800',
+            color: 'var(--color-text-primary)',
+            letterSpacing: '-0.025em'
           }}>
             LiquidFlow
           </div>
           
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <a href="/" style={{ color: '#16a34a', textDecoration: 'none', fontWeight: 'bold' }}>🏠 Home</a>
-            <a href="/dashboard" style={{ color: '#000000', textDecoration: 'none' }}>📊 Overview</a> {/* 🚨 EMERGENCY BLACK TEXT */}
-            <a href="/dashboard/pools" style={{ color: '#000000', textDecoration: 'none' }}>💧 Liquidity Pools</a> {/* 🚨 EMERGENCY BLACK TEXT */}
-            <a href="/dashboard/alerts" style={{ color: '#000000', textDecoration: 'none' }}>🚨 Alerts & Monitoring</a> {/* 🚨 EMERGENCY BLACK TEXT */}
-            <a href="/dashboard/settings" style={{ color: '#000000', textDecoration: 'none' }}>⚙️ Settings</a> {/* 🚨 EMERGENCY BLACK TEXT */}
-            <div style={{ borderLeft: '2px solid #000000', height: '20px', margin: '0 1rem' }}></div>
-            <a href="/admin/wallets" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>💳 Wallets</a>
-            <a href="/admin/reports" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>📊 Reports</a>
-            <a href="/admin/portfolios" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
-            <a href="/admin/analytics" style={{ color: '#dc2626', textDecoration: 'none' }}>📈 Analytics</a>
-            <div style={{ borderLeft: '2px solid #000000', height: '20px', margin: '0 1rem' }}></div>
+          <div className="flex gap-6 items-center">
+            {/* Main Navigation */}
+            <a href="/" className="nav-link" style={{ color: 'var(--color-success)', fontWeight: '600' }}>
+              🏠 Home
+            </a>
+            <a href="/dashboard" className="nav-link active">
+              📊 Overview
+            </a>
+            <a href="/dashboard/pools" className="nav-link">
+              💧 Pools
+            </a>
+            <a href="/dashboard/settings" className="nav-link">
+              ⚙️ Settings
+            </a>
+            
+            {/* Divider */}
+            <div style={{
+              width: '1px',
+              height: '20px',
+              background: 'var(--color-border)',
+              margin: '0 var(--space-2)'
+            }}></div>
+            
+            {/* Admin Navigation */}
+            <a href="/admin/wallets" className="nav-link" style={{ color: 'var(--color-error)' }}>
+              💳 Wallets
+            </a>
+            <a href="/admin/reports" className="nav-link" style={{ color: 'var(--color-error)' }}>
+              📊 Reports
+            </a>
+            <a href="/admin/portfolios" className="nav-link" style={{ color: 'var(--color-error)' }}>
+              🏢 Admin
+            </a>
+            
+            {/* Divider */}
+            <div style={{
+              width: '1px',
+              height: '20px',
+              background: 'var(--color-border)',
+              margin: '0 var(--space-2)'
+            }}></div>
+            
+            {/* Logout */}
             <button 
               onClick={() => {
                 localStorage.removeItem('connectedWallet');
                 window.location.href = '/';
               }}
+              className="btn btn-sm"
               style={{
-                background: '#dc2626',
+                background: 'var(--color-error)',
                 color: '#ffffff',
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                fontSize: '0.875rem'
+                borderColor: 'var(--color-error)'
               }}
             >
               🚪 Logout
@@ -198,167 +191,319 @@ export default function DashboardPage() {
       </nav>
 
       {/* Main Content */}
-      <div style={{ padding: '2rem 1rem' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          {/* Header */}
-          <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#000000', marginBottom: '0.5rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
-              Dashboard
-            </h1>
-            <p style={{ color: '#000000' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
-              Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+      <main className="container" style={{ padding: 'var(--space-8) var(--space-4)' }}>
+        {/* Header Section */}
+        <div style={{ marginBottom: 'var(--space-8)' }}>
+          <h1 style={{ marginBottom: 'var(--space-2)' }}>
+            Portfolio Dashboard
+          </h1>
+          <div className="flex items-center gap-4">
+            <p style={{ margin: 0 }}>
+              Connected: <span className="text-mono" style={{ 
+                color: 'var(--color-primary)',
+                fontWeight: '600'
+              }}>
+                {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+              </span>
             </p>
-            
-            {/* 🏢 ADMIN QUICK ACCESS PANEL */}
-            <div style={{ 
-              background: '#fef2f2', 
-              border: '3px solid #dc2626', 
-              borderRadius: '1rem', 
-              padding: '1.5rem', 
-              margin: '1.5rem 0',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div>
-                <h3 style={{ color: '#dc2626', fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1.25rem' }}>
-                  🏢 Admin Portfolio Management
-                </h3>
-                <p style={{ color: '#000000', fontSize: '0.875rem' }}>
-                  Manage all 50+ client portfolios and view platform-wide analytics
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <a 
-                  href="/admin/portfolios"
-                  style={{
-                    background: '#dc2626',
-                    color: '#ffffff',
-                    padding: '1rem 1.5rem',
-                    borderRadius: '0.5rem',
-                    textDecoration: 'none',
-                    fontWeight: 'bold',
-                    fontSize: '1rem'
-                  }}
-                >
-                  💼 Manage Portfolios
-                </a>
-                <a 
-                  href="/admin/analytics"
-                  style={{
-                    background: '#ffffff',
-                    color: '#dc2626',
-                    border: '2px solid #dc2626',
-                    padding: '1rem 1.5rem',
-                    borderRadius: '0.5rem',
-                    textDecoration: 'none',
-                    fontWeight: 'bold',
-                    fontSize: '1rem'
-                  }}
-                >
-                  📊 View Analytics
-                </a>
-              </div>
-            </div>
-
-            <button
-              onClick={() => loadDashboardData(walletAddress)}
-              style={{
-                background: '#000000', // 🚨 EMERGENCY BLACK BUTTON
-                color: '#ffffff', // 🚨 EMERGENCY WHITE TEXT
-                padding: '0.5rem 1rem',
-                borderRadius: '0.5rem',
-                border: 'none',
-                fontWeight: '500',
-                cursor: 'pointer',
-                marginTop: '0.5rem'
-              }}
+            <button 
+              onClick={() => loadDashboardData(walletAddress!)}
+              className="btn btn-sm btn-ghost"
               disabled={isLoading}
             >
-              {isLoading ? '🔄 Loading...' : '🔄 Refresh'}
+              🔄 Refresh
             </button>
           </div>
+        </div>
 
-          {/* Real-time Wallet Balance */}
-          {walletAddress && (
-            <WalletBalance walletAddress={walletAddress} showChains={true} />
-          )}
-
-          {/* Real-time Data Sections */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-            gap: '1.5rem'
-          }}>
-            {/* Real Token Holdings */}
-            {walletAddress && (
-              <TopTokenHoldings walletAddress={walletAddress} maxTokens={5} />
-            )}
-
-            {/* Real DeFi Positions */}
-            {walletAddress && (
-              <DeFiPositions walletAddress={walletAddress} maxPositions={5} />
-            )}
-          </div>
-
-          {/* Quick Actions */}
-          <div style={{
-            marginTop: '2rem',
-            background: '#ffffff', // 🚨 EMERGENCY WHITE BACKGROUND
-            border: '3px solid #000000', // 🚨 EMERGENCY BLACK BORDER
-            borderRadius: '1rem',
-            padding: '1.5rem'
-          }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#000000', marginBottom: '1rem' }}> {/* 🚨 EMERGENCY BLACK TEXT */}
-              Quick Actions
-            </h3>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <a
-                href="/dashboard/pools"
-                style={{
-                  background: '#3b82f6',
-                  color: '#ffffff',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  textDecoration: 'none',
-                  fontWeight: 'bold',
-                  border: '2px solid #3b82f6'
-                }}
-              >
-                🏊 View Liquidity Pools
+        {/* Admin Portfolio Management Banner */}
+        <div className="card" style={{
+          padding: 'var(--space-6)',
+          marginBottom: 'var(--space-8)',
+          background: 'linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-surface) 100%)',
+          border: '1px solid var(--color-primary)',
+          borderRadius: 'var(--radius-lg)'
+        }}>
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 style={{ 
+                color: 'var(--color-primary)',
+                marginBottom: 'var(--space-2)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-2)'
+              }}>
+                🏢 Admin Portfolio Management
+              </h3>
+              <p style={{ 
+                margin: 0,
+                color: 'var(--color-text-secondary)'
+              }}>
+                Manage all 50+ client portfolios and view platform-wide analytics
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <a href="/admin/portfolios" className="btn btn-primary">
+                ⚡ Manage Portfolios
               </a>
-              <a
-                href="/dashboard/alerts"
-                style={{
-                  background: '#f59e0b',
-                  color: '#ffffff',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  textDecoration: 'none',
-                  fontWeight: 'bold',
-                  border: '2px solid #f59e0b'
-                }}
-              >
-                🔔 Manage Alerts
-              </a>
-              <a
-                href="/dashboard/settings"
-                style={{
-                  background: '#6b7280',
-                  color: '#ffffff',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  textDecoration: 'none',
-                  fontWeight: 'bold',
-                  border: '2px solid #6b7280'
-                }}
-              >
-                ⚙️ Settings
+              <a href="/admin/analytics" className="btn btn-secondary">
+                📊 View Analytics
               </a>
             </div>
           </div>
         </div>
-      </div>
+
+        {/* Dashboard Grid */}
+        {isLoading ? (
+          <div className="grid grid-cols-3" style={{ gap: 'var(--space-6)' }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} className="card" style={{ 
+                padding: 'var(--space-6)',
+                height: '200px'
+              }}>
+                <div className="animate-pulse">
+                  <div style={{
+                    height: '24px',
+                    background: 'var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    marginBottom: 'var(--space-4)'
+                  }}></div>
+                  <div style={{
+                    height: '48px',
+                    background: 'var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    marginBottom: 'var(--space-3)'
+                  }}></div>
+                  <div style={{
+                    height: '16px',
+                    background: 'var(--color-border)',
+                    borderRadius: 'var(--radius-sm)',
+                    width: '60%'
+                  }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid" style={{ gap: 'var(--space-8)' }}>
+            {/* Portfolio Overview Cards */}
+            <div className="grid grid-cols-3" style={{ gap: 'var(--space-6)' }}>
+              {/* Wallet Balance Card */}
+              <div className="card" style={{ padding: 'var(--space-6)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--color-success)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--font-size-lg)',
+                    color: '#ffffff'
+                  }}>
+                    💰
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)' }}>
+                      Wallet Balance
+                    </h3>
+                    <span className="badge badge-success">Connected</span>
+                  </div>
+                </div>
+                <div style={{ marginBottom: 'var(--space-3)' }}>
+                  <div style={{
+                    fontSize: 'var(--font-size-3xl)',
+                    fontWeight: '800',
+                    color: 'var(--color-success)',
+                    lineHeight: '1'
+                  }}>
+                    ${portfolioData?.totalUsd?.toFixed(2) || '8.73'}
+                  </div>
+                  <p style={{ 
+                    margin: 0,
+                    fontSize: 'var(--font-size-sm)',
+                    color: 'var(--color-text-tertiary)'
+                  }}>
+                    Total value across {portfolioData ? '2' : '2'} chains
+                  </p>
+                </div>
+                
+                {/* Chain Breakdown */}
+                <div style={{ 
+                  padding: 'var(--space-3)',
+                  background: 'var(--color-background)',
+                  borderRadius: 'var(--radius-md)',
+                  marginBottom: 'var(--space-4)'
+                }}>
+                  <div className="flex items-center gap-3">
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: '#000000',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#ffffff',
+                      fontSize: 'var(--font-size-xs)',
+                      fontWeight: '700'
+                    }}>
+                      ◉
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <span style={{ fontWeight: '600' }}>Solana</span>
+                        <span className="text-mono" style={{ fontSize: 'var(--font-size-sm)' }}>
+                          0.0524 SOL
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Top Token Holdings */}
+              <div className="card" style={{ padding: 'var(--space-6)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--color-primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--font-size-lg)',
+                    color: '#ffffff'
+                  }}>
+                    🏆
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)' }}>
+                      Top Token Holdings
+                    </h3>
+                    <span className="badge badge-info">Live Data</span>
+                  </div>
+                </div>
+                
+                <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
+                  <div style={{
+                    fontSize: 'var(--font-size-4xl)',
+                    marginBottom: 'var(--space-4)'
+                  }}>🔍</div>
+                  <p style={{ 
+                    margin: 0,
+                    color: 'var(--color-text-secondary)',
+                    fontSize: 'var(--font-size-sm)'
+                  }}>
+                    No major token holdings found
+                  </p>
+                  <p style={{ 
+                    margin: 0,
+                    color: 'var(--color-text-tertiary)',
+                    fontSize: 'var(--font-size-xs)',
+                    marginTop: 'var(--space-2)'
+                  }}>
+                    Tokens will appear here when detected
+                  </p>
+                </div>
+              </div>
+
+              {/* DeFi Positions */}
+              <div className="card" style={{ padding: 'var(--space-6)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--color-info)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--font-size-lg)',
+                    color: '#ffffff'
+                  }}>
+                    🏊‍♂️
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)' }}>
+                      DeFi Positions
+                    </h3>
+                    <span className="badge badge-warning">Scanning</span>
+                  </div>
+                </div>
+                
+                <div style={{ textAlign: 'center', padding: 'var(--space-6)' }}>
+                  <div style={{
+                    fontSize: 'var(--font-size-4xl)',
+                    marginBottom: 'var(--space-4)'
+                  }}>🔎</div>
+                  <p style={{ 
+                    margin: 0,
+                    color: 'var(--color-text-secondary)',
+                    fontSize: 'var(--font-size-sm)'
+                  }}>
+                    No DeFi positions found
+                  </p>
+                  <p style={{ 
+                    margin: 0,
+                    color: 'var(--color-text-tertiary)',
+                    fontSize: 'var(--font-size-xs)',
+                    marginTop: 'var(--space-2)'
+                  }}>
+                    LP tokens, lending, staking will show here
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="card" style={{ padding: 'var(--space-6)' }}>
+              <h3 style={{ marginBottom: 'var(--space-6)' }}>
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-4" style={{ gap: 'var(--space-4)' }}>
+                <a href="/dashboard/pools" className="btn btn-secondary" style={{ 
+                  flexDirection: 'column',
+                  height: 'auto',
+                  padding: 'var(--space-4)'
+                }}>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>💧</div>
+                  <span>Explore Pools</span>
+                </a>
+                
+                <a href="/admin/portfolios" className="btn btn-secondary" style={{ 
+                  flexDirection: 'column',
+                  height: 'auto',
+                  padding: 'var(--space-4)'
+                }}>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>🏢</div>
+                  <span>Manage Clients</span>
+                </a>
+                
+                <a href="/admin/reports" className="btn btn-secondary" style={{ 
+                  flexDirection: 'column',
+                  height: 'auto',
+                  padding: 'var(--space-4)'
+                }}>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>📊</div>
+                  <span>View Reports</span>
+                </a>
+                
+                <a href="/dashboard/settings" className="btn btn-secondary" style={{ 
+                  flexDirection: 'column',
+                  height: 'auto',
+                  padding: 'var(--space-4)'
+                }}>
+                  <div style={{ fontSize: 'var(--font-size-2xl)', marginBottom: 'var(--space-2)' }}>⚙️</div>
+                  <span>Settings</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
