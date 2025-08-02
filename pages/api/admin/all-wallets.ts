@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getUserFromEmail, getUserWallets } from '../../../lib/auth-roles';
+import { getUserFromEmail, getUserWorkspaces, getWorkspaceWallets } from '../../../lib/auth-roles';
 
 interface ClientWallet {
   id: string;
@@ -12,7 +12,8 @@ interface ClientWallet {
   protocols: string[];
   alerts: number;
   performance24h: number;
-  userEmail: string;
+  addedBy: string;
+  workspaceId: string;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -21,8 +22,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Get user email from headers or query
+    // Get user email and workspace from headers/query
     const userEmail = req.headers['x-user-email'] as string || req.query.email as string;
+    const workspaceId = req.headers['x-workspace-id'] as string || req.query.workspace as string;
     
     if (!userEmail) {
       return res.status(401).json({ error: 'User email required for authentication' });
@@ -33,24 +35,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(403).json({ error: 'Unauthorized - Invalid user email' });
     }
 
-    // Get user-specific wallets
-    let userWallets: ClientWallet[] = [];
-
-    if (user.role === 'SUPER_ADMIN') {
-      // Super admins see all wallets across all users
-      userWallets = getAllUserWallets();
-    } else {
-      // Regular users see only their own wallets
-      userWallets = getWalletsForUser(user.userWorkspaceId, user.email);
+    // Get user's workspaces
+    const userWorkspaces = getUserWorkspaces(userEmail);
+    
+    if (userWorkspaces.length === 0) {
+      return res.status(200).json({ 
+        wallets: [],
+        userEmail: user.email,
+        workspaces: [],
+        totalWallets: 0,
+        userRole: user.role,
+        message: 'No workspaces found. Create your first workspace to get started.'
+      });
     }
 
-    console.log(`👤 User ${user.email} (${user.role}) accessing ${userWallets.length} wallets`);
+    let workspaceWallets: ClientWallet[] = [];
+    let selectedWorkspace = null;
+
+    if (workspaceId) {
+      // Get wallets for specific workspace
+      const hasAccess = userWorkspaces.some(ws => ws.workspaceId === workspaceId);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'Access denied to this workspace' });
+      }
+      
+      selectedWorkspace = userWorkspaces.find(ws => ws.workspaceId === workspaceId);
+      workspaceWallets = getWorkspaceMockWallets(workspaceId);
+    } else {
+      // Default to first workspace
+      selectedWorkspace = userWorkspaces[0];
+      workspaceWallets = getWorkspaceMockWallets(selectedWorkspace.workspaceId);
+    }
+
+    console.log(`👤 User ${user.email} accessing ${workspaceWallets.length} wallets in workspace ${selectedWorkspace?.workspaceId}`);
 
     return res.status(200).json({ 
-      wallets: userWallets,
+      wallets: workspaceWallets,
       userEmail: user.email,
-      userWorkspace: user.userWorkspaceId,
-      totalWallets: userWallets.length,
+      currentWorkspace: selectedWorkspace,
+      workspaces: userWorkspaces,
+      totalWallets: workspaceWallets.length,
       userRole: user.role
     });
 
@@ -60,14 +84,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-// 👤 USER-SPECIFIC WALLET DATA
-function getWalletsForUser(userWorkspaceId: string, userEmail: string): ClientWallet[] {
-  const userWalletData: { [key: string]: ClientWallet[] } = {
-    'workspace_user_dGVzdEBleGFtcGxl': [ // test@example.com
+// 🏢 WORKSPACE-SPECIFIC WALLET DATA
+function getWorkspaceMockWallets(workspaceId: string): ClientWallet[] {
+  const workspaceWalletData: { [key: string]: ClientWallet[] } = {
+    'ws_xtc_company': [
       {
         id: '1',
         address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-        clientName: 'My Client - Alice Johnson',
+        clientName: 'XTC Client - Alice Johnson',
         totalValue: 245823.12,
         lastUpdated: '2 mins ago',
         status: 'active',
@@ -75,14 +99,13 @@ function getWalletsForUser(userWorkspaceId: string, userEmail: string): ClientWa
         protocols: ['Uniswap V3', 'Aave V3'],
         alerts: 0,
         performance24h: 2.45,
-        userEmail: 'test@example.com'
-      }
-    ],
-    'workspace_user_amRvZUBjb21wYW55': [ // john@company.com  
+        addedBy: 'john@company.com',
+        workspaceId: 'ws_xtc_company'
+      },
       {
         id: '2',
         address: '0x456789abcdef0123456789abcdef0123456789ab',
-        clientName: 'John Client - David Brown',
+        clientName: 'XTC Client - Bob Smith (added by Jane)',
         totalValue: 156789.45,
         lastUpdated: '5 mins ago',
         status: 'active',
@@ -90,23 +113,29 @@ function getWalletsForUser(userWorkspaceId: string, userEmail: string): ClientWa
         protocols: ['Compound', 'Yearn'],
         alerts: 1,
         performance24h: 1.89,
-        userEmail: 'john@company.com'
+        addedBy: 'jane@email.com',
+        workspaceId: 'ws_xtc_company'
+      }
+    ],
+    'ws_personal_test': [
+      {
+        id: '3',
+        address: '0x1234567890abcdef1234567890abcdef12345678',
+        clientName: 'Personal Client - Charlie Brown',
+        totalValue: 89123.45,
+        lastUpdated: '10 mins ago',
+        status: 'active',
+        positions: 5,
+        protocols: ['Uniswap V2'],
+        alerts: 0,
+        performance24h: 0.85,
+        addedBy: 'test@example.com',
+        workspaceId: 'ws_personal_test'
       }
     ]
   };
 
-  return userWalletData[userWorkspaceId] || [];
-}
-
-// 🌐 ALL USERS WALLET DATA (for super admins)
-function getAllUserWallets(): ClientWallet[] {
-  const allWallets: ClientWallet[] = [];
-  
-  // Combine wallets from all users
-  allWallets.push(...getWalletsForUser('workspace_user_dGVzdEBleGFtcGxl', 'test@example.com'));
-  allWallets.push(...getWalletsForUser('workspace_user_amRvZUBjb21wYW55', 'john@company.com'));
-  
-  return allWallets;
+  return workspaceWalletData[workspaceId] || [];
 }
 
 // 🚀 Production Implementation Functions:

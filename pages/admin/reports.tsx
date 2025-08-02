@@ -204,6 +204,7 @@ export default function AdminReportsPage() {
   // 🔐 CHECK USER SESSION ON LOAD
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
+    const currentWorkspaceId = localStorage.getItem('currentWorkspaceId');
     
     if (!userEmail) {
       // Redirect to portfolio management to login with email
@@ -212,7 +213,7 @@ export default function AdminReportsPage() {
       return;
     }
     
-    loadManagedWallets();
+    loadManagedWallets(currentWorkspaceId);
   }, []);
 
   useEffect(() => {
@@ -221,7 +222,7 @@ export default function AdminReportsPage() {
     }
   }, [selectedWallet, reportPeriod, reportType, managedWallets]);
 
-  const loadManagedWallets = async () => {
+  const loadManagedWallets = async (workspaceId?: string) => {
     setIsLoadingWallets(true);
     try {
       // Get current user's email (consistent with portfolio system)
@@ -233,11 +234,20 @@ export default function AdminReportsPage() {
         return;
       }
 
-      console.log(`🔗 Loading managed wallets for user: ${userEmail}`);
+      console.log(`🔗 Loading managed wallets for user: ${userEmail}, workspace: ${workspaceId || 'default'}`);
       
-      const response = await fetch(`/api/admin/all-wallets?email=${userEmail}`, {
+      const queryParams = new URLSearchParams({
+        email: userEmail
+      });
+      
+      if (workspaceId) {
+        queryParams.append('workspace', workspaceId);
+      }
+      
+      const response = await fetch(`/api/admin/all-wallets?${queryParams}`, {
         headers: {
-          'x-user-email': userEmail
+          'x-user-email': userEmail,
+          ...(workspaceId && { 'x-workspace-id': workspaceId })
         }
       });
       
@@ -246,55 +256,65 @@ export default function AdminReportsPage() {
         setManagedWallets(data.wallets || []);
         console.log(`✅ Loaded ${data.wallets?.length || 0} wallets for reports`);
         
-        // Show user context in UI
-        if (data.userEmail) {
-          console.log(`📊 Reports system connected to: ${data.userEmail}`);
+        // Show workspace context in UI
+        if (data.currentWorkspace) {
+          console.log(`📊 Reports system connected to: ${data.currentWorkspace.workspaceId} (${data.currentWorkspace.role})`);
         }
       } else {
         // Use same mock data as portfolio management for consistency
-        const mockWallets = getUserMockWallets(userEmail);
+        const mockWallets = getWorkspaceMockWallets(workspaceId || 'ws_personal_test');
         setManagedWallets(mockWallets);
-        console.log(`✅ Using ${mockWallets.length} mock wallets for user reports`);
+        console.log(`✅ Using ${mockWallets.length} mock wallets for workspace reports`);
       }
     } catch (error) {
       console.error('❌ Error loading managed wallets for reports:', error);
-      // Fallback to user-specific mock data
-      const userEmail = localStorage.getItem('userEmail');
-      if (userEmail) {
-        const mockWallets = getUserMockWallets(userEmail);
-        setManagedWallets(mockWallets);
-      }
+      // Fallback to workspace-specific mock data
+      const workspaceId = localStorage.getItem('currentWorkspaceId') || 'ws_personal_test';
+      const mockWallets = getWorkspaceMockWallets(workspaceId);
+      setManagedWallets(mockWallets);
     } finally {
       setIsLoadingWallets(false);
     }
   };
 
-  // 👤 USER-SPECIFIC MOCK DATA (same as portfolio management)
-  const getUserMockWallets = (userEmail: string) => {
-    // Each user gets their own unique wallets
-    if (userEmail === 'test@example.com') {
-      return [
+  // 🏢 WORKSPACE-SPECIFIC MOCK DATA (same as portfolio management)
+  const getWorkspaceMockWallets = (workspaceId: string) => {
+    const workspaceWalletData: { [key: string]: any[] } = {
+      'ws_xtc_company': [
         {
           id: '1',
           address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-          clientName: 'My Client - Alice Johnson',
+          clientName: 'XTC Client - Alice Johnson',
           status: 'active'
-        }
-      ];
-    }
-    
-    if (userEmail === 'john@company.com') {
-      return [
+        },
         {
           id: '2',
           address: '0x456789abcdef0123456789abcdef0123456789ab',
-          clientName: 'John Client - David Brown',
+          clientName: 'XTC Client - Bob Smith (added by Jane)',
           status: 'active'
         }
-      ];
-    }
+      ],
+      'ws_personal_test': [
+        {
+          id: '3',
+          address: '0x1234567890abcdef1234567890abcdef12345678',
+          clientName: 'Personal Client - Charlie Brown',
+          status: 'active'
+        }
+      ]
+    };
     
-    return []; // No wallets for unknown users
+    return workspaceWalletData[workspaceId] || []; // Empty workspace if unknown
+  };
+
+  const getWorkspaceDisplayName = (): string => {
+    const workspaceId = localStorage.getItem('currentWorkspaceId');
+    const workspaceNames: { [key: string]: string } = {
+      'ws_xtc_company': 'XTC Company',
+      'ws_personal_test': 'Personal Workspace'
+    };
+    
+    return workspaceNames[workspaceId || ''] || 'Current Workspace';
   };
 
   const loadReports = async () => {
@@ -511,7 +531,8 @@ export default function AdminReportsPage() {
                 color: '#1e40af'
               }}>
                 <strong>👤 User:</strong> {localStorage.getItem('userEmail')} • 
-                <strong> Workspace:</strong> Personal Portfolio Data
+                <strong> Workspace:</strong> {getWorkspaceDisplayName()} •
+                <strong> Wallets:</strong> {managedWallets.length} client{managedWallets.length !== 1 ? 's' : ''}
               </div>
             )}
           </div>
