@@ -139,11 +139,7 @@ export default function JoinWorkspacePage() {
 
   const handlePrivyLogin = async () => {
     try {
-      await login({
-        loginOptions: {
-          email: email as string // Pre-fill with invited email
-        }
-      });
+      await login();
     } catch (error) {
       console.error('❌ Privy login failed:', error);
       setError('Authentication failed. Please try again.');
@@ -158,7 +154,7 @@ export default function JoinWorkspacePage() {
       console.log(`🏢 Joining workspace: ${invitation.workspaceName}`);
       
       // Verify email matches
-      if (user.email?.address !== email) {
+      if (!user.email?.address || user.email.address !== email) {
         setError('Please sign in with the invited email address: ' + email);
         setIsJoining(false);
         return;
@@ -348,7 +344,7 @@ export default function JoinWorkspacePage() {
                   🔐 Sign In with Privy
                 </button>
               </>
-            ) : user?.email?.address === email ? (
+                         ) : (user && user.email?.address === email) ? (
               <>
                 <p style={styles.subtitle}>
                   ✅ Authenticated as <strong>{user.email.address}</strong>
