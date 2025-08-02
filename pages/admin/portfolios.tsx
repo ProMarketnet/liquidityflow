@@ -89,7 +89,26 @@ export default function PortfoliosPage() {
       if (data.success && Array.isArray(data.pools)) {
         console.log(`✅ Received ${data.pools.length} real pools from Moralis API`);
         console.log(`🔍 Debug: Pool details:`, data.pools);
-        setPools(data.pools);
+        
+        // If we got pools from Moralis, use them
+        if (data.pools.length > 0) {
+          setPools(data.pools);
+        } else {
+          // No DeFi positions found, but show wallets anyway for monitoring
+          console.log('🔍 No DeFi positions found, showing wallets as monitoring addresses');
+          const monitoringPools: PoolData[] = wallets.map((wallet, index) => ({
+            id: wallet.id,
+            clientName: wallet.clientName,
+            address: wallet.address,
+            protocol: 'Monitoring Address',
+            pair: 'No Active DeFi Positions',
+            totalValue: wallet.totalValue || 0,
+            change24h: 0,
+            status: 'HEALTHY' as const,
+            pairAddress: wallet.address
+          }));
+          setPools(monitoringPools);
+        }
       } else {
         console.warn('⚠️ API returned no pools, falling back to placeholder data');
         console.log('🔍 Debug: Fallback reason - data:', data);
@@ -319,6 +338,32 @@ export default function PortfoliosPage() {
                   }}
                 >
                   {isLoading ? '🔄 Loading Moralis Data...' : '🔄 Refresh Pool Data'}
+                </button>
+                <button
+                  onClick={() => {
+                    const saved = localStorage.getItem('managedWallets');
+                    console.log('🔍 RAW localStorage:', saved);
+                    if (saved) {
+                      const wallets = JSON.parse(saved);
+                      console.log('🔍 PARSED wallets:', wallets);
+                      alert(`Found ${wallets.length} wallets in localStorage:\n${wallets.map((w: ManagedWallet) => `${w.clientName}: ${w.address}`).join('\n')}`);
+                    } else {
+                      alert('❌ No wallets found in localStorage!');
+                    }
+                  }}
+                  style={{
+                    background: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '0.375rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    marginLeft: '0.5rem'
+                  }}
+                >
+                  🔍 Test localStorage
                 </button>
               </div>
             </div>
