@@ -114,20 +114,24 @@ export default function AdminPortfoliosPage() {
         background: '#f8fafc',
         padding: '2rem 1rem'
       }}>
-        {/* Professional Navigation */}
+        {/* Professional Navigation - STICKY */}
         <nav style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
           background: '#ffffff',
           borderBottom: '2px solid #e5e7eb',
           padding: '1rem 0',
           marginBottom: '2rem',
-          borderRadius: '0.5rem'
+          borderRadius: '0.5rem',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
         }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>
               🏢 LiquidFlow Admin
             </div>
             <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-              <a href="/" style={{ color: '#059669', fontWeight: '600', textDecoration: 'none' }}>🏠 Home</a>
+              <a href="/admin/portfolios" style={{ color: '#059669', fontWeight: '600', textDecoration: 'none' }}>🏠 Home</a>
               <a href="/admin/wallets" style={{ color: '#6b7280', fontWeight: '600', textDecoration: 'none' }}>💳 Manage Wallets</a>
               <a href="/admin/reports" style={{ color: '#6b7280', fontWeight: '600', textDecoration: 'none' }}>📊 Trading Reports</a>
               <a href="/admin/analytics" style={{ color: '#6b7280', fontWeight: '600', textDecoration: 'none' }}>📈 Analytics</a>
@@ -335,12 +339,7 @@ export default function AdminPortfoliosPage() {
                     <td style={{ padding: '1rem', textAlign: 'center' }}>
                       <button 
                         onClick={() => handleAuthenticatedAction('Manage Portfolio', () => {
-                          const action = confirm(`Manage ${wallet.clientName}?\n\nOK = View Details\nCancel = Edit Settings`);
-                          if (action) {
-                            alert(`📊 Portfolio Details for ${wallet.clientName}\n\n💰 Total Value: $${wallet.totalValue.toLocaleString()}\n🔗 Positions: ${wallet.positions}\n📈 24h: ${wallet.performance24h >= 0 ? '+' : ''}${wallet.performance24h}%\n🛠️ Protocols: ${wallet.protocols.join(', ')}\n\n👤 Owner: ${user?.email?.address || user?.wallet?.address}`);
-                          } else {
-                            alert(`⚙️ Settings for ${wallet.clientName}\n\n• Add/Remove positions\n• Set alerts\n• Configure notifications\n• Export data\n• Invite collaborators\n\n🔧 These features will be implemented in the full version.`);
-                          }
+                          window.location.href = `/portfolio/${wallet.id}`;
                         })}
                         style={{
                           background: '#374151',
