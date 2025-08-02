@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getUserWithCompany, getAccessibleWallets } from '../../../lib/auth-roles';
+import { getUserFromEmail, getUserWallets } from '../../../lib/auth-roles';
 
 interface ClientWallet {
   id: string;
@@ -12,8 +12,7 @@ interface ClientWallet {
   protocols: string[];
   alerts: number;
   performance24h: number;
-  companyId: string;
-  companyName: string;
+  userEmail: string;
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -22,37 +21,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Get user from session/wallet address
-    const walletAddress = req.headers['x-wallet-address'] as string || req.query.wallet as string;
+    // Get user email from headers or query
+    const userEmail = req.headers['x-user-email'] as string || req.query.email as string;
     
-    if (!walletAddress) {
-      return res.status(401).json({ error: 'Wallet address required for authentication' });
+    if (!userEmail) {
+      return res.status(401).json({ error: 'User email required for authentication' });
     }
 
-    const user = getUserWithCompany(walletAddress);
+    const user = getUserFromEmail(userEmail);
     if (!user) {
-      return res.status(403).json({ error: 'Unauthorized - No admin access' });
+      return res.status(403).json({ error: 'Unauthorized - Invalid user email' });
     }
 
-    // Get company-specific wallets
-    const accessibleWallets = getAccessibleWallets(user);
-    
-    let companyWallets: ClientWallet[] = [];
+    // Get user-specific wallets
+    let userWallets: ClientWallet[] = [];
 
     if (user.role === 'SUPER_ADMIN') {
-      // Super admins see all wallets across all companies
-      companyWallets = getAllCompanyWallets();
-    } else if (user.companyId) {
-      // Company admins see only their company's wallets
-      companyWallets = getWalletsForCompany(user.companyId, user.companyName || 'Unknown Company');
+      // Super admins see all wallets across all users
+      userWallets = getAllUserWallets();
+    } else {
+      // Regular users see only their own wallets
+      userWallets = getWalletsForUser(user.userWorkspaceId, user.email);
     }
 
-    console.log(`👥 User ${user.name} (${user.role}) accessing ${companyWallets.length} wallets`);
+    console.log(`👤 User ${user.email} (${user.role}) accessing ${userWallets.length} wallets`);
 
     return res.status(200).json({ 
-      wallets: companyWallets,
-      company: user.companyName,
-      totalWallets: companyWallets.length,
+      wallets: userWallets,
+      userEmail: user.email,
+      userWorkspace: user.userWorkspaceId,
+      totalWallets: userWallets.length,
       userRole: user.role
     });
 
@@ -62,14 +60,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-// 🏢 COMPANY-SPECIFIC WALLET DATA
-function getWalletsForCompany(companyId: string, companyName: string): ClientWallet[] {
-  const companyWalletData: { [key: string]: ClientWallet[] } = {
-    'comp_abc123': [
+// 👤 USER-SPECIFIC WALLET DATA
+function getWalletsForUser(userWorkspaceId: string, userEmail: string): ClientWallet[] {
+  const userWalletData: { [key: string]: ClientWallet[] } = {
+    'workspace_user_dGVzdEBleGFtcGxl': [ // test@example.com
       {
         id: '1',
         address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-        clientName: 'ABC Client - Alice Johnson',
+        clientName: 'My Client - Alice Johnson',
         totalValue: 245823.12,
         lastUpdated: '2 mins ago',
         status: 'active',
@@ -77,97 +75,36 @@ function getWalletsForCompany(companyId: string, companyName: string): ClientWal
         protocols: ['Uniswap V3', 'Aave V3'],
         alerts: 0,
         performance24h: 2.45,
-        companyId: 'comp_abc123',
-        companyName: 'ABC Company'
-      },
+        userEmail: 'test@example.com'
+      }
+    ],
+    'workspace_user_amRvZUBjb21wYW55': [ // john@company.com  
       {
         id: '2',
-        address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
-        clientName: 'ABC Client - Bob Chen',
-        totalValue: 123456.78,
-        lastUpdated: '5 mins ago',
-        status: 'warning',
-        positions: 12,
-        protocols: ['Compound', 'Curve', 'Balancer'],
-        alerts: 2,
-        performance24h: -1.23,
-        companyId: 'comp_abc123',
-        companyName: 'ABC Company'
-      },
-      {
-        id: '3',
-        address: '0x9f8e7d6c5b4a3928374656789abcdef0123456789',
-        clientName: 'ABC Client - Carol Smith',
-        totalValue: 87234.56,
-        lastUpdated: '1 hour ago',
-        status: 'critical',
-        positions: 5,
-        protocols: ['Aave V3'],
-        alerts: 4,
-        performance24h: -5.67,
-        companyId: 'comp_abc123',
-        companyName: 'ABC Company'
-      }
-    ],
-    'comp_xyz456': [
-      {
-        id: '4',
         address: '0x456789abcdef0123456789abcdef0123456789ab',
-        clientName: 'XYZ Client - David Brown',
-        totalValue: 456789.23,
-        lastUpdated: '10 mins ago',
+        clientName: 'John Client - David Brown',
+        totalValue: 156789.45,
+        lastUpdated: '5 mins ago',
         status: 'active',
-        positions: 15,
-        protocols: ['Uniswap V3', 'Compound', 'Yearn'],
+        positions: 12,
+        protocols: ['Compound', 'Yearn'],
         alerts: 1,
-        performance24h: 3.21,
-        companyId: 'comp_xyz456',
-        companyName: 'XYZ Corporation'
-      },
-      {
-        id: '5',
-        address: '0xabcdef0123456789abcdef0123456789abcdef01',
-        clientName: 'XYZ Client - Emma Wilson',
-        totalValue: 198765.43,
-        lastUpdated: '3 mins ago',
-        status: 'active',
-        positions: 9,
-        protocols: ['Curve', 'Balancer'],
-        alerts: 0,
         performance24h: 1.89,
-        companyId: 'comp_xyz456',
-        companyName: 'XYZ Corporation'
-      }
-    ],
-    'comp_demo789': [
-      {
-        id: '6',
-        address: '0xdemo123456789abcdef0123456789abcdef012345',
-        clientName: 'Demo Client - Frank Miller',
-        totalValue: 54321.09,
-        lastUpdated: '15 mins ago',
-        status: 'active',
-        positions: 3,
-        protocols: ['Uniswap V2'],
-        alerts: 0,
-        performance24h: 0.85,
-        companyId: 'comp_demo789',
-        companyName: 'Demo LLC'
+        userEmail: 'john@company.com'
       }
     ]
   };
 
-  return companyWalletData[companyId] || [];
+  return userWalletData[userWorkspaceId] || [];
 }
 
-// 🌐 ALL COMPANIES WALLET DATA (for super admins)
-function getAllCompanyWallets(): ClientWallet[] {
+// 🌐 ALL USERS WALLET DATA (for super admins)
+function getAllUserWallets(): ClientWallet[] {
   const allWallets: ClientWallet[] = [];
   
-  // Combine wallets from all companies
-  allWallets.push(...getWalletsForCompany('comp_abc123', 'ABC Company'));
-  allWallets.push(...getWalletsForCompany('comp_xyz456', 'XYZ Corporation'));
-  allWallets.push(...getWalletsForCompany('comp_demo789', 'Demo LLC'));
+  // Combine wallets from all users
+  allWallets.push(...getWalletsForUser('workspace_user_dGVzdEBleGFtcGxl', 'test@example.com'));
+  allWallets.push(...getWalletsForUser('workspace_user_amRvZUBjb21wYW55', 'john@company.com'));
   
   return allWallets;
 }
