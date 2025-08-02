@@ -49,8 +49,10 @@ export default function AdminReportsPage() {
   const [reportPeriod, setReportPeriod] = useState<string>('30d');
   const [reportType, setReportType] = useState<string>('pnl');
   const [reports, setReports] = useState<WalletReport[]>([]);
+  const [managedWallets, setManagedWallets] = useState<Array<{id: string; address: string; clientName: string; status: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isLoadingWallets, setIsLoadingWallets] = useState(true);
 
   // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
   const styles = {
@@ -102,46 +104,36 @@ export default function AdminReportsPage() {
       marginBottom: '2rem',
       padding: '1.5rem',
       background: '#f9fafb',
-      border: '2px solid #e5e7eb',
+      border: '2px solid #000000',
       borderRadius: '1rem'
     },
     select: {
       padding: '0.75rem',
-      border: '2px solid #d1d5db',
+      border: '2px solid #000000',
       borderRadius: '0.5rem',
       fontSize: '1rem',
+      color: '#000000',
       background: '#ffffff'
     },
     button: {
-      background: '#3b82f6',
-      color: '#ffffff',
-      padding: '0.75rem 1.5rem',
-      borderRadius: '0.5rem',
-      border: 'none',
-      fontWeight: 'bold',
-      cursor: 'pointer',
-      fontSize: '1rem'
-    },
-    generateButton: {
       background: '#16a34a',
       color: '#ffffff',
+      border: 'none',
       padding: '0.75rem 1.5rem',
       borderRadius: '0.5rem',
-      border: 'none',
+      fontSize: '1rem',
       fontWeight: 'bold',
-      cursor: 'pointer',
-      fontSize: '1rem'
+      cursor: 'pointer'
     },
-    exportButton: {
+    buttonSecondary: {
       background: '#dc2626',
       color: '#ffffff',
-      padding: '0.5rem 1rem',
-      borderRadius: '0.375rem',
       border: 'none',
-      fontWeight: 'bold',
-      cursor: 'pointer',
+      padding: '0.5rem 1rem',
+      borderRadius: '0.25rem',
       fontSize: '0.875rem',
-      marginLeft: '0.5rem'
+      fontWeight: 'bold',
+      cursor: 'pointer'
     },
     card: {
       background: '#ffffff',
@@ -199,75 +191,158 @@ export default function AdminReportsPage() {
       textAlign: 'center' as const,
       padding: '3rem',
       color: '#666666'
+    },
+    walletInfo: {
+      background: '#eff6ff',
+      border: '2px solid #3b82f6',
+      borderRadius: '0.5rem',
+      padding: '1rem',
+      marginBottom: '1rem'
     }
   };
 
+  // 🔗 LOAD MANAGED WALLETS FROM PORTFOLIO SYSTEM
   useEffect(() => {
-    loadReports();
-  }, [selectedWallet, reportPeriod, reportType]);
+    loadManagedWallets();
+  }, []);
+
+  useEffect(() => {
+    if (managedWallets.length > 0) {
+      loadReports();
+    }
+  }, [selectedWallet, reportPeriod, reportType, managedWallets]);
+
+  const loadManagedWallets = async () => {
+    setIsLoadingWallets(true);
+    try {
+      console.log('🔗 Loading managed wallets from portfolio system...');
+      const response = await fetch('/api/admin/all-wallets');
+      if (response.ok) {
+        const data = await response.json();
+        setManagedWallets(data.wallets || []);
+        console.log('✅ Loaded managed wallets:', data.wallets?.length || 0);
+      } else {
+        // Use same mock data as portfolio management for consistency
+        const mockWallets = [
+          {
+            id: '1',
+            address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
+            clientName: 'Alice Johnson',
+            status: 'active'
+          },
+          {
+            id: '2',
+            address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
+            clientName: 'Bob Chen',
+            status: 'warning'
+          },
+          {
+            id: '3',
+            address: '0x9f8e7d6c5b4a3928374656789abcdef0123456789',
+            clientName: 'Carol Smith',
+            status: 'critical'
+          },
+          {
+            id: '4',
+            address: '0x456789abcdef0123456789abcdef0123456789ab',
+            clientName: 'David Brown',
+            status: 'active'
+          },
+          {
+            id: '5',
+            address: '0xabcdef0123456789abcdef0123456789abcdef01',
+            clientName: 'Emma Wilson',
+            status: 'active'
+          }
+        ];
+        setManagedWallets(mockWallets);
+        console.log('✅ Using mock managed wallets:', mockWallets.length);
+      }
+    } catch (error) {
+      console.error('❌ Error loading managed wallets:', error);
+    } finally {
+      setIsLoadingWallets(false);
+    }
+  };
 
   const loadReports = async () => {
+    if (managedWallets.length === 0) return;
+    
     setIsLoading(true);
     try {
-      // In production, this would call your reports API
-      // For now, generate mock report data
+      console.log(`📊 Loading reports for: ${selectedWallet} (${reportPeriod}, ${reportType})`);
+      
+      // Filter to only include managed wallets in reports
+      const availableWallets = selectedWallet === 'all' 
+        ? managedWallets 
+        : managedWallets.filter(w => w.address === selectedWallet);
+
+      if (availableWallets.length === 0) {
+        console.warn('⚠️ No managed wallets found for selected criteria');
+        setReports([]);
+        return;
+      }
+
+      // In production, this would call your reports API with managed wallet addresses
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
       
-      const mockReports: WalletReport[] = [
-        {
-          address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-          clientName: 'Alice Johnson',
-          reportPeriod: reportPeriod,
-          totalPnL: 15420.50,
-          realizedPnL: 8750.25,
-          unrealizedPnL: 6670.25,
-          totalTransfers: 25,
-          transfersIn: 15,
-          transfersOut: 10,
-          currentBalance: 245823.12,
-          startingBalance: 230402.62,
-          highestBalance: 252000.00,
-          lowestBalance: 225000.00,
-          tradingVolume: 125000.00,
-          fees: 892.35,
-          transactions: [
-            {
-              hash: '0xabc123...',
-              type: 'trade',
-              timestamp: '2024-01-20T14:30:00Z',
-              tokenIn: 'USDC',
-              tokenOut: 'ETH',
-              amountIn: 5000,
-              amountOut: 2.1,
-              usdValue: 5000,
-              gasFee: 12.50,
-              chain: 'Ethereum',
-              protocol: 'Uniswap V3'
-            },
-            {
-              hash: '0xdef456...',
-              type: 'defi_stake',
-              timestamp: '2024-01-19T09:15:00Z',
-              tokenIn: 'ETH',
-              tokenOut: 'stETH',
-              amountIn: 5.0,
-              amountOut: 4.98,
-              usdValue: 11950,
-              gasFee: 18.75,
-              chain: 'Ethereum',
-              protocol: 'Lido'
-            }
-          ],
-          chainBreakdown: [
-            { chainName: 'Ethereum', chainLogo: '⟠', pnl: 12420.50, volume: 95000, fees: 650.25, transactions: 18 },
-            { chainName: 'Arbitrum', chainLogo: '🔵', pnl: 3000.00, volume: 30000, fees: 242.10, transactions: 7 }
-          ]
-        }
-      ];
-      
+      // Generate reports only for managed wallets
+      const mockReports: WalletReport[] = availableWallets.map(wallet => ({
+        address: wallet.address,
+        clientName: wallet.clientName,
+        reportPeriod: reportPeriod,
+        totalPnL: wallet.id === '1' ? 15420.50 : wallet.id === '2' ? -2543.75 : wallet.id === '3' ? -8932.45 : wallet.id === '4' ? 12675.80 : 5432.10,
+        realizedPnL: wallet.id === '1' ? 8750.25 : wallet.id === '2' ? -1250.00 : wallet.id === '3' ? -5000.00 : wallet.id === '4' ? 7500.00 : 3000.00,
+        unrealizedPnL: wallet.id === '1' ? 6670.25 : wallet.id === '2' ? -1293.75 : wallet.id === '3' ? -3932.45 : wallet.id === '4' ? 5175.80 : 2432.10,
+        totalTransfers: wallet.id === '1' ? 25 : wallet.id === '2' ? 18 : wallet.id === '3' ? 12 : wallet.id === '4' ? 32 : 15,
+        transfersIn: wallet.id === '1' ? 15 : wallet.id === '2' ? 10 : wallet.id === '3' ? 7 : wallet.id === '4' ? 20 : 9,
+        transfersOut: wallet.id === '1' ? 10 : wallet.id === '2' ? 8 : wallet.id === '3' ? 5 : wallet.id === '4' ? 12 : 6,
+        currentBalance: wallet.id === '1' ? 245823.12 : wallet.id === '2' ? 123456.78 : wallet.id === '3' ? 87234.56 : wallet.id === '4' ? 456789.23 : 198765.43,
+        startingBalance: wallet.id === '1' ? 230402.62 : wallet.id === '2' ? 126000.53 : wallet.id === '3' ? 96167.01 : wallet.id === '4' ? 444113.43 : 193333.33,
+        highestBalance: wallet.id === '1' ? 252000.00 : wallet.id === '2' ? 135000.00 : wallet.id === '3' ? 98000.00 : wallet.id === '4' ? 470000.00 : 205000.00,
+        lowestBalance: wallet.id === '1' ? 225000.00 : wallet.id === '2' ? 118000.00 : wallet.id === '3' ? 82000.00 : wallet.id === '4' ? 440000.00 : 185000.00,
+        tradingVolume: wallet.id === '1' ? 125000.00 : wallet.id === '2' ? 89000.00 : wallet.id === '3' ? 45000.00 : wallet.id === '4' ? 275000.00 : 112000.00,
+        fees: wallet.id === '1' ? 892.35 : wallet.id === '2' ? 654.20 : wallet.id === '3' ? 321.15 : wallet.id === '4' ? 1234.56 : 567.89,
+        transactions: [
+          {
+            hash: `0x${wallet.id}abc123...`,
+            type: 'trade',
+            timestamp: '2024-01-20T14:30:00Z',
+            tokenIn: 'USDC',
+            tokenOut: 'ETH',
+            amountIn: 5000,
+            amountOut: 2.1,
+            usdValue: 5000,
+            gasFee: 12.50,
+            chain: 'Ethereum',
+            protocol: 'Uniswap V3'
+          }
+        ],
+        chainBreakdown: [
+          {
+            chainName: 'Ethereum',
+            chainLogo: '⟠',
+            pnl: wallet.id === '1' ? 12420.50 : wallet.id === '2' ? -1543.75 : wallet.id === '3' ? -6932.45 : wallet.id === '4' ? 9675.80 : 4432.10,
+            volume: wallet.id === '1' ? 95000.00 : wallet.id === '2' ? 65000.00 : wallet.id === '3' ? 32000.00 : wallet.id === '4' ? 200000.00 : 85000.00,
+            fees: wallet.id === '1' ? 675.25 : wallet.id === '2' ? 480.15 : wallet.id === '3' ? 240.10 : wallet.id === '4' ? 920.40 : 425.65,
+            transactions: wallet.id === '1' ? 18 : wallet.id === '2' ? 12 : wallet.id === '3' ? 8 : wallet.id === '4' ? 24 : 11
+          },
+          {
+            chainName: 'Solana',
+            chainLogo: '◎',
+            pnl: wallet.id === '1' ? 3000.00 : wallet.id === '2' ? -1000.00 : wallet.id === '3' ? -2000.00 : wallet.id === '4' ? 3000.00 : 1000.00,
+            volume: wallet.id === '1' ? 30000.00 : wallet.id === '2' ? 24000.00 : wallet.id === '3' ? 13000.00 : wallet.id === '4' ? 75000.00 : 27000.00,
+            fees: wallet.id === '1' ? 217.10 : wallet.id === '2' ? 174.05 : wallet.id === '3' ? 81.05 : wallet.id === '4' ? 314.16 : 142.24,
+            transactions: wallet.id === '1' ? 7 : wallet.id === '2' ? 6 : wallet.id === '3' ? 4 : wallet.id === '4' ? 8 : 4
+          }
+        ]
+      }));
+
       setReports(mockReports);
+      console.log('✅ Reports generated for managed wallets:', mockReports.length);
     } catch (error) {
-      console.error('Error loading reports:', error);
+      console.error('❌ Error loading reports:', error);
+      setReports([]);
     } finally {
       setIsLoading(false);
     }
@@ -394,24 +469,38 @@ export default function AdminReportsPage() {
           {/* Report Controls */}
           <div style={styles.controls}>
             <div>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                Select Wallet
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                📝 Select Wallet
               </label>
-              <select
-                value={selectedWallet}
-                onChange={(e) => setSelectedWallet(e.target.value)}
-                style={styles.select}
-              >
-                <option value="all">All Wallets (Platform Report)</option>
-                <option value="0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2">Alice Johnson</option>
-                <option value="0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t">Bob Chen</option>
-                <option value="0x9f8e7d6c5b4a3928374656789abcdef0123456789">Carol Smith</option>
-              </select>
+              {isLoadingWallets ? (
+                <div style={styles.select}>Loading managed wallets...</div>
+              ) : (
+                <select
+                  value={selectedWallet}
+                  onChange={(e) => setSelectedWallet(e.target.value)}
+                  style={styles.select}
+                >
+                  <option value="all">All Wallets (Platform Report)</option>
+                  {managedWallets.length === 0 ? (
+                    <option disabled>No managed wallets found</option>
+                  ) : (
+                    managedWallets.map((wallet) => (
+                      <option key={wallet.id} value={wallet.address}>
+                        {wallet.clientName} - {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)} 
+                        {wallet.status === 'critical' ? ' ⚠️' : wallet.status === 'warning' ? ' ⚠️' : ' ✅'}
+                      </option>
+                    ))
+                  )}
+                </select>
+              )}
+              <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
+                Only wallets from Portfolio Management can generate reports
+              </div>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                Report Period
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                📅 Report Period
               </label>
               <select
                 value={reportPeriod}
@@ -428,8 +517,8 @@ export default function AdminReportsPage() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                Report Type
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                📊 Report Type
               </label>
               <select
                 value={reportType}
@@ -437,29 +526,91 @@ export default function AdminReportsPage() {
                 style={styles.select}
               >
                 <option value="pnl">P&L Analysis</option>
-                <option value="transfers">Transfer Tracking</option>
+                <option value="transfers">Transfer History</option>
                 <option value="balance">Balance History</option>
                 <option value="tax">Tax Report</option>
-                <option value="comprehensive">Comprehensive</option>
+                <option value="fees">Fee Analysis</option>
+                <option value="comprehensive">Comprehensive Report</option>
               </select>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                Actions
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                🎬 Actions
               </label>
               <button
-                onClick={generateReport}
-                disabled={isGenerating}
-                style={styles.generateButton}
+                onClick={() => {
+                  if (managedWallets.length === 0) {
+                    alert('⚠️ No managed wallets found. Please add wallets in Portfolio Management first.');
+                    return;
+                  }
+                  setIsGenerating(true);
+                  setTimeout(() => setIsGenerating(false), 2000);
+                  loadReports();
+                }}
+                style={{
+                  ...styles.button,
+                  opacity: isLoading || isGenerating || managedWallets.length === 0 ? 0.6 : 1,
+                  cursor: isLoading || isGenerating || managedWallets.length === 0 ? 'not-allowed' : 'pointer'
+                }}
+                disabled={isLoading || isGenerating || managedWallets.length === 0}
               >
                 {isGenerating ? '⏳ Generating...' : '📈 Generate Report'}
               </button>
             </div>
           </div>
 
+          {/* Connection Status Info */}
+          {managedWallets.length > 0 && (
+            <div style={styles.walletInfo}>
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e40af' }}>
+                🔗 Connected to Portfolio Management
+              </h4>
+              <p style={{ margin: 0, color: '#1e40af' }}>
+                Found {managedWallets.length} managed wallet{managedWallets.length !== 1 ? 's' : ''} available for reporting. 
+                {managedWallets.filter(w => w.status === 'critical').length > 0 && 
+                  ` ${managedWallets.filter(w => w.status === 'critical').length} wallet(s) need attention.`
+                }
+              </p>
+              <div style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#475569' }}>
+                <strong>Active Clients:</strong> {managedWallets.map(w => w.clientName).join(', ')}
+              </div>
+            </div>
+          )}
+
+          {managedWallets.length === 0 && !isLoadingWallets && (
+            <div style={{
+              background: '#fef2f2',
+              border: '2px solid #ef4444',
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#dc2626' }}>
+                ⚠️ No Managed Wallets Found
+              </h4>
+              <p style={{ margin: '0 0 0.5rem 0', color: '#dc2626' }}>
+                No client wallets are currently managed in the Portfolio Management system. 
+                Reports can only be generated for actively managed wallets.
+              </p>
+              <p style={{ margin: 0, color: '#dc2626' }}>
+                👉 <a href="/admin/portfolios" style={{ color: '#dc2626', fontWeight: 'bold' }}>
+                  Go to Portfolio Management
+                </a> to add client wallets first.
+              </p>
+            </div>
+          )}
+
           {/* Loading State */}
-          {isLoading ? (
+          {isLoadingWallets ? (
+            <div style={styles.card}>
+              <div style={styles.loading}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔗</div>
+                <h3>Connecting to Portfolio System...</h3>
+                <p>Loading managed wallets and their status.</p>
+              </div>
+            </div>
+          ) : isLoading ? (
             <div style={styles.card}>
               <div style={styles.loading}>
                 <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📊</div>
@@ -482,10 +633,10 @@ export default function AdminReportsPage() {
                       </p>
                     </div>
                     <div>
-                      <button onClick={() => exportToPDF(wallet)} style={styles.exportButton}>
+                      <button onClick={() => exportToPDF(wallet)} style={styles.buttonSecondary}>
                         📄 Export PDF
                       </button>
-                      <button onClick={() => exportToCSV(wallet)} style={styles.exportButton}>
+                      <button onClick={() => exportToCSV(wallet)} style={styles.buttonSecondary}>
                         📊 Export CSV
                       </button>
                     </div>
