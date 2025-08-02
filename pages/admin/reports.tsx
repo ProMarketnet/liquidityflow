@@ -201,8 +201,18 @@ export default function AdminReportsPage() {
     }
   };
 
-  // 🔗 LOAD MANAGED WALLETS FROM PORTFOLIO SYSTEM
+  // 🔐 CHECK COMPANY SESSION ON LOAD
   useEffect(() => {
+    const adminWallet = localStorage.getItem('adminWallet');
+    const currentCompany = localStorage.getItem('currentCompany');
+    
+    if (!adminWallet || !currentCompany) {
+      // Redirect to portfolio management to select company
+      alert('🏢 Please select your company first in Portfolio Management');
+      window.location.href = '/admin/portfolios';
+      return;
+    }
+    
     loadManagedWallets();
   }, []);
 
@@ -215,54 +225,113 @@ export default function AdminReportsPage() {
   const loadManagedWallets = async () => {
     setIsLoadingWallets(true);
     try {
-      console.log('🔗 Loading managed wallets from portfolio system...');
-      const response = await fetch('/api/admin/all-wallets');
+      // Get current admin's wallet address (consistent with portfolio system)
+      const adminWallet = localStorage.getItem('adminWallet');
+      const currentCompany = localStorage.getItem('currentCompany');
+      
+      if (!adminWallet || !currentCompany) {
+        console.warn('⚠️ No admin session found. Redirecting to portfolio management...');
+        setIsLoadingWallets(false);
+        return;
+      }
+
+      console.log(`🔗 Loading managed wallets for company: ${currentCompany} (${adminWallet})`);
+      
+      const response = await fetch(`/api/admin/all-wallets?wallet=${adminWallet}`, {
+        headers: {
+          'x-wallet-address': adminWallet
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setManagedWallets(data.wallets || []);
-        console.log('✅ Loaded managed wallets:', data.wallets?.length || 0);
+        console.log(`✅ Loaded ${data.wallets?.length || 0} company wallets for reports`);
+        
+        // Show company context in UI
+        if (data.company) {
+          console.log(`📊 Reports system connected to: ${data.company}`);
+        }
       } else {
         // Use same mock data as portfolio management for consistency
-        const mockWallets = [
-          {
-            id: '1',
-            address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-            clientName: 'Alice Johnson',
-            status: 'active'
-          },
-          {
-            id: '2',
-            address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
-            clientName: 'Bob Chen',
-            status: 'warning'
-          },
-          {
-            id: '3',
-            address: '0x9f8e7d6c5b4a3928374656789abcdef0123456789',
-            clientName: 'Carol Smith',
-            status: 'critical'
-          },
-          {
-            id: '4',
-            address: '0x456789abcdef0123456789abcdef0123456789ab',
-            clientName: 'David Brown',
-            status: 'active'
-          },
-          {
-            id: '5',
-            address: '0xabcdef0123456789abcdef0123456789abcdef01',
-            clientName: 'Emma Wilson',
-            status: 'active'
-          }
-        ];
+        const mockWallets = getCompanyMockWallets(adminWallet);
         setManagedWallets(mockWallets);
-        console.log('✅ Using mock managed wallets:', mockWallets.length);
+        console.log(`✅ Using ${mockWallets.length} mock wallets for company reports`);
       }
     } catch (error) {
-      console.error('❌ Error loading managed wallets:', error);
+      console.error('❌ Error loading managed wallets for reports:', error);
+      // Fallback to company-specific mock data
+      const adminWallet = localStorage.getItem('adminWallet');
+      if (adminWallet) {
+        const mockWallets = getCompanyMockWallets(adminWallet);
+        setManagedWallets(mockWallets);
+      }
     } finally {
       setIsLoadingWallets(false);
     }
+  };
+
+  // 🏢 COMPANY-SPECIFIC MOCK DATA (same as portfolio management)
+  const getCompanyMockWallets = (adminWallet: string) => {
+    const address = adminWallet.toLowerCase();
+    
+    // ABC Company admins
+    if (address === '0x742d35cc6635c0532925a3b8c0d2c35ad81c35c2' || 
+        address === '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t') {
+      return [
+        {
+          id: '1',
+          address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
+          clientName: 'ABC Client - Alice Johnson',
+          status: 'active'
+        },
+        {
+          id: '2',
+          address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t',
+          clientName: 'ABC Client - Bob Chen',
+          status: 'warning'
+        },
+        {
+          id: '3',
+          address: '0x9f8e7d6c5b4a3928374656789abcdef0123456789',
+          clientName: 'ABC Client - Carol Smith',
+          status: 'critical'
+        }
+      ];
+    }
+    
+    // XYZ Corporation admins
+    if (address === '0x9f8e7d6c5b4a3928374656789abcdef0123456789' || 
+        address === '0x456789abcdef0123456789abcdef0123456789ab') {
+      return [
+        {
+          id: '4',
+          address: '0x456789abcdef0123456789abcdef0123456789ab',
+          clientName: 'XYZ Client - David Brown',
+          status: 'active'
+        },
+        {
+          id: '5',
+          address: '0xabcdef0123456789abcdef0123456789abcdef01',
+          clientName: 'XYZ Client - Emma Wilson',
+          status: 'active'
+        }
+      ];
+    }
+    
+    // Demo LLC admins
+    if (address === '0xabcdef0123456789abcdef0123456789abcdef01') {
+      return [
+        {
+          id: '6',
+          address: '0xdemo123456789abcdef0123456789abcdef012345',
+          clientName: 'Demo Client - Frank Miller',
+          status: 'active'
+        }
+      ];
+    }
+    
+    return []; // No wallets for unknown admins
   };
 
   const loadReports = async () => {
@@ -461,10 +530,28 @@ export default function AdminReportsPage() {
         </nav>
 
         <div style={styles.container}>
-          <h1 style={styles.title}>📊 Trading Reports</h1>
-          <p style={styles.subtitle}>
-            Generate comprehensive P&L, transfer tracking, and wallet balance reports for tax and accounting purposes
-          </p>
+          <div style={{ marginBottom: '2rem' }}>
+            <h1 style={{ marginBottom: '0.5rem', color: '#0d1421' }}>
+              📊 Trading Reports
+            </h1>
+            <p style={{ margin: 0, color: '#4a5568' }}>
+              Generate comprehensive P&L, transfer tracking, and wallet balance reports for tax and accounting purposes
+            </p>
+            {localStorage.getItem('currentCompany') && (
+              <div style={{
+                marginTop: '0.5rem',
+                padding: '0.5rem 1rem',
+                background: '#eff6ff',
+                border: '1px solid #3b82f6',
+                borderRadius: '0.5rem',
+                fontSize: '0.875rem',
+                color: '#1e40af'
+              }}>
+                <strong>🏢 Company:</strong> {localStorage.getItem('currentCompany')?.replace('-', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} • 
+                <strong> Admin:</strong> {localStorage.getItem('adminWallet')?.slice(0, 6)}...{localStorage.getItem('adminWallet')?.slice(-4)}
+              </div>
+            )}
+          </div>
 
           {/* Report Controls */}
           <div style={styles.controls}>
