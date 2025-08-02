@@ -26,9 +26,7 @@ export default function Home() {
             }}>
               🏢 Admin Portal
             </a>
-            <a href="/onboarding-new" className="btn btn-primary">
-              🚀 Launch App
-            </a>
+            <a href="/auth/register" className="btn btn-primary">🚀 Launch App</a>
           </div>
         </div>
       </nav>
@@ -422,7 +420,7 @@ export default function Home() {
                   Platform
                 </h5>
                 <div className="flex flex-col gap-2">
-                  <a href="/onboarding-new" className="nav-link" style={{ fontSize: 'var(--font-size-sm)' }}>Launch App</a>
+                  <p><a href="/auth/register" className="btn btn-outline">🚀 Launch App</a></p>
                   <a href="/auth/admin" className="nav-link" style={{ fontSize: 'var(--font-size-sm)' }}>Admin Portal</a>
                 </div>
               </div>
