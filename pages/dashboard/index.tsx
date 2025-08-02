@@ -259,7 +259,7 @@ export default function DashboardPage() {
               color: 'var(--color-text-primary)'
             }}>
               <div style={{ fontSize: '2rem', marginBottom: 'var(--space-2)' }}>🏢</div>
-              <span>Manage Clients</span>
+              <span>Portfolio Management</span>
             </a>
             
             <a href="/admin/reports" style={{

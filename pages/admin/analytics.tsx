@@ -168,6 +168,10 @@ export default function AdminAnalyticsPage() {
             <a href="/admin/portfolios" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
               🏢 Portfolios
             </a>
+            <a href="/admin/reports" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+              📊 Reports
+            </a>
+            <span style={{ color: 'var(--color-primary)', fontWeight: '600' }}>📈 Analytics</span>
             <a href="/dashboard" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
               ⬅️ Back to Dashboard
             </a>
