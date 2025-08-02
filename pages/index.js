@@ -1,576 +1,464 @@
 export default function Home() {
-  // 🚨 EMERGENCY VISIBILITY FIX - HIGH CONTRAST
-  const colors = {
-    // Background gradients - SIMPLIFIED FOR VISIBILITY
-    mainBg: '#ffffff', // WHITE background for maximum contrast
-    navBg: '#ffffff',
-    sectionBg: '#ffffff',
-    cardBg: '#ffffff',
-    
-    // Primary colors - HIGH CONTRAST
-    primary: '#000000',      // BLACK
-    secondary: '#000000',    // BLACK  
-    accent: '#000000',       // BLACK
-    
-    // Button gradients - VISIBLE
-    primaryBtn: '#000000',   // BLACK buttons
-    secondaryBtn: '#ffffff', // WHITE buttons
-    
-    // Text gradients - HIGH CONTRAST
-    titleGradient: '#000000', // BLACK text
-    logoGradient: '#000000',  // BLACK text
-    
-    // Text colors - MAXIMUM CONTRAST
-    textPrimary: '#000000',   // BLACK text
-    textSecondary: '#333333', // DARK GRAY text
-    textMuted: '#666666',     // MEDIUM GRAY text
-    
-    // Status colors - VISIBLE
-    success: '#008000',   // GREEN
-    warning: '#FF8000',   // ORANGE
-    danger: '#FF0000',    // RED
-    info: '#0000FF'       // BLUE
-  };
-
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: colors.mainBg, // 🎨 Easy to change
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
+    <div style={{ minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       {/* Navigation */}
-      <nav style={{
+      <nav className="nav" style={{
         position: 'fixed',
         top: 0,
         width: '100%',
-        background: colors.navBg,
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
         zIndex: 1000,
-        padding: '1rem 0'
+        padding: 'var(--space-4) 0'
       }}>
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          padding: '0 1rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
+        <div className="container flex justify-between items-center">
           <div style={{
-            fontSize: '1.5rem',
-            fontWeight: 'bold',
-            background: colors.logoGradient, // 🎨 Easy to change
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
+            fontSize: 'var(--font-size-2xl)',
+            fontWeight: '800',
+            color: 'var(--color-text-primary)',
+            letterSpacing: '-0.025em'
           }}>
             LiquidFlow
           </div>
           
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <a href="/auth/admin" style={{ color: '#dc2626', textDecoration: 'none', fontWeight: 'bold' }}>🏢 Admin</a>
-          <a
-            href="/onboarding-new"
-            style={{
-              background: colors.primaryBtn, // 🎨 Easy to change
-              color: 'white',
-              padding: '0.5rem 1rem',
-              borderRadius: '0.5rem',
-              textDecoration: 'none',
+          <div className="flex gap-6 items-center">
+            <a href="/auth/admin" className="nav-link" style={{
+              color: 'var(--color-error)',
               fontWeight: '600'
-            }}
-          >
-            👀 View Wallet
-          </a>
-        </div>
+            }}>
+              🏢 Admin Portal
+            </a>
+            <a href="/onboarding-new" className="btn btn-primary">
+              👀 View Wallet
+            </a>
+          </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section style={{
-        paddingTop: '8rem',
-        paddingBottom: '4rem',
-        padding: '8rem 1rem 4rem',
-        textAlign: 'center'
+      <section className="section-lg" style={{ 
+        paddingTop: 'calc(var(--space-20) + var(--space-16))',
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, var(--color-background) 0%, #f8fafc 100%)'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <h1 style={{
-            fontSize: 'clamp(2.5rem, 8vw, 5rem)',
-            fontWeight: 'bold',
-            color: colors.textPrimary,
-            marginBottom: '1.5rem',
-            lineHeight: 1.1
-          }}>
-            Stop Watching Your{' '}
-            <span style={{
-              background: colors.titleGradient, // 🎨 Easy to change
+        <div className="container">
+          <div className="animate-fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h1 style={{
+              fontSize: 'var(--font-size-5xl)',
+              fontWeight: '900',
+              marginBottom: 'var(--space-6)',
+              background: 'linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-primary) 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text'
+              backgroundClip: 'text',
+              lineHeight: '1.1'
             }}>
-              Liquidity Die
-            </span>
-          </h1>
-          
-          <p style={{
-            fontSize: '1.25rem',
-            color: colors.textSecondary,
-            marginBottom: '2rem',
-            maxWidth: '800px',
-            margin: '0 auto 2rem',
-            lineHeight: 1.6
-          }}>
-            Professional liquidity management that prevents the death spiral. Monitor, maintain, 
-            and rescue your token's trading liquidity with institutional-grade DeFi infrastructure.
-          </p>
-          
-          <div style={{
-            display: 'flex',
-            gap: '1rem',
-            justifyContent: 'center',
-            marginBottom: '4rem',
-            flexWrap: 'wrap'
-          }}>
-            <a
-              href="/onboarding-new"
-              style={{
-                background: colors.primaryBtn, // 🎨 Easy to change
-                color: 'white',
-                padding: '1rem 2rem',
-                borderRadius: '0.5rem',
-                textDecoration: 'none',
-                fontWeight: 'bold',
-                fontSize: '1.1rem'
-              }}
-            >
-              Get Started Free
-            </a>
-            <a
-              href="#pricing"
-              style={{
-                border: `2px solid ${colors.primary}`, // 🎨 Easy to change
-                color: colors.primary,
-                padding: '1rem 2rem',
-                borderRadius: '0.5rem',
-                textDecoration: 'none',
-                fontWeight: 'bold',
-                fontSize: '1.1rem'
-              }}
-            >
-              See Pricing
-            </a>
+              Professional DeFi Portfolio Management
+            </h1>
+            
+            <p style={{
+              fontSize: 'var(--font-size-xl)',
+              color: 'var(--color-text-secondary)',
+              marginBottom: 'var(--space-8)',
+              lineHeight: '1.6'
+            }}>
+              Advanced liquidity monitoring, cross-chain analytics, and institutional-grade portfolio management for DeFi professionals.
+            </p>
+            
+            <div className="flex gap-4 justify-center" style={{ marginBottom: 'var(--space-12)' }}>
+              <a href="/onboarding-new" className="btn btn-primary btn-lg">
+                Get Started Free
+              </a>
+              <a href="#features" className="btn btn-secondary btn-lg">
+                See Features
+              </a>
+            </div>
+            
+            {/* Trust Indicators */}
+            <div className="grid grid-cols-3" style={{ maxWidth: '600px', margin: '0 auto' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: 'var(--font-size-3xl)', 
+                  fontWeight: '800', 
+                  color: 'var(--color-primary)',
+                  marginBottom: 'var(--space-2)'
+                }}>$50M+</div>
+                <div style={{ 
+                  fontSize: 'var(--font-size-sm)', 
+                  color: 'var(--color-text-tertiary)',
+                  fontWeight: '500'
+                }}>Assets Under Management</div>
+              </div>
+              
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: 'var(--font-size-3xl)', 
+                  fontWeight: '800', 
+                  color: 'var(--color-success)',
+                  marginBottom: 'var(--space-2)'
+                }}>500+</div>
+                <div style={{ 
+                  fontSize: 'var(--font-size-sm)', 
+                  color: 'var(--color-text-tertiary)',
+                  fontWeight: '500'
+                }}>Active Portfolios</div>
+              </div>
+              
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ 
+                  fontSize: 'var(--font-size-3xl)', 
+                  fontWeight: '800', 
+                  color: 'var(--color-info)',
+                  marginBottom: 'var(--space-2)'
+                }}>15+</div>
+                <div style={{ 
+                  fontSize: 'var(--font-size-sm)', 
+                  color: 'var(--color-text-tertiary)',
+                  fontWeight: '500'
+                }}>Supported Chains</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="section">
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-16)' }}>
+            <h2 style={{ marginBottom: 'var(--space-4)' }}>
+              Professional DeFi Tools
+            </h2>
+            <p style={{ 
+              fontSize: 'var(--font-size-lg)',
+              maxWidth: '600px',
+              margin: '0 auto'
+            }}>
+              Everything you need to manage, monitor, and optimize your DeFi portfolio with institutional precision.
+            </p>
           </div>
           
-          {/* Stats */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '2rem',
-            maxWidth: '800px',
-            margin: '0 auto'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: colors.accent }}>$50M+</div>
-              <div style={{ color: colors.textMuted }}>Liquidity Under Management</div>
+          <div className="grid grid-cols-3" style={{ gap: 'var(--space-8)' }}>
+            {/* Feature 1 */}
+            <div className="card animate-slide-in" style={{ 
+              padding: 'var(--space-8)',
+              textAlign: 'center',
+              height: '100%'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-4xl)',
+                marginBottom: 'var(--space-4)'
+              }}>📊</div>
+              <h3 style={{ 
+                fontSize: 'var(--font-size-xl)',
+                marginBottom: 'var(--space-3)'
+              }}>
+                Multi-Chain Analytics
+              </h3>
+              <p style={{ marginBottom: 'var(--space-4)' }}>
+                Track positions across Ethereum, Arbitrum, Base, Optimism, and Solana with real-time data from leading protocols.
+              </p>
+              <div className="flex gap-2 justify-center">
+                <span className="badge badge-info">Ethereum</span>
+                <span className="badge badge-success">Arbitrum</span>
+                <span className="badge badge-warning">Solana</span>
+              </div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: colors.accent }}>95%</div>
-              <div style={{ color: colors.textMuted }}>Crisis Recovery Rate</div>
+
+            {/* Feature 2 */}
+            <div className="card animate-slide-in" style={{ 
+              padding: 'var(--space-8)',
+              textAlign: 'center',
+              height: '100%',
+              animationDelay: '0.1s'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-4xl)',
+                marginBottom: 'var(--space-4)'
+              }}>🔄</div>
+              <h3 style={{ 
+                fontSize: 'var(--font-size-xl)',
+                marginBottom: 'var(--space-3)'
+              }}>
+                Direct Trading Links
+              </h3>
+              <p style={{ marginBottom: 'var(--space-4)' }}>
+                Seamlessly execute trades on Uniswap, Raydium, Orca, and other DEXs directly from your portfolio interface.
+              </p>
+              <div className="flex gap-2 justify-center">
+                <span className="badge badge-info">Uniswap</span>
+                <span className="badge badge-success">Raydium</span>
+                <span className="badge badge-warning">Orca</span>
+              </div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: colors.accent }}>24/7</div>
-              <div style={{ color: colors.textMuted }}>Automated Monitoring</div>
+
+            {/* Feature 3 */}
+            <div className="card animate-slide-in" style={{ 
+              padding: 'var(--space-8)',
+              textAlign: 'center',
+              height: '100%',
+              animationDelay: '0.2s'
+            }}>
+              <div style={{
+                fontSize: 'var(--font-size-4xl)',
+                marginBottom: 'var(--space-4)'
+              }}>🏢</div>
+              <h3 style={{ 
+                fontSize: 'var(--font-size-xl)',
+                marginBottom: 'var(--space-3)'
+              }}>
+                Portfolio Management
+              </h3>
+              <p style={{ marginBottom: 'var(--space-4)' }}>
+                Professional-grade admin tools for managing multiple client portfolios with P&L tracking and reporting.
+              </p>
+              <div className="flex gap-2 justify-center">
+                <span className="badge badge-success">P&L Tracking</span>
+                <span className="badge badge-info">Reports</span>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Two Paths Section */}
-      <section style={{
-        padding: '4rem 1rem',
-        background: 'rgba(0,0,0,0.3)',
-        borderTop: '2px solid rgba(255,255,255,0.1)',
-        borderBottom: '2px solid rgba(255,255,255,0.1)'
+      <section className="section" style={{
+        background: 'linear-gradient(135deg, #f8fafc 0%, var(--color-background) 100%)'
       }}>
-        <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-16)' }}>
+            <h2 style={{ marginBottom: 'var(--space-4)' }}>
               Choose Your Access Level
             </h2>
-            <p style={{ fontSize: '1.25rem', color: '#cbd5e1', marginBottom: '1rem' }}>
-              Two distinct ways to use LiquidFlow based on your needs
-            </p>
-            
-            {/* Multi-Chain Support Banner */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '1rem',
-              background: 'rgba(255,255,255,0.1)',
-              border: '2px solid rgba(255,255,255,0.2)',
-              borderRadius: '1rem',
-              padding: '1rem 2rem',
-              marginBottom: '2rem'
+            <p style={{ 
+              fontSize: 'var(--font-size-lg)',
+              maxWidth: '600px',
+              margin: '0 auto'
             }}>
-              <span style={{ color: '#ffffff', fontWeight: 'bold', fontSize: '1rem' }}>
-                🌐 Multi-Chain Support:
-              </span>
-              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Ethereum">⟠</span>
-                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Arbitrum">🔵</span>
-                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Base">🔷</span>
-                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Optimism">🔴</span>
-                <span style={{ fontSize: '1.5rem', filter: 'grayscale(0)' }} title="Solana">◉</span>
-              </div>
-              <span style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>
-                View portfolios across all major chains + Research any wallet address
-              </span>
-            </div>
+              Whether you're exploring DeFi or managing professional portfolios, we have the right tools for you.
+            </p>
           </div>
           
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-            gap: '2rem'
-          }}>
-            {/* Get Started Card */}
-            <div style={{
-              background: 'rgba(34, 197, 94, 0.1)',
-              border: '2px solid rgba(34, 197, 94, 0.3)',
-              borderRadius: '1rem',
-              padding: '2rem',
+          <div className="grid grid-cols-2" style={{ gap: 'var(--space-8)', maxWidth: '900px', margin: '0 auto' }}>
+            {/* Get Started Path */}
+            <div className="card-elevated" style={{ 
+              padding: 'var(--space-8)',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🚀</div>
-                             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#22c55e', marginBottom: '1rem' }}>
-                 🚀 Get Started (View Only)
-               </h3>
-               <div style={{ color: '#cbd5e1', marginBottom: '1.5rem', textAlign: 'left' }}>
-                 <div style={{ marginBottom: '0.5rem' }}>👀 <strong>VIEW ONLY:</strong> Connect wallet to see positions</div>
-                 <div style={{ marginBottom: '0.5rem' }}>📊 Monitor your DeFi portfolio health</div>
-                 <div style={{ marginBottom: '0.5rem' }}>🔗 Get trading links to DEX platforms</div>
-                 <div style={{ marginBottom: '0.5rem' }}>⚡ Instant access - no account needed</div>
-                 <div style={{ marginBottom: '0.5rem' }}>🔒 No private keys stored or required</div>
-                 <div style={{ marginBottom: '0.5rem' }}>🕵️ <strong>Research any wallet:</strong> Analyze competitors & whales</div>
-               </div>
-              <a
-                href="/onboarding-new"
-                style={{
-                  display: 'inline-block',
-                  background: '#22c55e',
-                  color: 'white',
-                  padding: '1rem 2rem',
-                  borderRadius: '0.5rem',
-                  textDecoration: 'none',
-                  fontWeight: 'bold',
-                  fontSize: '1.1rem'
-                }}
-              >
-                                 👀 View My Wallet
+              <div style={{
+                fontSize: 'var(--font-size-4xl)',
+                marginBottom: 'var(--space-4)'
+              }}>👀</div>
+              <h3 style={{ 
+                fontSize: 'var(--font-size-2xl)',
+                marginBottom: 'var(--space-4)',
+                color: 'var(--color-primary)'
+              }}>
+                View Wallet
+              </h3>
+              <div style={{ marginBottom: 'var(--space-6)' }}>
+                <div className="badge badge-info" style={{ marginBottom: 'var(--space-3)' }}>Read-Only Access</div>
+                <p style={{ marginBottom: 'var(--space-4)' }}>
+                  Connect any wallet address to view comprehensive DeFi positions, liquidity pools, and portfolio analytics across all supported chains.
+                </p>
+                <ul style={{ 
+                  textAlign: 'left', 
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 'var(--font-size-sm)',
+                  lineHeight: '1.8'
+                }}>
+                  <li>• View any wallet's DeFi positions</li>
+                  <li>• Multi-chain portfolio analytics</li>
+                  <li>• Real-time price & P&L data</li>
+                  <li>• Direct links to trade pairs</li>
+                </ul>
+              </div>
+              <a href="/onboarding-new" className="btn btn-primary" style={{ width: '100%' }}>
+                Get Started Free
               </a>
             </div>
 
-            {/* Admin Card */}
-            <div style={{
-              background: 'rgba(220, 38, 38, 0.1)',
-              border: '2px solid rgba(220, 38, 38, 0.3)',
-              borderRadius: '1rem',
-              padding: '2rem',
+            {/* Admin Path */}
+            <div className="card-elevated" style={{ 
+              padding: 'var(--space-8)',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏢</div>
-                             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626', marginBottom: '1rem' }}>
-                 🏢 Admin (Full Management + Sharing)
-               </h3>
-               <div style={{ color: '#cbd5e1', marginBottom: '1.5rem', textAlign: 'left' }}>
-                 <div style={{ marginBottom: '0.5rem' }}>🔐 <strong>FULL ACCESS:</strong> Create account to manage portfolios</div>
-                 <div style={{ marginBottom: '0.5rem' }}>🤝 Share access with team/clients</div>
-                 <div style={{ marginBottom: '0.5rem' }}>💼 Manage multiple client wallets (50+)</div>
-                 <div style={{ marginBottom: '0.5rem' }}>⚡ Execute trades directly on platform</div>
-                 <div style={{ marginBottom: '0.5rem' }}>🔑 Secure private key management</div>
-                 <div style={{ marginBottom: '0.5rem' }}>📊 <strong>Platform analytics:</strong> Aggregate data & reporting</div>
-               </div>
-                             <a
-                 href="/auth/admin"
-                 style={{
-                   display: 'inline-block',
-                   background: '#dc2626',
-                   color: 'white',
-                   padding: '1rem 2rem',
-                   borderRadius: '0.5rem',
-                   textDecoration: 'none',
-                   fontWeight: 'bold',
-                   fontSize: '1.1rem'
-                 }}
-               >
-                 🔐 Admin Login
-               </a>
+              <div style={{
+                fontSize: 'var(--font-size-4xl)',
+                marginBottom: 'var(--space-4)'
+              }}>🏢</div>
+              <h3 style={{ 
+                fontSize: 'var(--font-size-2xl)',
+                marginBottom: 'var(--space-4)',
+                color: 'var(--color-error)'
+              }}>
+                Admin Portal
+              </h3>
+              <div style={{ marginBottom: 'var(--space-6)' }}>
+                <div className="badge badge-error" style={{ marginBottom: 'var(--space-3)' }}>Full Management Access</div>
+                <p style={{ marginBottom: 'var(--space-4)' }}>
+                  Professional account management with multi-wallet oversight, client portfolio management, and comprehensive reporting tools.
+                </p>
+                <ul style={{ 
+                  textAlign: 'left', 
+                  color: 'var(--color-text-secondary)',
+                  fontSize: 'var(--font-size-sm)',
+                  lineHeight: '1.8'
+                }}>
+                  <li>• Manage multiple client wallets</li>
+                  <li>• Advanced P&L reporting</li>
+                  <li>• Portfolio sharing & access control</li>
+                  <li>• Professional trading tools</li>
+                </ul>
+              </div>
+              <a href="/auth/admin" className="btn btn-secondary" style={{ width: '100%' }}>
+                Admin Access
+              </a>
             </div>
           </div>
-
-          
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" style={{
-        padding: '4rem 1rem',
-        background: 'rgba(255,255,255,0.02)'
-      }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
-              Your Liquidity Lifeline
+      {/* Supported Protocols */}
+      <section className="section">
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-12)' }}>
+            <h2 style={{ marginBottom: 'var(--space-4)' }}>
+              Integrated Protocols
             </h2>
-            <p style={{ fontSize: '1.25rem', color: '#cbd5e1' }}>
-              Professional tools that institutional traders use, now available for your project
+            <p style={{ 
+              fontSize: 'var(--font-size-lg)',
+              color: 'var(--color-text-secondary)'
+            }}>
+              Connected to the leading DeFi protocols across all major chains
             </p>
           </div>
           
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-            gap: '2rem'
-          }}>
+          <div className="grid grid-cols-4" style={{ gap: 'var(--space-6)' }}>
             {[
-              {
-                icon: '🎯',
-                title: '24/7 Health Monitoring',
-                desc: 'Real-time tracking across all major DEXs. Get alerts before liquidity crisis hits, not after.'
-              },
-              {
-                icon: '🚨',
-                title: 'Emergency Liquidity Injection',
-                desc: 'Automated liquidity provision when pools drop below critical levels. Stop the death spiral immediately.'
-              },
-              {
-                icon: '🎮',
-                title: 'Smart Incentive Management',
-                desc: 'Dynamic LP rewards that scale with market conditions. Keep your best liquidity providers happy.'
-              },
-              {
-                icon: '🚀',
-                title: 'Launch Bootstrapping',
-                desc: 'Professional token launches with gradual price discovery. No more "launch and pray" strategies.'
-              }
-            ].map((feature, i) => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '1rem',
-                padding: '2rem',
-                transition: 'all 0.3s ease'
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{feature.icon}</div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
-                  {feature.title}
-                </h3>
-                <p style={{ color: '#cbd5e1', lineHeight: 1.6 }}>{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section id="pricing" style={{ padding: '4rem 1rem' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
-              Choose Your Protection Level
-            </h2>
-            <p style={{ fontSize: '1.25rem', color: '#cbd5e1' }}>
-              From basic monitoring to full liquidity management
-            </p>
-          </div>
-          
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '2rem'
-          }}>
-            {[
-              {
-                name: 'Basic Monitor',
-                price: '$500',
-                period: '/month',
-                features: [
-                  'Real-time liquidity monitoring',
-                  'Slippage analysis & alerts',
-                  'Weekly health reports',
-                  'Discord/Telegram integration'
-                ],
-                button: 'Start Monitoring',
-                featured: false
-              },
-              {
-                name: 'Liquidity Guardian',
-                price: '$2,000',
-                period: '/month',
-                features: [
-                  'Everything in Basic',
-                  'Emergency liquidity injection',
-                  'Automated LP incentives',
-                  'Advanced analytics dashboard',
-                  'Priority support'
-                ],
-                button: 'Get Guardian',
-                featured: true
-              },
-              {
-                name: 'Enterprise',
-                price: 'Custom',
-                period: '',
-                features: [
-                  'Everything in Guardian',
-                  'Unlimited emergency liquidity',
-                  'Launch bootstrapping',
-                  'Dedicated account manager',
-                  'Custom integrations'
-                ],
-                button: 'Contact Sales',
-                featured: false
-              }
-            ].map((plan, i) => (
-              <div key={i} style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: plan.featured ? '2px solid #3b82f6' : '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '1rem',
-                padding: '2rem',
+              { name: 'Uniswap', chain: 'Ethereum', color: 'var(--color-primary)' },
+              { name: 'Raydium', chain: 'Solana', color: 'var(--color-success)' },
+              { name: 'Aave', chain: 'Multi-chain', color: 'var(--color-info)' },
+              { name: 'Compound', chain: 'Ethereum', color: 'var(--color-warning)' },
+              { name: 'Orca', chain: 'Solana', color: 'var(--color-success)' },
+              { name: 'Curve', chain: 'Multi-chain', color: 'var(--color-primary)' },
+              { name: 'SushiSwap', chain: 'Multi-chain', color: 'var(--color-error)' },
+              { name: 'Jupiter', chain: 'Solana', color: 'var(--color-info)' }
+            ].map((protocol, index) => (
+              <div key={protocol.name} className="card" style={{ 
+                padding: 'var(--space-4)',
                 textAlign: 'center',
-                position: 'relative',
-                transform: plan.featured ? 'scale(1.05)' : 'none'
-              }}>
-                {plan.featured && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-12px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                    color: 'white',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '1rem',
-                    fontSize: '0.8rem',
-                    fontWeight: 'bold'
-                  }}>
-                    Most Popular
-                  </div>
-                )}
-                
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white', marginBottom: '1rem' }}>
-                  {plan.name}
-                </h3>
-                <div style={{ marginBottom: '2rem' }}>
-                  <span style={{ fontSize: '3rem', fontWeight: 'bold', color: '#00d4ff' }}>
-                    {plan.price}
-                  </span>
-                  <span style={{ color: '#94a3b8' }}>{plan.period}</span>
-                </div>
-                
-                <ul style={{ listStyle: 'none', padding: 0, marginBottom: '2rem' }}>
-                  {plan.features.map((feature, j) => (
-                    <li key={j} style={{
-                      color: '#cbd5e1',
-                      padding: '0.5rem 0',
-                      borderBottom: j < plan.features.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none'
-                    }}>
-                      ✓ {feature}
-                    </li>
-                  ))}
-                </ul>
-                
-                <button style={{
-                  width: '100%',
-                  background: plan.featured 
-                    ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' 
-                    : i === 2 
-                      ? 'transparent' 
-                      : 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                  border: i === 2 ? '2px solid #3b82f6' : 'none',
-                  color: i === 2 ? '#3b82f6' : 'white',
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                  fontSize: '1rem'
+                transition: 'transform 0.2s ease-in-out'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0px)'}
+              >
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: 'var(--radius-lg)',
+                  backgroundColor: protocol.color,
+                  margin: '0 auto var(--space-3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 'var(--font-size-xl)',
+                  fontWeight: '700',
+                  color: '#ffffff'
                 }}>
-                  {plan.button}
-                </button>
+                  {protocol.name.charAt(0)}
+                </div>
+                <h4 style={{ 
+                  fontSize: 'var(--font-size-base)',
+                  fontWeight: '600',
+                  marginBottom: 'var(--space-1)'
+                }}>
+                  {protocol.name}
+                </h4>
+                <p style={{ 
+                  fontSize: 'var(--font-size-xs)',
+                  color: 'var(--color-text-tertiary)',
+                  margin: 0
+                }}>
+                  {protocol.chain}
+                </p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section style={{
-        padding: '4rem 1rem',
-        background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.1))'
-      }}>
-        <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{
-            fontSize: '2.5rem',
-            fontWeight: 'bold',
-            color: 'white',
-            marginBottom: '1rem'
-          }}>
-            Don't Let Your Project Die From Bad Liquidity
-          </h2>
-          <p style={{
-            fontSize: '1.25rem',
-            color: '#cbd5e1',
-            marginBottom: '2rem'
-          }}>
-            Join the projects that take liquidity seriously. Start monitoring today, upgrade when you need rescue.
-          </p>
-          <div style={{
-            display: 'flex',
-            gap: '1rem',
-            justifyContent: 'center',
-            flexWrap: 'wrap'
-          }}>
-            <a
-              href="/onboarding-new"
-              style={{
-                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                color: 'white',
-                padding: '1rem 2rem',
-                borderRadius: '0.5rem',
-                textDecoration: 'none',
-                fontWeight: 'bold'
-              }}
-            >
-              Start Free Monitoring
-            </a>
-            <a
-              href="mailto:hello@liquidflow.com"
-              style={{
-                border: '2px solid #3b82f6',
-                color: '#3b82f6',
-                padding: '1rem 2rem',
-                borderRadius: '0.5rem',
-                textDecoration: 'none',
-                fontWeight: 'bold'
-              }}
-            >
-              Talk to Expert
-            </a>
           </div>
         </div>
       </section>
 
       {/* Footer */}
       <footer style={{
-        padding: '2rem 1rem',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        textAlign: 'center'
+        background: 'var(--color-surface)',
+        borderTop: '1px solid var(--color-border)',
+        padding: 'var(--space-12) 0'
       }}>
-        <p style={{ color: '#94a3b8' }}>
-          © 2025 LiquidFlow. Professional liquidity management for serious DeFi projects.
-        </p>
+        <div className="container">
+          <div className="flex justify-between items-center">
+            <div>
+              <div style={{
+                fontSize: 'var(--font-size-xl)',
+                fontWeight: '800',
+                color: 'var(--color-text-primary)',
+                marginBottom: 'var(--space-2)'
+              }}>
+                LiquidFlow
+              </div>
+              <p style={{ 
+                fontSize: 'var(--font-size-sm)',
+                color: 'var(--color-text-tertiary)',
+                margin: 0
+              }}>
+                Professional DeFi portfolio management platform
+              </p>
+            </div>
+            
+            <div className="flex gap-8">
+              <div>
+                <h5 style={{ 
+                  fontSize: 'var(--font-size-sm)',
+                  fontWeight: '600',
+                  marginBottom: 'var(--space-3)'
+                }}>
+                  Platform
+                </h5>
+                <div className="flex flex-col gap-2">
+                  <a href="/onboarding-new" className="nav-link" style={{ fontSize: 'var(--font-size-sm)' }}>View Wallet</a>
+                  <a href="/auth/admin" className="nav-link" style={{ fontSize: 'var(--font-size-sm)' }}>Admin Portal</a>
+                </div>
+              </div>
+              
+              <div>
+                <h5 style={{ 
+                  fontSize: 'var(--font-size-sm)',
+                  fontWeight: '600',
+                  marginBottom: 'var(--space-3)'
+                }}>
+                  Supported Chains
+                </h5>
+                <div className="flex flex-col gap-2">
+                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)' }}>Ethereum</span>
+                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)' }}>Arbitrum</span>
+                  <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-tertiary)' }}>Solana</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style={{
+            borderTop: '1px solid var(--color-border)',
+            marginTop: 'var(--space-8)',
+            paddingTop: 'var(--space-6)',
+            textAlign: 'center'
+          }}>
+            <p style={{ 
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-tertiary)',
+              margin: 0
+            }}>
+              © 2024 LiquidFlow. Professional DeFi portfolio management platform.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );
