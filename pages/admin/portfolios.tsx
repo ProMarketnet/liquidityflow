@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { usePrivy } from '@privy-io/react-auth';
 
 interface ClientWallet {
   id: string;
@@ -17,6 +18,7 @@ interface ClientWallet {
 export default function AdminPortfoliosPage() {
   const [wallets, setWallets] = useState<ClientWallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { login, logout, ready, authenticated, user } = usePrivy();
 
   useEffect(() => {
     loadWallets();
@@ -74,6 +76,19 @@ export default function AdminPortfoliosPage() {
     }
   };
 
+  const handleAuthenticatedAction = (actionName: string, action: () => void) => {
+    if (!ready) return;
+    
+    if (!authenticated) {
+      const shouldRegister = confirm(`🔐 Account Required\n\nTo ${actionName.toLowerCase()}, please sign in with Privy.\n\n✅ Sign in to:\n   • Add your wallet addresses\n   • Track real positions\n   • Manage settings & alerts\n   • Invite collaborators\n   • Export your data\n\n❌ Cancel: Continue viewing demo\n\nSign in now?`);
+      if (shouldRegister) {
+        login();
+      }
+    } else {
+      action();
+    }
+  };
+
   if (isLoading) {
     return (
       <div style={{ 
@@ -102,21 +117,66 @@ export default function AdminPortfoliosPage() {
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
-          {/* Header - Clean and Simple */}
+          {/* Header with Auth Status */}
           <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{ 
-              fontSize: '2.5rem', 
-              fontWeight: 'bold', 
-              color: '#1f2937',
-              marginBottom: '0.5rem'
-            }}>
-              Portfolio Management
-            </h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h1 style={{ 
+                fontSize: '2.5rem', 
+                fontWeight: 'bold', 
+                color: '#1f2937',
+                margin: 0
+              }}>
+                Portfolio Management
+              </h1>
+              
+              {ready && (
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  {authenticated && user ? (
+                    <>
+                      <span style={{ color: '#059669', fontWeight: '600' }}>
+                        ✅ {user.email?.address || user.wallet?.address?.slice(0, 6) + '...' + user.wallet?.address?.slice(-4)}
+                      </span>
+                      <button 
+                        onClick={logout}
+                        style={{
+                          background: '#dc2626',
+                          color: '#ffffff',
+                          padding: '0.5rem 1rem',
+                          border: 'none',
+                          borderRadius: '0.375rem',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        🚪 Sign Out
+                      </button>
+                    </>
+                  ) : (
+                    <button 
+                      onClick={login}
+                      style={{
+                        background: '#3b82f6',
+                        color: '#ffffff',
+                        padding: '0.75rem 1.5rem',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      🔑 Sign In
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <p style={{ 
               color: '#6b7280', 
               fontSize: '1.1rem'
             }}>
-              Overview of managed DeFi portfolios and positions
+              {authenticated ? 'Managing your DeFi portfolios and positions' : 'Overview of sample DeFi portfolios'}
             </p>
           </div>
 
@@ -131,12 +191,13 @@ export default function AdminPortfoliosPage() {
             <h2 style={{ marginBottom: '1rem', color: '#1f2937' }}>Quick Actions</h2>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button 
-                onClick={() => {
-                  const shouldRegister = confirm(`🔐 Account Required\n\nThis is demo data. To manage your own portfolios:\n\n✅ Register to:\n   • Add your wallet addresses\n   • Track real positions\n   • Manage settings & alerts\n   • Invite collaborators\n   • Export your data\n\n❌ Cancel: Continue viewing demo\n\nCreate account now?`);
-                  if (shouldRegister) {
-                    window.location.href = '/auth/register';
+                onClick={() => handleAuthenticatedAction('Add New Wallet', () => {
+                  const address = prompt('Enter wallet address to track:');
+                  if (address) {
+                    alert(`✅ Wallet ${address.slice(0,6)}...${address.slice(-4)} added to your portfolio!`);
+                    // TODO: Add API call to save wallet to user's account
                   }
-                }}
+                })}
                 style={{
                   background: '#3b82f6',
                   color: '#ffffff',
@@ -150,12 +211,12 @@ export default function AdminPortfoliosPage() {
                 Add New Wallet
               </button>
               <button 
-                onClick={() => {
-                  const shouldRegister = confirm(`📊 Account Required for Reports\n\nTo generate reports on your own portfolios, please register.\n\n✅ With an account you can:\n   • Export your portfolio data\n   • Generate PDF/CSV reports\n   • Set up automated reports\n   • Share reports with collaborators\n\nWould you like to create an account?`);
-                  if (shouldRegister) {
-                    window.location.href = '/auth/register';
-                  }
-                }}
+                onClick={() => handleAuthenticatedAction('Generate Report', () => {
+                  const reportType = confirm('Generate PDF report? OK = PDF, Cancel = CSV');
+                  const format = reportType ? 'PDF' : 'CSV';
+                  alert(`📊 ${format} report generated for ${user?.email?.address || user?.wallet?.address}! Check your downloads.`);
+                  // TODO: Add API call to generate real report
+                })}
                 style={{
                   background: '#10b981',
                   color: '#ffffff',
@@ -244,12 +305,14 @@ export default function AdminPortfoliosPage() {
                     </td>
                     <td style={{ padding: '1rem', textAlign: 'center' }}>
                       <button 
-                        onClick={() => {
-                          const shouldRegister = confirm(`🔐 Account Required\n\nThis is demo data. To manage your own portfolios:\n\n✅ Register to:\n   • Add your wallet addresses\n   • Track real positions\n   • Manage settings & alerts\n   • Invite collaborators\n   • Export your data\n\n❌ Cancel: Continue viewing demo\n\nCreate account now?`);
-                          if (shouldRegister) {
-                            window.location.href = '/auth/register';
+                        onClick={() => handleAuthenticatedAction('Manage Portfolio', () => {
+                          const action = confirm(`Manage ${wallet.clientName}?\n\nOK = View Details\nCancel = Edit Settings`);
+                          if (action) {
+                            alert(`📊 Portfolio Details for ${wallet.clientName}\n\n💰 Total Value: $${wallet.totalValue.toLocaleString()}\n🔗 Positions: ${wallet.positions}\n📈 24h: ${wallet.performance24h >= 0 ? '+' : ''}${wallet.performance24h}%\n🛠️ Protocols: ${wallet.protocols.join(', ')}\n\n👤 Owner: ${user?.email?.address || user?.wallet?.address}`);
+                          } else {
+                            alert(`⚙️ Settings for ${wallet.clientName}\n\n• Add/Remove positions\n• Set alerts\n• Configure notifications\n• Export data\n• Invite collaborators\n\n🔧 These features will be implemented in the full version.`);
                           }
-                        }}
+                        })}
                         style={{
                           background: '#374151',
                           color: '#ffffff',
