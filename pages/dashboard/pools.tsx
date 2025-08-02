@@ -319,58 +319,122 @@ const Pools = () => {
       
       try {
         const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(address);
-        const chain = isEVMAddress ? 'eth' : 'solana';
         
-        const pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
-        
-        if (pairResponse.ok) {
-          const pairData = await pairResponse.json();
+        if (isEVMAddress) {
+          // Try multiple EVM chains since we don't know which chain the pool is on
+          const evmChains = ['arbitrum', 'eth', 'base', 'optimism', 'polygon', 'bsc'];
           
-          if (pairData.success && (pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool)) {
-            console.log('✅ POOL/PAIR DETECTED! Showing direct pool data');
+          for (const chain of evmChains) {
+            try {
+              console.log(`🔍 Trying ${chain} chain for pool lookup...`);
+              const pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=${chain}`);
+              
+              if (pairResponse.ok) {
+                const pairData = await pairResponse.json();
+                
+                if (pairData.success && (pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool)) {
+                  console.log(`✅ POOL FOUND ON ${chain.toUpperCase()}!`, pairData);
+                  
+                  const poolInfo = pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool || pairData;
+                  const protocol = poolInfo.dex || poolInfo.protocol || 'Unknown DEX';
+                  const poolChain = poolInfo.chain || chain;
+                  
+                  const protocolName = `${protocol} (${poolChain})`;
+                  const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+                  
+                  protocolPositions[protocolName] = [{
+                    position_type: 'liquidity_pool',
+                    position_id: address,
+                    position_token_data: [
+                      { symbol: poolInfo.baseToken?.symbol || poolInfo.token0?.symbol || 'TOKEN0' },
+                      { symbol: poolInfo.quoteToken?.symbol || poolInfo.token1?.symbol || 'TOKEN1' }
+                    ],
+                    total_usd_value: parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0'),
+                    apr: poolInfo.apr || poolInfo.apy,
+                    rawData: poolInfo
+                  }];
+                  
+                  const totalValue = parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0');
+                  
+                  setPoolsData({
+                    summary: {
+                      total_usd_value: totalValue,
+                      active_protocols: [{
+                        protocol_name: protocolName,
+                        protocol_id: protocol.toLowerCase(),
+                        total_usd_value: totalValue,
+                        relative_portfolio_percentage: 100
+                      }]
+                    },
+                    protocolPositions,
+                    isLoading: false,
+                    error: null
+                  });
+                  
+                  console.log(`🎯 SUCCESS: ${chain.toUpperCase()} pool data displayed!`);
+                  return;
+                }
+              }
+            } catch (chainError) {
+              console.warn(`⚠️ ${chain} lookup failed:`, chainError);
+              // Continue to next chain
+            }
+          }
+          
+          console.log('❌ Pool not found on any EVM chain');
+        } else {
+          // Try Solana
+          console.log('🔍 Trying Solana chain for pool lookup...');
+          const pairResponse = await fetch(`/api/pools/pair-info?address=${address}&chain=solana`);
+          
+          if (pairResponse.ok) {
+            const pairData = await pairResponse.json();
             
-            const poolInfo = pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool || pairData;
-            const protocol = poolInfo.dex || poolInfo.protocol || 'Unknown DEX';
-            const poolChain = poolInfo.chain || (address.startsWith('0x') ? 'Ethereum' : 'Solana');
-            
-            const protocolName = `${protocol} (${poolChain})`;
-            const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
-            
-            protocolPositions[protocolName] = [{
-              position_type: 'liquidity_pool',
-              position_id: address,
-              position_token_data: [
-                { symbol: poolInfo.token0?.symbol || poolInfo.baseToken?.symbol || 'TOKEN0' },
-                { symbol: poolInfo.token1?.symbol || poolInfo.quoteToken?.symbol || 'TOKEN1' }
-              ],
-              total_usd_value: parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0'),
-              apr: poolInfo.apr || poolInfo.apy,
-              rawData: poolInfo
-            }];
-            
-            const totalValue = parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0');
-            
-            setPoolsData({
-              summary: {
-                total_usd_value: totalValue,
-                active_protocols: [{
-                  protocol_name: protocolName,
-                  protocol_id: protocol.toLowerCase(),
+            if (pairData.success && (pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool)) {
+              console.log('✅ SOLANA POOL FOUND!', pairData);
+              
+              const poolInfo = pairData.pairInfo || pairData.poolInfo || pairData.pair || pairData.pool || pairData;
+              const protocol = poolInfo.dex || poolInfo.protocol || 'Unknown DEX';
+              
+              const protocolName = `${protocol} (Solana)`;
+              const protocolPositions: { [protocol: string]: ProtocolPosition[] } = {};
+              
+              protocolPositions[protocolName] = [{
+                position_type: 'liquidity_pool',
+                position_id: address,
+                position_token_data: [
+                  { symbol: poolInfo.baseToken?.symbol || poolInfo.token0?.symbol || 'TOKEN0' },
+                  { symbol: poolInfo.quoteToken?.symbol || poolInfo.token1?.symbol || 'TOKEN1' }
+                ],
+                total_usd_value: parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0'),
+                apr: poolInfo.apr || poolInfo.apy,
+                rawData: poolInfo
+              }];
+              
+              const totalValue = parseFloat(poolInfo.liquidity || poolInfo.liquidityUSD || poolInfo.tvl || '0');
+              
+              setPoolsData({
+                summary: {
                   total_usd_value: totalValue,
-                  relative_portfolio_percentage: 100
-                }]
-              },
-              protocolPositions,
-              isLoading: false,
-              error: null
-            });
-            
-            console.log('🎯 SUCCESS: Pool/pair data displayed!');
-            return;
+                  active_protocols: [{
+                    protocol_name: protocolName,
+                    protocol_id: protocol.toLowerCase(),
+                    total_usd_value: totalValue,
+                    relative_portfolio_percentage: 100
+                  }]
+                },
+                protocolPositions,
+                isLoading: false,
+                error: null
+              });
+              
+              console.log('🎯 SUCCESS: Solana pool data displayed!');
+              return;
+            }
           }
         }
       } catch (error) {
-        console.warn('⚠️ Pair lookup failed:', error);
+        console.warn('⚠️ Pool lookup failed:', error);
       }
       
       // STEP 4: Final fallback - try as wallet address for DeFi positions
