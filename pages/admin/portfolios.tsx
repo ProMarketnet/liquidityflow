@@ -27,12 +27,23 @@ interface SelectedWalletDetails {
     apr: number;
     healthFactor?: number;
     status: 'healthy' | 'warning' | 'critical';
+    entryPrice?: number;
+    currentPrice?: number;
+    quantity?: number;
+    pnl?: number;
+    pnlPercentage?: number;
+    change24h?: number;
+    entryDate?: string;
+    lastUpdated?: string;
   }>;
   alerts: Array<{
     type: 'critical' | 'warning' | 'info';
     message: string;
     timestamp: string;
   }>;
+  totalPnL?: number;
+  totalPnLPercentage?: number;
+  performance24h?: number;
 }
 
 export default function AdminPortfoliosPage() {
@@ -322,32 +333,60 @@ export default function AdminPortfoliosPage() {
           address: wallet.address,
           clientName: wallet.clientName,
           totalValue: wallet.totalValue,
+          totalPnL: 12543.78,
+          totalPnLPercentage: 5.4,
+          performance24h: wallet.performance24h,
           positions: [
             {
               protocol: 'Uniswap V3',
               type: 'Liquidity Pool',
               tokens: 'ETH/USDC',
+              quantity: 125.5,
+              entryPrice: 1850.00,
+              currentPrice: 2145.30,
               value: 125000.00,
+              pnl: 15643.25,
+              pnlPercentage: 14.3,
+              change24h: 2.8,
               apr: 15.6,
-              status: 'healthy'
+              healthFactor: 1.8,
+              status: 'healthy',
+              entryDate: '2024-01-15',
+              lastUpdated: 'Just now'
             },
             {
-              protocol: 'Aave V3',
+              protocol: 'Aave V3', 
               type: 'Lending',
-              tokens: 'USDC Supply',
+              tokens: 'USDC',
+              quantity: 85000,
+              entryPrice: 1.00,
+              currentPrice: 1.00,
               value: 85000.00,
+              pnl: 3600.00,
+              pnlPercentage: 4.4,
+              change24h: 0.1,
               apr: 4.2,
               healthFactor: 2.45,
-              status: 'healthy'
+              status: 'healthy',
+              entryDate: '2024-01-20',
+              lastUpdated: '5 mins ago'
             },
             {
               protocol: 'Aave V3',
               type: 'Borrowing',
               tokens: 'ETH Borrow',
+              quantity: -16.3,
+              entryPrice: 2100.00,
+              currentPrice: 2145.30,
               value: -35000.00,
+              pnl: -738.39,
+              pnlPercentage: -2.1,
+              change24h: -0.8,
               apr: 3.8,
               healthFactor: 2.45,
-              status: wallet.status === 'critical' ? 'critical' : 'healthy'
+              status: wallet.status === 'critical' ? 'critical' : 'healthy',
+              entryDate: '2024-01-18',
+              lastUpdated: '1 hour ago'
             }
           ],
           alerts: [
@@ -580,6 +619,30 @@ export default function AdminPortfoliosPage() {
                       <div style={styles.bigNumber}>{walletDetails.alerts.length}</div>
                       <div style={styles.metric}>Active Alerts</div>
                     </div>
+                    <div style={styles.statCard}>
+                      <div style={styles.bigNumber}>
+                        {walletDetails.totalPnL !== undefined 
+                          ? formatCurrency(walletDetails.totalPnL) 
+                          : '$0.00'}
+                      </div>
+                      <div style={styles.metric}>Total P&L</div>
+                    </div>
+                    <div style={styles.statCard}>
+                      <div style={styles.bigNumber}>
+                        {walletDetails.totalPnLPercentage !== undefined 
+                          ? formatPercentage(walletDetails.totalPnLPercentage) 
+                          : '0%'}
+                      </div>
+                      <div style={styles.metric}>P&L %</div>
+                    </div>
+                    <div style={styles.statCard}>
+                      <div style={styles.bigNumber}>
+                        {walletDetails.performance24h !== undefined 
+                          ? formatPercentage(walletDetails.performance24h) 
+                          : '0%'}
+                      </div>
+                      <div style={styles.metric}>24h Performance</div>
+                    </div>
                   </div>
 
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
@@ -591,7 +654,12 @@ export default function AdminPortfoliosPage() {
                         <th style={styles.th}>Protocol</th>
                         <th style={styles.th}>Type</th>
                         <th style={styles.th}>Tokens</th>
+                        <th style={styles.th}>Quantity</th>
+                        <th style={styles.th}>Entry Price</th>
+                        <th style={styles.th}>Current Price</th>
                         <th style={styles.th}>Value</th>
+                        <th style={styles.th}>P&L</th>
+                        <th style={styles.th}>24h Change</th>
                         <th style={styles.th}>APR</th>
                         <th style={styles.th}>Status</th>
                         <th style={styles.th}>Actions</th>
@@ -604,7 +672,22 @@ export default function AdminPortfoliosPage() {
                           <td style={styles.td}>{position.type}</td>
                           <td style={styles.td}>{position.tokens}</td>
                           <td style={styles.td}>
+                            {position.quantity !== undefined ? position.quantity : '-'}
+                          </td>
+                          <td style={styles.td}>
+                            {position.entryPrice !== undefined ? formatCurrency(position.entryPrice) : '-'}
+                          </td>
+                          <td style={styles.td}>
+                            {position.currentPrice !== undefined ? formatCurrency(position.currentPrice) : '-'}
+                          </td>
+                          <td style={styles.td}>
                             {position.value < 0 ? '-' : ''}{formatCurrency(position.value)}
+                          </td>
+                          <td style={styles.td}>
+                            {position.pnl !== undefined ? formatCurrency(position.pnl) : '-'}
+                          </td>
+                          <td style={styles.td}>
+                            {position.change24h !== undefined ? formatPercentage(position.change24h) : '-'}
                           </td>
                           <td style={styles.td}>
                             {position.apr > 0 ? `${position.apr.toFixed(1)}%` : '-'}
