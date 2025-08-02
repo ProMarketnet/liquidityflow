@@ -165,7 +165,7 @@ export default function AdminAnalyticsPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#fafbfc' }}>
       <Head>
         <title>Platform Analytics - LiquidFlow Admin</title>
         <meta name="description" content="Comprehensive analytics dashboard for LiquidFlow platform administrators" />
@@ -176,42 +176,42 @@ export default function AdminAnalyticsPage() {
         position: 'sticky',
         top: 0,
         zIndex: 1000,
-        padding: 'var(--space-4) 0',
+        padding: '1rem 0',
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid var(--color-border)'
+        borderBottom: '1px solid #e1e5eb'
       }}>
         <div style={{ 
           maxWidth: '1200px', 
           margin: '0 auto', 
-          padding: '0 var(--space-4)',
+          padding: '0 1rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
           <div style={{
-            fontSize: 'var(--font-size-2xl)',
+            fontSize: '1.5rem',
             fontWeight: '800',
-            color: 'var(--color-text-primary)'
+            color: '#0d1421'
           }}>
             🏢 LiquidFlow Admin
           </div>
           
-          <div style={{ display: 'flex', gap: 'var(--space-6)', alignItems: 'center' }}>
-            <a href="/" style={{ color: 'var(--color-success)', fontWeight: '600', textDecoration: 'none' }}>
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+            <a href="/" style={{ color: '#059669', fontWeight: '600', textDecoration: 'none' }}>
               🏠 Home
             </a>
-            <a href="/admin/wallets" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+            <a href="/admin/wallets" style={{ color: '#4a5568', textDecoration: 'none' }}>
               💳 Manage Wallets
             </a>
-            <a href="/admin/portfolios" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+            <a href="/admin/portfolios" style={{ color: '#4a5568', textDecoration: 'none' }}>
               🏢 Portfolios
             </a>
-            <a href="/admin/reports" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+            <a href="/admin/reports" style={{ color: '#4a5568', textDecoration: 'none' }}>
               📊 Reports
             </a>
-            <span style={{ color: 'var(--color-primary)', fontWeight: '600' }}>📈 Analytics</span>
-            <a href="/dashboard" style={{ color: 'var(--color-text-secondary)', textDecoration: 'none' }}>
+            <span style={{ color: '#2563eb', fontWeight: '600' }}>📈 Analytics</span>
+            <a href="/dashboard" style={{ color: '#4a5568', textDecoration: 'none' }}>
               ⬅️ Back to Dashboard
             </a>
             
@@ -220,10 +220,10 @@ export default function AdminAnalyticsPage() {
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value)}
               style={{
-                padding: 'var(--space-2) var(--space-3)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: 'var(--color-surface)'
+                padding: '0.5rem 0.75rem',
+                border: '1px solid #e1e5eb',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
               }}
             >
               <option value="7d">Last 7 Days</option>
@@ -234,15 +234,20 @@ export default function AdminAnalyticsPage() {
             {/* Logout */}
             <button 
               onClick={() => {
-                localStorage.removeItem('adminSession');
-                window.location.href = '/';
+                try {
+                  localStorage.removeItem('adminSession');
+                  window.location.href = '/';
+                } catch (error) {
+                  console.error('Logout error:', error);
+                  window.location.href = '/';
+                }
               }}
               style={{
-                background: 'var(--color-error)',
+                background: '#dc2626',
                 color: '#ffffff',
                 border: 'none',
-                padding: 'var(--space-2) var(--space-4)',
-                borderRadius: 'var(--radius-md)',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
                 cursor: 'pointer'
               }}
             >
@@ -256,53 +261,53 @@ export default function AdminAnalyticsPage() {
       <main style={{ 
         maxWidth: '1200px', 
         margin: '0 auto', 
-        padding: 'var(--space-8) var(--space-4)' 
+        padding: '2rem 1rem' 
       }}>
-        <div style={{ marginBottom: 'var(--space-8)' }}>
-          <h1 style={{ marginBottom: 'var(--space-2)', color: 'var(--color-text-primary)' }}>
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{ marginBottom: '0.5rem', color: '#0d1421' }}>
             📊 Platform Analytics
           </h1>
-          <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
+          <p style={{ margin: 0, color: '#4a5568' }}>
             Comprehensive view of all connected wallets and platform activity
           </p>
         </div>
 
         {analytics && (
-          <div style={{ display: 'grid', gap: 'var(--space-8)' }}>
+          <div style={{ display: 'grid', gap: '2rem' }}>
             {/* Key Metrics */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 'var(--space-6)'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '1.5rem'
             }}>
               {/* Total Users */}
               <div style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-6)'
+                background: '#ffffff',
+                border: '1px solid #e1e5eb',
+                borderRadius: '12px',
+                padding: '1.5rem'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
                   <div style={{
                     width: '40px',
                     height: '40px',
-                    borderRadius: 'var(--radius-lg)',
-                    background: 'var(--color-primary)',
+                    borderRadius: '12px',
+                    background: '#2563eb',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 'var(--font-size-lg)',
+                    fontSize: '1.125rem',
                     color: '#ffffff'
                   }}>
                     👥
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}>
+                    <h3 style={{ margin: 0, fontSize: '1rem', color: '#0d1421' }}>
                       Total Users
                     </h3>
                     <span style={{
-                      background: 'var(--color-info-light)',
-                      color: 'var(--color-info)',
+                      background: '#cffafe',
+                      color: '#0891b2',
                       padding: '2px 8px',
                       borderRadius: '4px',
                       fontSize: '10px',
@@ -311,9 +316,9 @@ export default function AdminAnalyticsPage() {
                   </div>
                 </div>
                 <div style={{
-                  fontSize: 'var(--font-size-3xl)',
+                  fontSize: '1.875rem',
                   fontWeight: '800',
-                  color: 'var(--color-primary)',
+                  color: '#2563eb',
                   lineHeight: '1'
                 }}>
                   {analytics.totalUsers.toLocaleString()}
@@ -322,32 +327,32 @@ export default function AdminAnalyticsPage() {
 
               {/* Total Value Locked */}
               <div style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-6)'
+                background: '#ffffff',
+                border: '1px solid #e1e5eb',
+                borderRadius: '12px',
+                padding: '1.5rem'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
                   <div style={{
                     width: '40px',
                     height: '40px',
-                    borderRadius: 'var(--radius-lg)',
-                    background: 'var(--color-success)',
+                    borderRadius: '12px',
+                    background: '#059669',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 'var(--font-size-lg)',
+                    fontSize: '1.125rem',
                     color: '#ffffff'
                   }}>
                     💰
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}>
+                    <h3 style={{ margin: 0, fontSize: '1rem', color: '#0d1421' }}>
                       Total Value Locked
                     </h3>
                     <span style={{
-                      background: 'var(--color-success-light)',
-                      color: 'var(--color-success)',
+                      background: '#d1fae5',
+                      color: '#059669',
                       padding: '2px 8px',
                       borderRadius: '4px',
                       fontSize: '10px',
@@ -356,9 +361,9 @@ export default function AdminAnalyticsPage() {
                   </div>
                 </div>
                 <div style={{
-                  fontSize: 'var(--font-size-3xl)',
+                  fontSize: '1.875rem',
                   fontWeight: '800',
-                  color: 'var(--color-success)',
+                  color: '#059669',
                   lineHeight: '1'
                 }}>
                   {formatCurrency(analytics.totalValueLocked)}
@@ -367,32 +372,32 @@ export default function AdminAnalyticsPage() {
 
               {/* Total Positions */}
               <div style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-6)'
+                background: '#ffffff',
+                border: '1px solid #e1e5eb',
+                borderRadius: '12px',
+                padding: '1.5rem'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
                   <div style={{
                     width: '40px',
                     height: '40px',
-                    borderRadius: 'var(--radius-lg)',
-                    background: 'var(--color-info)',
+                    borderRadius: '12px',
+                    background: '#0891b2',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 'var(--font-size-lg)',
+                    fontSize: '1.125rem',
                     color: '#ffffff'
                   }}>
                     📊
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}>
+                    <h3 style={{ margin: 0, fontSize: '1rem', color: '#0d1421' }}>
                       Total Positions
                     </h3>
                     <span style={{
-                      background: 'var(--color-info-light)',
-                      color: 'var(--color-info)',
+                      background: '#cffafe',
+                      color: '#0891b2',
                       padding: '2px 8px',
                       borderRadius: '4px',
                       fontSize: '10px',
@@ -401,9 +406,9 @@ export default function AdminAnalyticsPage() {
                   </div>
                 </div>
                 <div style={{
-                  fontSize: 'var(--font-size-3xl)',
+                  fontSize: '1.875rem',
                   fontWeight: '800',
-                  color: 'var(--color-info)',
+                  color: '#0891b2',
                   lineHeight: '1'
                 }}>
                   {analytics.totalPositions.toLocaleString()}
@@ -412,32 +417,32 @@ export default function AdminAnalyticsPage() {
 
               {/* Active Alerts */}
               <div style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-6)'
+                background: '#ffffff',
+                border: '1px solid #e1e5eb',
+                borderRadius: '12px',
+                padding: '1.5rem'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
                   <div style={{
                     width: '40px',
                     height: '40px',
-                    borderRadius: 'var(--radius-lg)',
-                    background: analytics.alertsSummary.critical > 0 ? 'var(--color-error)' : 'var(--color-success)',
+                    borderRadius: '12px',
+                    background: analytics.alertsSummary.critical > 0 ? '#dc2626' : '#059669',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: 'var(--font-size-lg)',
+                    fontSize: '1.125rem',
                     color: '#ffffff'
                   }}>
                     🚨
                   </div>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 'var(--font-size-base)', color: 'var(--color-text-primary)' }}>
+                    <h3 style={{ margin: 0, fontSize: '1rem', color: '#0d1421' }}>
                       Active Alerts
                     </h3>
                     <span style={{
-                      background: analytics.alertsSummary.critical > 0 ? 'var(--color-error-light)' : 'var(--color-success-light)',
-                      color: analytics.alertsSummary.critical > 0 ? 'var(--color-error)' : 'var(--color-success)',
+                      background: analytics.alertsSummary.critical > 0 ? '#fee2e2' : '#d1fae5',
+                      color: analytics.alertsSummary.critical > 0 ? '#dc2626' : '#059669',
                       padding: '2px 8px',
                       borderRadius: '4px',
                       fontSize: '10px',
@@ -447,40 +452,40 @@ export default function AdminAnalyticsPage() {
                     </span>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--space-4)' }}>
+                <div style={{ display: 'flex', gap: '1rem' }}>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{
-                      fontSize: 'var(--font-size-xl)',
+                      fontSize: '1.25rem',
                       fontWeight: '800',
-                      color: 'var(--color-error)'
+                      color: '#dc2626'
                     }}>
                       {analytics.alertsSummary.critical}
                     </div>
-                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#718096' }}>
                       Critical
                     </div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{
-                      fontSize: 'var(--font-size-xl)',
+                      fontSize: '1.25rem',
                       fontWeight: '800',
-                      color: 'var(--color-warning)'
+                      color: '#d97706'
                     }}>
                       {analytics.alertsSummary.warning}
                     </div>
-                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#718096' }}>
                       Warning
                     </div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
                     <div style={{
-                      fontSize: 'var(--font-size-xl)',
+                      fontSize: '1.25rem',
                       fontWeight: '800',
-                      color: 'var(--color-info)'
+                      color: '#0891b2'
                     }}>
                       {analytics.alertsSummary.info}
                     </div>
-                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-tertiary)' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#718096' }}>
                       Info
                     </div>
                   </div>
@@ -490,48 +495,48 @@ export default function AdminAnalyticsPage() {
 
             {/* Top Protocols Table */}
             <div style={{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'var(--space-6)'
+              background: '#ffffff',
+              border: '1px solid #e1e5eb',
+              borderRadius: '12px',
+              padding: '1.5rem'
             }}>
-              <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--color-text-primary)' }}>
+              <h3 style={{ marginBottom: '1.5rem', color: '#0d1421' }}>
                 🏆 Top Protocols by TVL
               </h3>
               
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <tr style={{ borderBottom: '1px solid #e1e5eb' }}>
                       <th style={{ 
                         textAlign: 'left', 
-                        padding: 'var(--space-3)', 
+                        padding: '0.75rem', 
                         fontWeight: '600',
-                        color: 'var(--color-text-secondary)'
+                        color: '#4a5568'
                       }}>
                         Protocol
                       </th>
                       <th style={{ 
                         textAlign: 'right', 
-                        padding: 'var(--space-3)', 
+                        padding: '0.75rem', 
                         fontWeight: '600',
-                        color: 'var(--color-text-secondary)'
+                        color: '#4a5568'
                       }}>
                         Total Value Locked
                       </th>
                       <th style={{ 
                         textAlign: 'right', 
-                        padding: 'var(--space-3)', 
+                        padding: '0.75rem', 
                         fontWeight: '600',
-                        color: 'var(--color-text-secondary)'
+                        color: '#4a5568'
                       }}>
                         Users
                       </th>
                       <th style={{ 
                         textAlign: 'right', 
-                        padding: 'var(--space-3)', 
+                        padding: '0.75rem', 
                         fontWeight: '600',
-                        color: 'var(--color-text-secondary)'
+                        color: '#4a5568'
                       }}>
                         % of Platform
                       </th>
@@ -539,19 +544,19 @@ export default function AdminAnalyticsPage() {
                   </thead>
                   <tbody>
                     {analytics.topProtocols.map((protocol, index) => (
-                      <tr key={index} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-                        <td style={{ padding: 'var(--space-3)' }}>
-                          <div style={{ fontWeight: '600', color: 'var(--color-text-primary)' }}>{protocol.name}</div>
+                      <tr key={index} style={{ borderBottom: '1px solid #f0f2f5' }}>
+                        <td style={{ padding: '0.75rem' }}>
+                          <div style={{ fontWeight: '600', color: '#0d1421' }}>{protocol.name}</div>
                         </td>
-                        <td style={{ padding: 'var(--space-3)', textAlign: 'right' }}>
-                          <div style={{ fontWeight: '700', color: 'var(--color-success)' }}>
+                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                          <div style={{ fontWeight: '700', color: '#059669' }}>
                             {formatCurrency(protocol.tvl)}
                           </div>
                         </td>
-                        <td style={{ padding: 'var(--space-3)', textAlign: 'right', color: 'var(--color-text-primary)' }}>
+                        <td style={{ padding: '0.75rem', textAlign: 'right', color: '#0d1421' }}>
                           {protocol.users}
                         </td>
-                        <td style={{ padding: 'var(--space-3)', textAlign: 'right', color: 'var(--color-text-primary)' }}>
+                        <td style={{ padding: '0.75rem', textAlign: 'right', color: '#0d1421' }}>
                           {((protocol.tvl / analytics.totalValueLocked) * 100).toFixed(1)}%
                         </td>
                       </tr>
@@ -563,36 +568,36 @@ export default function AdminAnalyticsPage() {
 
             {/* Recent Wallet Connections */}
             <div style={{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-lg)',
-              padding: 'var(--space-6)'
+              background: '#ffffff',
+              border: '1px solid #e1e5eb',
+              borderRadius: '12px',
+              padding: '1.5rem'
             }}>
-              <h3 style={{ marginBottom: 'var(--space-6)', color: 'var(--color-text-primary)' }}>
+              <h3 style={{ marginBottom: '1.5rem', color: '#0d1421' }}>
                 🔗 Recent Wallet Connections
               </h3>
               
-              <div style={{ display: 'grid', gap: 'var(--space-4)' }}>
+              <div style={{ display: 'grid', gap: '1rem' }}>
                 {analytics.recentConnections.map((connection, index) => (
                   <div key={index} style={{ 
-                    padding: 'var(--space-4)',
-                    background: 'var(--color-background)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-md)'
+                    padding: '1rem',
+                    background: '#fafbfc',
+                    border: '1px solid #e1e5eb',
+                    borderRadius: '8px'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ 
                           fontFamily: 'monospace',
                           fontWeight: '600',
-                          marginBottom: 'var(--space-1)',
-                          color: 'var(--color-text-primary)'
+                          marginBottom: '0.25rem',
+                          color: '#0d1421'
                         }}>
                           {formatAddress(connection.address)}
                         </div>
                         <div style={{ 
-                          fontSize: 'var(--font-size-sm)',
-                          color: 'var(--color-text-tertiary)'
+                          fontSize: '0.875rem',
+                          color: '#718096'
                         }}>
                           Connected {connection.timestamp}
                         </div>
@@ -600,14 +605,14 @@ export default function AdminAnalyticsPage() {
                       <div style={{ textAlign: 'right' }}>
                         <div style={{
                           fontWeight: '700',
-                          color: 'var(--color-success)',
-                          fontSize: 'var(--font-size-lg)'
+                          color: '#059669',
+                          fontSize: '1.125rem'
                         }}>
                           {formatCurrency(connection.tvl)}
                         </div>
                         <div style={{ 
-                          fontSize: 'var(--font-size-sm)',
-                          color: 'var(--color-text-tertiary)'
+                          fontSize: '0.875rem',
+                          color: '#718096'
                         }}>
                           Portfolio Value
                         </div>
@@ -623,10 +628,10 @@ export default function AdminAnalyticsPage() {
 
       {/* Footer */}
       <footer style={{
-        background: 'var(--color-surface)',
-        borderTop: '1px solid var(--color-border)',
-        padding: 'var(--space-8) 0',
-        marginTop: 'var(--space-16)'
+        background: '#ffffff',
+        borderTop: '1px solid #e1e5eb',
+        padding: '2rem 0',
+        marginTop: '4rem'
       }}>
         <div style={{ 
           maxWidth: '1200px', 
@@ -634,8 +639,8 @@ export default function AdminAnalyticsPage() {
           textAlign: 'center' 
         }}>
           <p style={{ 
-            fontSize: 'var(--font-size-sm)',
-            color: 'var(--color-text-tertiary)',
+            fontSize: '0.875rem',
+            color: '#718096',
             margin: 0
           }}>
             © 2025 LiquidFlow. Professional DeFi portfolio management platform.
