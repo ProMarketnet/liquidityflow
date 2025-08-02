@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
 export default function OnboardingNew() {
   const [step, setStep] = useState(1);
   const [walletAddress, setWalletAddress] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const router = useRouter();
 
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -14,6 +17,8 @@ export default function OnboardingNew() {
         // Save to localStorage for dashboard access
         localStorage.setItem('connectedWallet', accounts[0]);
         setStep(2);
+        // Automatically start analysis
+        startAnalysis();
       } catch (error) {
         console.error('Error connecting wallet:', error);
       }
@@ -22,333 +27,320 @@ export default function OnboardingNew() {
     }
   };
 
+  const startAnalysis = async () => {
+    setIsAnalyzing(true);
+    
+    // Auto-scan all supported chains in parallel
+    const chains = ['ethereum', 'arbitrum', 'base', 'optimism', 'solana'];
+    
+    try {
+      // Simulate multi-chain analysis (in production, these would be real API calls)
+      console.log('🔍 Scanning all chains automatically:', chains);
+      
+      // Wait 3 seconds to show the analysis process
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Auto-redirect to dashboard
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
-    <>
+    <div style={{ minHeight: '100vh' }}>
       <Head>
         <title>Get Started - LiquidFlow</title>
         <meta name="description" content="Connect your wallet and start monitoring" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div style={{
-        minHeight: '100vh',
-        background: '#ffffff', // 🚨 EMERGENCY WHITE BACKGROUND FOR VISIBILITY
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        color: '#000000' // 🚨 EMERGENCY BLACK TEXT FOR VISIBILITY
+      {/* Premium Navigation */}
+      <nav className="nav" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+        padding: 'var(--space-4) 0'
       }}>
-        
-        {/* Navigation */}
-        <nav style={{
-          position: 'fixed',
-          top: 0,
-          width: '100%',
-          background: '#ffffff', // 🚨 EMERGENCY WHITE NAV
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          zIndex: 1000,
-          padding: '1rem 0'
-        }}>
-          <div style={{
-            maxWidth: '1200px',
-            margin: '0 auto',
-            padding: '0 1rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+        <div className="container flex justify-between items-center">
+          <Link href="/" style={{
+            fontSize: 'var(--font-size-2xl)',
+            fontWeight: '800',
+            color: 'var(--color-text-primary)',
+            textDecoration: 'none',
+            letterSpacing: '-0.025em'
           }}>
-            <Link href="/" style={{
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              background: 'linear-gradient(135deg, #00d4ff, #7c3aed)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              textDecoration: 'none'
-            }}>
-              LiquidFlow
-            </Link>
-            
-            <Link href="/" style={{ 
-              color: '#cbd5e1', 
-              textDecoration: 'none',
-              fontSize: '0.9rem'
-            }}>
-              ← Back to Home
-            </Link>
-          </div>
-        </nav>
+            LiquidFlow
+          </Link>
+          
+          <Link href="/" className="nav-link" style={{ 
+            color: 'var(--color-text-secondary)',
+            fontSize: 'var(--font-size-sm)'
+          }}>
+            ← Back to Home
+          </Link>
+        </div>
+      </nav>
 
-        {/* Main Content */}
-        <div style={{
-          paddingTop: '120px',
-          paddingBottom: '60px',
-          maxWidth: '800px',
-          margin: '0 auto',
-          padding: '120px 2rem 60px'
+      {/* Main Content */}
+      <main className="container" style={{ 
+        padding: 'var(--space-16) var(--space-4) var(--space-8)',
+        maxWidth: '800px',
+        margin: '0 auto'
+      }}>
+
+        {/* Progress Indicator - Now only 2 steps */}
+        <div className="flex justify-center mb-8 gap-4">
+          {[1, 2].map((num) => (
+            <div key={num} style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: step >= num ? 'var(--color-primary)' : 'var(--color-border)',
+              color: step >= num ? '#ffffff' : 'var(--color-text-tertiary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: '700',
+              fontSize: 'var(--font-size-lg)',
+              transition: 'all 0.3s ease'
+            }}>
+              {step > num ? '✓' : num}
+            </div>
+          ))}
+        </div>
+
+        {/* Step Content */}
+        <div className="card card-elevated" style={{ 
+          padding: 'var(--space-8)',
+          textAlign: 'center',
+          maxWidth: '600px',
+          margin: '0 auto'
         }}>
 
-          {/* Progress Indicator */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            marginBottom: '3rem',
-            gap: '1rem'
-          }}>
-            {[1, 2, 3].map((num) => (
-              <div key={num} style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: step >= num ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'rgba(255,255,255,0.2)',
-                color: 'white',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 'bold',
-                fontSize: '1rem'
+          {/* Step 1: Connect Wallet */}
+          {step === 1 && (
+            <div className="animate-fade-in">
+              <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>🚀</div>
+              <h1 style={{ marginBottom: 'var(--space-4)' }}>
+                Connect Your Wallet
+              </h1>
+              <p style={{
+                fontSize: 'var(--font-size-lg)',
+                color: 'var(--color-text-secondary)',
+                marginBottom: 'var(--space-6)',
+                lineHeight: '1.6'
               }}>
-                {step > num ? '✓' : num}
-              </div>
-            ))}
-          </div>
+                Connect your wallet to automatically scan all supported chains and discover your DeFi positions
+              </p>
+              
+              <button
+                onClick={connectWallet}
+                className="btn btn-primary btn-lg"
+                style={{
+                  fontSize: 'var(--font-size-lg)',
+                  padding: 'var(--space-4) var(--space-8)',
+                  marginBottom: 'var(--space-8)'
+                }}
+              >
+                🔗 Connect Wallet
+              </button>
 
-          {/* Step Content */}
-          <div style={{
-            background: 'rgba(255,255,255,0.1)',
-            backdropFilter: 'blur(20px)',
-            borderRadius: '20px',
-            padding: '3rem 2rem',
-            border: '1px solid rgba(255,255,255,0.2)',
-            textAlign: 'center'
-          }}>
-
-            {/* Step 1: Connect Wallet */}
-            {step === 1 && (
-              <>
-                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🚀</div>
-                <h1 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '1rem',
-                  lineHeight: '1.2'
-                }}>
-                  Connect Your Wallet
-                </h1>
-                <p style={{
-                  fontSize: '1.2rem',
-                  color: '#cbd5e1',
-                  marginBottom: '2rem',
-                  lineHeight: '1.6'
-                }}>
-                  Connect your wallet to start monitoring liquidity pools and track your DeFi positions
-                </p>
-                
-                <button
-                  onClick={connectWallet}
-                  style={{
-                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                    color: 'white',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    padding: '1rem 2rem',
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)',
-                    transition: 'all 0.3s ease'
-                  }}
-                  onMouseOver={(e) => {
-                    (e.target as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                    (e.target as HTMLButtonElement).style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.6)';
-                  }}
-                  onMouseOut={(e) => {
-                    (e.target as HTMLButtonElement).style.transform = 'translateY(0)';
-                    (e.target as HTMLButtonElement).style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.4)';
-                  }}
-                >
-                  🔗 Connect Wallet
-                </button>
-
-                <div style={{
-                  marginTop: '2rem',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '1rem'
-                }}>
+              {/* Supported Chains Preview */}
+              <div style={{
+                background: 'var(--color-surface)',
+                borderRadius: 'var(--radius-lg)',
+                padding: 'var(--space-6)',
+                marginBottom: 'var(--space-6)'
+              }}>
+                <h3 style={{ marginBottom: 'var(--space-4)', color: 'var(--color-text-secondary)' }}>
+                  🌐 Auto-scanning supported chains:
+                </h3>
+                <div className="flex justify-center gap-4 flex-wrap">
                   {[
-                    { icon: '✨', title: 'Real-time Portfolio', desc: 'Track your wallet balance' },
-                    { icon: '📊', title: 'DeFi Positions', desc: 'Monitor protocol interactions' },
-                    { icon: '🔔', title: 'Smart Alerts', desc: 'Get notified of changes' }
-                  ].map((feature, i) => (
-                    <div key={i} style={{
-                      background: 'rgba(255,255,255,0.05)',
-                      padding: '1.5rem 1rem',
-                      borderRadius: '12px',
-                      border: '1px solid rgba(255,255,255,0.1)'
+                    { name: 'Ethereum', logo: '⟠', color: '#627EEA' },
+                    { name: 'Arbitrum', logo: '🔵', color: '#28A0F0' },
+                    { name: 'Base', logo: '🔷', color: '#0052FF' },
+                    { name: 'Optimism', logo: '🔴', color: '#FF0420' },
+                    { name: 'Solana', logo: '◉', color: '#9945FF' }
+                  ].map((chain) => (
+                    <div key={chain.name} className="flex items-center gap-2 badge badge-info" style={{
+                      padding: 'var(--space-2) var(--space-3)',
+                      fontSize: 'var(--font-size-sm)'
                     }}>
-                      <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{feature.icon}</div>
-                      <h3 style={{ color: 'white', fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                        {feature.title}
-                      </h3>
-                      <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>{feature.desc}</p>
+                      <span style={{ fontSize: 'var(--font-size-base)' }}>{chain.logo}</span>
+                      <span>{chain.name}</span>
                     </div>
                   ))}
                 </div>
-              </>
-            )}
+              </div>
 
-            {/* Step 2: Wallet Connected */}
-            {step === 2 && (
-              <>
-                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>✅</div>
-                <h1 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '1rem'
-                }}>
-                  Wallet Connected!
+              {/* Features Grid */}
+              <div className="grid grid-cols-3" style={{ gap: 'var(--space-4)' }}>
+                {[
+                  { icon: '✨', title: 'Real-time Portfolio', desc: 'Live wallet tracking' },
+                  { icon: '📊', title: 'DeFi Positions', desc: 'All protocols monitored' },
+                  { icon: '🔔', title: 'Smart Alerts', desc: 'Automated notifications' }
+                ].map((feature, i) => (
+                  <div key={i} className="card" style={{
+                    padding: 'var(--space-4)',
+                    background: 'var(--color-background)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '2rem', marginBottom: 'var(--space-2)' }}>{feature.icon}</div>
+                    <h4 style={{ 
+                      fontSize: 'var(--font-size-sm)', 
+                      fontWeight: '600', 
+                      marginBottom: 'var(--space-1)',
+                      color: 'var(--color-text-primary)'
+                    }}>
+                      {feature.title}
+                    </h4>
+                    <p style={{ 
+                      fontSize: 'var(--font-size-xs)', 
+                      color: 'var(--color-text-tertiary)',
+                      margin: 0
+                    }}>
+                      {feature.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Analysis & Auto-redirect */}
+          {step === 2 && (
+            <div className="animate-fade-in">
+              <div className="mb-6">
+                <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>
+                  {isAnalyzing ? '🔍' : '✅'}
+                </div>
+                <h1 style={{ marginBottom: 'var(--space-2)' }}>
+                  {isAnalyzing ? 'Analyzing Your Portfolio' : 'Wallet Connected!'}
                 </h1>
                 <p style={{
-                  fontSize: '1.2rem',
-                  color: '#cbd5e1',
-                  marginBottom: '1rem'
+                  fontSize: 'var(--font-size-base)',
+                  color: 'var(--color-text-secondary)',
+                  marginBottom: 'var(--space-2)'
                 }}>
-                  Successfully connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-                </p>
-                <p style={{
-                  fontSize: '1rem',
-                  color: '#94a3b8',
-                  marginBottom: '2rem'
-                }}>
-                  Now we'll analyze your wallet and find relevant liquidity pools to monitor.
-                </p>
-                
-                {/* Multi-Chain Selection */}
-                <div style={{
-                  background: 'rgba(255,255,255,0.1)',
-                  border: '2px solid rgba(255,255,255,0.2)',
-                  borderRadius: '1rem',
-                  padding: '1.5rem',
-                  marginBottom: '2rem'
-                }}>
-                  <h3 style={{ color: 'white', marginBottom: '1rem', fontSize: '1.25rem', fontWeight: 'bold' }}>
-                    🌐 Select Chains to Monitor
-                  </h3>
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                    gap: '0.75rem'
+                  Connected: <code style={{ 
+                    background: 'var(--color-surface)',
+                    padding: 'var(--space-1) var(--space-2)',
+                    borderRadius: 'var(--radius-sm)',
+                    fontFamily: 'var(--font-mono)'
                   }}>
-                    {[
-                      { name: 'Ethereum', logo: '⟠', color: '#627EEA' },
-                      { name: 'Arbitrum', logo: '🔵', color: '#28A0F0' },
-                      { name: 'Base', logo: '🔷', color: '#0052FF' },
-                      { name: 'Optimism', logo: '🔴', color: '#FF0420' },
-                      { name: 'Solana', logo: '◉', color: '#9945FF' }
-                    ].map((chain) => (
-                      <label
-                        key={chain.name}
-                        style={{
+                    {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+                  </code>
+                </p>
+              </div>
+              
+              {isAnalyzing ? (
+                <div style={{ textAlign: 'center' }}>
+                  <div className="animate-pulse" style={{
+                    background: 'var(--color-surface)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: 'var(--space-6)',
+                    marginBottom: 'var(--space-6)'
+                  }}>
+                    <h3 style={{ 
+                      marginBottom: 'var(--space-4)',
+                      color: 'var(--color-primary)'
+                    }}>
+                      🌐 Scanning all chains automatically...
+                    </h3>
+                    
+                    {/* Chain scanning progress */}
+                    <div className="grid grid-cols-5" style={{ gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
+                      {[
+                        { name: 'Ethereum', logo: '⟠' },
+                        { name: 'Arbitrum', logo: '🔵' },
+                        { name: 'Base', logo: '🔷' },
+                        { name: 'Optimism', logo: '🔴' },
+                        { name: 'Solana', logo: '◉' }
+                      ].map((chain, index) => (
+                        <div key={chain.name} className="card" style={{
+                          padding: 'var(--space-3)',
+                          background: 'var(--color-background)',
+                          textAlign: 'center',
+                          minHeight: '80px',
                           display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          padding: '0.75rem',
-                          background: 'rgba(255,255,255,0.1)',
-                          borderRadius: '0.5rem',
-                          cursor: 'pointer',
-                          border: '2px solid transparent',
-                          color: 'white'
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          defaultChecked={true}
-                          style={{
-                            marginRight: '0.5rem',
-                            transform: 'scale(1.2)'
-                          }}
-                        />
-                        <span style={{ fontSize: '1.5rem' }}>{chain.logo}</span>
-                        <span style={{ fontWeight: 'bold' }}>{chain.name}</span>
-                      </label>
-                    ))}
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          animation: `pulse 2s ease-in-out ${index * 0.2}s infinite`
+                        }}>
+                          <div style={{ fontSize: '1.5rem', marginBottom: 'var(--space-1)' }}>{chain.logo}</div>
+                          <div style={{ 
+                            fontSize: 'var(--font-size-xs)', 
+                            color: 'var(--color-text-tertiary)'
+                          }}>
+                            {chain.name}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <p style={{ 
+                      color: 'var(--color-text-secondary)',
+                      fontSize: 'var(--font-size-sm)',
+                      margin: 0
+                    }}>
+                      Discovering DeFi positions, tokens, and liquidity pools...
+                    </p>
+                  </div>
+                  
+                  <div style={{
+                    fontSize: 'var(--font-size-sm)',
+                    color: 'var(--color-text-tertiary)'
+                  }}>
+                    Redirecting to dashboard in a moment...
                   </div>
                 </div>
-
-                <button
-                  onClick={() => setStep(3)}
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
-                    color: 'white',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    padding: '1rem 2rem',
-                    borderRadius: '12px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
-                  }}
-                >
-                  🔍 Analyze Multi-Chain Portfolio →
-                </button>
-              </>
-            )}
-
-            {/* Step 3: Setup Complete */}
-            {step === 3 && (
-              <>
-                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
-                <h1 style={{
-                  fontSize: '2.5rem',
-                  fontWeight: 'bold',
-                  color: 'white',
-                  marginBottom: '1rem'
-                }}>
-                  You're All Set!
-                </h1>
-                <p style={{
-                  fontSize: '1.2rem',
-                  color: '#cbd5e1',
-                  marginBottom: '2rem'
-                }}>
-                  Your liquidity monitoring is now active. Start exploring your dashboard!
-                </p>
-                
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <Link href="/dashboard" style={{
-                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                    color: 'white',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    padding: '1rem 2rem',
-                    borderRadius: '12px',
-                    textDecoration: 'none',
-                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.4)'
+              ) : (
+                <div>
+                  <p style={{
+                    fontSize: 'var(--font-size-lg)',
+                    color: 'var(--color-success)',
+                    marginBottom: 'var(--space-6)'
                   }}>
-                    📊 Go to Dashboard
-                  </Link>
+                    🎉 Analysis complete! Your dashboard is ready.
+                  </p>
                   
-                  <Link href="/dashboard/pools" style={{
-                    background: 'rgba(255,255,255,0.1)',
-                    color: 'white',
-                    fontSize: '1.1rem',
-                    fontWeight: '600',
-                    padding: '1rem 2rem',
-                    borderRadius: '12px',
-                    textDecoration: 'none',
-                    border: '1px solid rgba(255,255,255,0.2)'
-                  }}>
-                    🏊 View Pools
-                  </Link>
+                  <div className="flex gap-4 justify-center flex-wrap">
+                    <Link href="/dashboard" className="btn btn-primary btn-lg">
+                      📊 Go to Dashboard
+                    </Link>
+                    
+                    <Link href="/dashboard/pools" className="btn btn-secondary">
+                      🏊 View Pools
+                    </Link>
+                  </div>
                 </div>
-              </>
-            )}
+              )}
+            </div>
+          )}
 
-          </div>
         </div>
-      </div>
-    </>
+      </main>
+
+      {/* Footer */}
+      <footer style={{
+        background: 'var(--color-surface)',
+        borderTop: '1px solid var(--color-border)',
+        padding: 'var(--space-8) 0',
+        marginTop: 'var(--space-16)'
+      }}>
+        <div className="container" style={{ textAlign: 'center' }}>
+          <p style={{ 
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-tertiary)',
+            margin: 0
+          }}>
+            © 2025 LiquidFlow. Professional DeFi portfolio management platform.
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 } 

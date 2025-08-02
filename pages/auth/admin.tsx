@@ -2,6 +2,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import { getUserRole, getUserPermissions } from '../../lib/privy-config';
 
 export default function AdminAuth() {
@@ -10,79 +11,6 @@ export default function AdminAuth() {
   const router = useRouter();
   const [userRole, setUserRole] = useState<'customer' | 'admin' | 'super_admin'>('customer');
   const [loading, setLoading] = useState(true);
-
-  // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
-  const styles = {
-    page: {
-      minHeight: '100vh',
-      background: '#ffffff',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      color: '#000000',
-      padding: '2rem 1rem'
-    },
-    container: {
-      maxWidth: '600px',
-      margin: '0 auto',
-      background: '#ffffff',
-      borderRadius: '1rem',
-      border: '2px solid #e5e7eb',
-      padding: '2rem',
-      textAlign: 'center' as const
-    },
-    title: {
-      fontSize: '2rem',
-      fontWeight: 'bold',
-      color: '#000000',
-      marginBottom: '1rem'
-    },
-    subtitle: {
-      color: '#666666',
-      fontSize: '1rem',
-      marginBottom: '2rem'
-    },
-    button: {
-      background: '#dc2626',
-      color: '#ffffff',
-      padding: '1rem 2rem',
-      borderRadius: '0.5rem',
-      border: 'none',
-      fontSize: '1rem',
-      fontWeight: 'bold',
-      cursor: 'pointer',
-      marginBottom: '1rem'
-    },
-    successCard: {
-      background: '#f0fdf4',
-      border: '2px solid #16a34a',
-      borderRadius: '1rem',
-      padding: '2rem',
-      marginBottom: '2rem'
-    },
-    errorCard: {
-      background: '#fef2f2',
-      border: '2px solid #dc2626',
-      borderRadius: '1rem',
-      padding: '2rem',
-      marginBottom: '2rem'
-    },
-    roleCard: {
-      background: '#f9fafb',
-      border: '2px solid #e5e7eb',
-      borderRadius: '1rem',
-      padding: '1rem',
-      marginBottom: '1rem'
-    },
-    homeBtn: {
-      background: '#16a34a',
-      color: '#ffffff',
-      padding: '0.5rem 1rem',
-      borderRadius: '0.5rem',
-      textDecoration: 'none',
-      fontWeight: 'bold',
-      display: 'inline-block',
-      marginBottom: '2rem'
-    }
-  };
 
   useEffect(() => {
     if (ready) {
@@ -131,188 +59,398 @@ export default function AdminAuth() {
 
   if (loading) {
     return (
-      <div style={styles.page}>
-        <div style={styles.container}>
-          <h1 style={styles.title}>🔄 Loading...</h1>
-          <p style={styles.subtitle}>Initializing authentication system</p>
-        </div>
+      <div style={{ minHeight: '100vh' }}>
+        <Head>
+          <title>Loading - LiquidFlow Admin</title>
+        </Head>
+        
+        {/* Premium Navigation */}
+        <nav className="nav" style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          padding: 'var(--space-4) 0'
+        }}>
+          <div className="container flex justify-between items-center">
+            <Link href="/" style={{
+              fontSize: 'var(--font-size-2xl)',
+              fontWeight: '800',
+              color: 'var(--color-text-primary)',
+              textDecoration: 'none',
+              letterSpacing: '-0.025em'
+            }}>
+              LiquidFlow
+            </Link>
+            
+            <Link href="/" className="nav-link">
+              🏠 Back to Home
+            </Link>
+          </div>
+        </nav>
+        
+        <main className="container" style={{ 
+          padding: 'var(--space-16) var(--space-4)',
+          maxWidth: '600px',
+          margin: '0 auto',
+          textAlign: 'center'
+        }}>
+          <div className="card card-elevated" style={{ padding: 'var(--space-8)' }}>
+            <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>🔄</div>
+            <h1 style={{ marginBottom: 'var(--space-2)' }}>Loading...</h1>
+            <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>
+              Initializing authentication system
+            </p>
+          </div>
+        </main>
       </div>
     );
   }
 
   return (
-    <>
+    <div style={{ minHeight: '100vh' }}>
       <Head>
         <title>Admin Authentication - LiquidFlow</title>
         <meta name="description" content="Secure admin access for LiquidFlow portfolio management" />
       </Head>
       
-      <div style={styles.page}>
-        <a href="/" style={styles.homeBtn}>🏠 Back to Home</a>
-        
-        <div style={styles.container}>
+      {/* Premium Navigation */}
+      <nav className="nav" style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
+        padding: 'var(--space-4) 0'
+      }}>
+        <div className="container flex justify-between items-center">
+          <Link href="/" style={{
+            fontSize: 'var(--font-size-2xl)',
+            fontWeight: '800',
+            color: 'var(--color-text-primary)',
+            textDecoration: 'none',
+            letterSpacing: '-0.025em'
+          }}>
+            LiquidFlow
+          </Link>
+          
+          <Link href="/" className="nav-link">
+            🏠 Back to Home
+          </Link>
+        </div>
+      </nav>
+      
+      <main className="container" style={{ 
+        padding: 'var(--space-16) var(--space-4)',
+        maxWidth: '600px',
+        margin: '0 auto'
+      }}>
+        <div className="card card-elevated" style={{ 
+          padding: 'var(--space-8)',
+          textAlign: 'center'
+        }}>
           {!authenticated ? (
-            <>
-              <h1 style={styles.title}>🏢 Admin Access</h1>
-              <p style={styles.subtitle}>
+            <div className="animate-fade-in">
+              <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>🏢</div>
+              <h1 style={{ marginBottom: 'var(--space-4)' }}>
+                Admin Access
+              </h1>
+              <p style={{
+                fontSize: 'var(--font-size-lg)',
+                color: 'var(--color-text-secondary)',
+                marginBottom: 'var(--space-6)',
+                lineHeight: '1.6'
+              }}>
                 Connect your admin wallet or use email to access portfolio management features
               </p>
               
-              <div style={{
-                background: '#f0f9ff',
-                border: '2px solid #0ea5e9',
-                borderRadius: '1rem',
-                padding: '1rem',
-                marginBottom: '2rem'
+              {/* Security Features Card */}
+              <div className="card" style={{
+                background: 'var(--color-info-light)',
+                border: `1px solid var(--color-info)`,
+                padding: 'var(--space-6)',
+                marginBottom: 'var(--space-6)'
               }}>
-                <h3 style={{ color: '#0ea5e9', marginBottom: '0.5rem' }}>🔐 Secure Authentication</h3>
-                <p style={{ color: '#666666', fontSize: '0.875rem', margin: 0 }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'var(--color-info)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 'var(--font-size-lg)',
+                    color: '#ffffff'
+                  }}>
+                    🔐
+                  </div>
+                  <h3 style={{ margin: 0, color: 'var(--color-info)' }}>
+                    Secure Authentication
+                  </h3>
+                </div>
+                
+                <div style={{ 
+                  textAlign: 'left',
+                  fontSize: 'var(--font-size-sm)',
+                  color: 'var(--color-text-secondary)',
+                  lineHeight: '1.6'
+                }}>
                   • Multi-wallet support (MetaMask, Coinbase, WalletConnect)<br/>
                   • Solana wallets (Phantom, Solflare)<br/>
                   • Email-based authentication<br/>
                   • Automatic role detection
-                </p>
+                </div>
               </div>
               
-              <button onClick={handleLogin} style={styles.button}>
+              <button 
+                onClick={handleLogin} 
+                className="btn btn-primary btn-lg"
+                style={{
+                  fontSize: 'var(--font-size-lg)',
+                  padding: 'var(--space-4) var(--space-8)'
+                }}
+              >
                 🚀 Connect & Login
               </button>
-            </>
+            </div>
           ) : (
-            <>
+            <div className="animate-fade-in">
               {userRole === 'admin' || userRole === 'super_admin' ? (
-                <div style={styles.successCard}>
-                  <h1 style={styles.title}>✅ Admin Access Granted</h1>
-                  <p style={styles.subtitle}>
-                    Welcome! You have been authenticated as an administrator.
-                  </p>
+                <div>
+                  {/* Success Header */}
+                  <div style={{ marginBottom: 'var(--space-6)' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>✅</div>
+                    <h1 style={{ marginBottom: 'var(--space-2)' }}>
+                      Admin Access Granted
+                    </h1>
+                    <p style={{
+                      fontSize: 'var(--font-size-base)',
+                      color: 'var(--color-text-secondary)',
+                      margin: 0
+                    }}>
+                      Welcome! You have been authenticated as an administrator.
+                    </p>
+                  </div>
                   
-                  <div style={styles.roleCard}>
-                    <h3 style={{ color: '#000000', marginBottom: '0.5rem' }}>👤 Your Access Level</h3>
-                    <div style={{
-                      background: userRole === 'super_admin' ? '#dc2626' : '#f59e0b',
-                      color: '#ffffff',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '0.5rem',
-                      fontWeight: 'bold',
-                      marginBottom: '1rem'
+                  {/* Access Level Card */}
+                  <div className="card" style={{
+                    background: 'var(--color-success-light)',
+                    border: `1px solid var(--color-success)`,
+                    padding: 'var(--space-6)',
+                    marginBottom: 'var(--space-6)'
+                  }}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: 'var(--radius-lg)',
+                        background: 'var(--color-success)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 'var(--font-size-lg)',
+                        color: '#ffffff'
+                      }}>
+                        👤
+                      </div>
+                      <h3 style={{ margin: 0, color: 'var(--color-success)' }}>
+                        Your Access Level
+                      </h3>
+                    </div>
+                    
+                    <div className={`badge ${userRole === 'super_admin' ? 'badge-error' : 'badge-warning'}`} style={{
+                      fontSize: 'var(--font-size-base)',
+                      padding: 'var(--space-3) var(--space-4)',
+                      marginBottom: 'var(--space-4)',
+                      fontWeight: '700'
                     }}>
                       {userRole === 'super_admin' ? '🔴 SUPER ADMIN' : '🟡 ADMIN'}
                     </div>
                     
-                    <div style={{ textAlign: 'left', fontSize: '0.875rem', color: '#666666' }}>
-                      <strong>Connected:</strong><br/>
-                      📧 {user?.email?.address || 'No email'}<br/>
-                      💼 {user?.wallet?.address ? 
-                        `${user.wallet.address.slice(0, 8)}...${user.wallet.address.slice(-8)}` : 
-                        'No wallet connected'}<br/>
-                      🌐 {user?.wallet?.chainType || 'Unknown chain'}
+                    <div style={{ 
+                      textAlign: 'left',
+                      fontSize: 'var(--font-size-sm)',
+                      color: 'var(--color-text-secondary)',
+                      lineHeight: '1.6'
+                    }}>
+                      <div style={{ marginBottom: 'var(--space-1)' }}>
+                        <strong>Connected:</strong>
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', marginBottom: 'var(--space-1)' }}>
+                        📧 {user?.email?.address || 'No email'}
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', marginBottom: 'var(--space-1)' }}>
+                        💼 {user?.wallet?.address ? 
+                          `${user.wallet.address.slice(0, 8)}...${user.wallet.address.slice(-8)}` : 
+                          'No wallet connected'}
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)' }}>
+                        🌐 {user?.wallet?.chainType || 'ethereum'}
+                      </div>
                     </div>
                   </div>
                   
-                  <p style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '2rem' }}>
+                  <p style={{ 
+                    fontSize: 'var(--font-size-sm)',
+                    color: 'var(--color-text-tertiary)',
+                    marginBottom: 'var(--space-6)'
+                  }}>
                     Redirecting to admin dashboard in a moment...
                   </p>
                   
-                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                    <a 
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 justify-center flex-wrap">
+                    <Link 
                       href="/admin/portfolios"
+                      className="btn btn-primary"
                       style={{
-                        background: '#dc2626',
-                        color: '#ffffff',
-                        padding: '1rem 2rem',
-                        borderRadius: '0.5rem',
-                        textDecoration: 'none',
-                        fontWeight: 'bold'
+                        padding: 'var(--space-3) var(--space-6)',
+                        textDecoration: 'none'
                       }}
                     >
                       💼 Go to Admin Dashboard
-                    </a>
-                    <button onClick={handleLogout} style={{
-                      background: '#ffffff',
-                      color: '#dc2626',
-                      border: '2px solid #dc2626',
-                      padding: '1rem 2rem',
-                      borderRadius: '0.5rem',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}>
+                    </Link>
+                    <button 
+                      onClick={handleLogout} 
+                      className="btn btn-secondary"
+                      style={{
+                        padding: 'var(--space-3) var(--space-6)'
+                      }}
+                    >
                       🚪 Logout
                     </button>
                   </div>
                 </div>
               ) : (
-                <div style={styles.errorCard}>
-                  <h1 style={styles.title}>❌ Access Denied</h1>
-                  <p style={styles.subtitle}>
-                    Your wallet is not authorized for admin access.
-                  </p>
+                <div>
+                  {/* Access Denied Header */}
+                  <div style={{ marginBottom: 'var(--space-6)' }}>
+                    <div style={{ fontSize: '4rem', marginBottom: 'var(--space-4)' }}>❌</div>
+                    <h1 style={{ marginBottom: 'var(--space-2)' }}>
+                      Access Denied
+                    </h1>
+                    <p style={{
+                      fontSize: 'var(--font-size-base)',
+                      color: 'var(--color-text-secondary)',
+                      margin: 0
+                    }}>
+                      Your wallet is not authorized for admin access.
+                    </p>
+                  </div>
                   
-                  <div style={styles.roleCard}>
-                    <h3 style={{ color: '#000000', marginBottom: '0.5rem' }}>👤 Your Current Access</h3>
-                    <div style={{
-                      background: '#16a34a',
-                      color: '#ffffff',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '0.5rem',
-                      fontWeight: 'bold',
-                      marginBottom: '1rem'
+                  {/* Customer Access Card */}
+                  <div className="card" style={{
+                    background: 'var(--color-error-light)',
+                    border: `1px solid var(--color-error)`,
+                    padding: 'var(--space-6)',
+                    marginBottom: 'var(--space-6)'
+                  }}>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: 'var(--radius-lg)',
+                        background: 'var(--color-error)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 'var(--font-size-lg)',
+                        color: '#ffffff'
+                      }}>
+                        👤
+                      </div>
+                      <h3 style={{ margin: 0, color: 'var(--color-error)' }}>
+                        Your Current Access
+                      </h3>
+                    </div>
+                    
+                    <div className="badge badge-success" style={{
+                      fontSize: 'var(--font-size-base)',
+                      padding: 'var(--space-3) var(--space-4)',
+                      marginBottom: 'var(--space-4)',
+                      fontWeight: '700'
                     }}>
                       🟢 CUSTOMER ACCESS
                     </div>
                     
-                    <p style={{ fontSize: '0.875rem', color: '#666666' }}>
+                    <p style={{ 
+                      fontSize: 'var(--font-size-sm)',
+                      color: 'var(--color-text-secondary)',
+                      margin: 0,
+                      lineHeight: '1.6'
+                    }}>
                       You can still use LiquidFlow as a regular user to view your own portfolio and research other wallets.
                     </p>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                    <a 
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 justify-center flex-wrap">
+                    <Link 
                       href="/onboarding-new"
+                      className="btn btn-success"
                       style={{
-                        background: '#16a34a',
-                        color: '#ffffff',
-                        padding: '1rem 2rem',
-                        borderRadius: '0.5rem',
-                        textDecoration: 'none',
-                        fontWeight: 'bold'
+                        padding: 'var(--space-3) var(--space-6)',
+                        textDecoration: 'none'
                       }}
                     >
                       👀 Use as Customer
-                    </a>
-                    <button onClick={handleLogout} style={{
-                      background: '#ffffff',
-                      color: '#dc2626',
-                      border: '2px solid #dc2626',
-                      padding: '1rem 2rem',
-                      borderRadius: '0.5rem',
-                      fontWeight: 'bold',
-                      cursor: 'pointer'
-                    }}>
+                    </Link>
+                    <button 
+                      onClick={handleLogout} 
+                      className="btn btn-secondary"
+                      style={{
+                        padding: 'var(--space-3) var(--space-6)'
+                      }}
+                    >
                       🚪 Logout
                     </button>
                   </div>
                 </div>
               )}
-            </>
+            </div>
           )}
           
-          <div style={{
-            background: '#f9fafb',
-            border: '2px solid #e5e7eb',
-            borderRadius: '1rem',
-            padding: '1rem',
-            marginTop: '2rem'
+          {/* Footer Card */}
+          <div className="card" style={{
+            background: 'var(--color-surface)',
+            padding: 'var(--space-4)',
+            marginTop: 'var(--space-8)',
+            textAlign: 'center'
           }}>
-            <h4 style={{ color: '#000000', marginBottom: '0.5rem', fontSize: '0.875rem' }}>
+            <h4 style={{ 
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-text-primary)',
+              marginBottom: 'var(--space-2)',
+              fontWeight: '600'
+            }}>
               🔒 Powered by Privy Authentication
             </h4>
-            <p style={{ color: '#666666', fontSize: '0.75rem', margin: 0 }}>
+            <p style={{ 
+              fontSize: 'var(--font-size-xs)',
+              color: 'var(--color-text-tertiary)',
+              margin: 0
+            }}>
               Secure, decentralized authentication with support for 15+ wallet types and email login
             </p>
           </div>
         </div>
-      </div>
-    </>
+      </main>
+
+      {/* Footer */}
+      <footer style={{
+        background: 'var(--color-surface)',
+        borderTop: '1px solid var(--color-border)',
+        padding: 'var(--space-8) 0',
+        marginTop: 'var(--space-16)'
+      }}>
+        <div className="container" style={{ textAlign: 'center' }}>
+          <p style={{ 
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-text-tertiary)',
+            margin: 0
+          }}>
+            © 2025 LiquidFlow. Professional DeFi portfolio management platform.
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 } 
