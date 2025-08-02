@@ -27,7 +27,7 @@ export default function Home() {
               🏢 Admin Portal
             </a>
             <a href="/onboarding-new" className="btn btn-primary">
-              👀 View Wallet
+              🚀 Launch App
             </a>
           </div>
         </div>
@@ -252,7 +252,7 @@ export default function Home() {
                 marginBottom: 'var(--space-4)',
                 color: 'var(--color-primary)'
               }}>
-                View Wallet
+                Launch App
               </h3>
               <div style={{ marginBottom: 'var(--space-6)' }}>
                 <div className="badge badge-info" style={{ marginBottom: 'var(--space-3)' }}>Read-Only Access</div>
@@ -422,7 +422,7 @@ export default function Home() {
                   Platform
                 </h5>
                 <div className="flex flex-col gap-2">
-                  <a href="/onboarding-new" className="nav-link" style={{ fontSize: 'var(--font-size-sm)' }}>View Wallet</a>
+                  <a href="/onboarding-new" className="nav-link" style={{ fontSize: 'var(--font-size-sm)' }}>Launch App</a>
                   <a href="/auth/admin" className="nav-link" style={{ fontSize: 'var(--font-size-sm)' }}>Admin Portal</a>
                 </div>
               </div>

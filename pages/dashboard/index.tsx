@@ -144,33 +144,6 @@ export default function DashboardPage() {
               ⚙️ Settings
             </a>
             
-            {/* Divider */}
-            <div style={{
-              width: '1px',
-              height: '20px',
-              background: 'var(--color-border)',
-              margin: '0 var(--space-2)'
-            }}></div>
-            
-            {/* Admin Navigation */}
-            <a href="/admin/wallets" className="nav-link" style={{ color: 'var(--color-error)' }}>
-              💳 Wallets
-            </a>
-            <a href="/admin/reports" className="nav-link" style={{ color: 'var(--color-error)' }}>
-              📊 Reports
-            </a>
-            <a href="/admin/portfolios" className="nav-link" style={{ color: 'var(--color-error)' }}>
-              🏢 Admin
-            </a>
-            
-            {/* Divider */}
-            <div style={{
-              width: '1px',
-              height: '20px',
-              background: 'var(--color-border)',
-              margin: '0 var(--space-2)'
-            }}></div>
-            
             {/* Logout */}
             <button 
               onClick={() => {
@@ -388,9 +361,15 @@ export default function DashboardPage() {
                 </div>
                 
                 {/* Real Token Holdings Component */}
-                {walletAddress && (
-                  <TopTokenHoldings walletAddress={walletAddress} maxTokens={5} />
-                )}
+                <div style={{ marginTop: 'var(--space-4)' }}>
+                  {walletAddress ? (
+                    <TopTokenHoldings walletAddress={walletAddress} maxTokens={3} />
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: 'var(--space-4)', color: 'var(--color-text-tertiary)' }}>
+                      Connect wallet to view token holdings
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* DeFi Positions */}
@@ -418,9 +397,15 @@ export default function DashboardPage() {
                 </div>
                 
                 {/* Real DeFi Positions Component */}
-                {walletAddress && (
-                  <DeFiPositions walletAddress={walletAddress} maxPositions={5} />
-                )}
+                <div style={{ marginTop: 'var(--space-4)' }}>
+                  {walletAddress ? (
+                    <DeFiPositions walletAddress={walletAddress} maxPositions={3} />
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: 'var(--space-4)', color: 'var(--color-text-tertiary)' }}>
+                      Connect wallet to view DeFi positions
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
