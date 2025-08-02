@@ -203,6 +203,11 @@ export default function AdminReportsPage() {
 
   // 🔐 CHECK USER SESSION ON LOAD
   useEffect(() => {
+    // Add client-side check for SSR compatibility
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     const userEmail = localStorage.getItem('userEmail');
     const currentWorkspaceId = localStorage.getItem('currentWorkspaceId');
     
@@ -225,6 +230,12 @@ export default function AdminReportsPage() {
   const loadManagedWallets = async (workspaceId?: string) => {
     setIsLoadingWallets(true);
     try {
+      // Add client-side check for SSR compatibility
+      if (typeof window === 'undefined') {
+        setIsLoadingWallets(false);
+        return;
+      }
+      
       // Get current user's email (consistent with portfolio system)
       const userEmail = localStorage.getItem('userEmail');
       
@@ -269,9 +280,11 @@ export default function AdminReportsPage() {
     } catch (error) {
       console.error('❌ Error loading managed wallets for reports:', error);
       // Fallback to workspace-specific mock data
-      const workspaceId = localStorage.getItem('currentWorkspaceId') || 'ws_personal_test';
-      const mockWallets = getWorkspaceMockWallets(workspaceId);
-      setManagedWallets(mockWallets);
+      if (typeof window !== 'undefined') {
+        const workspaceId = localStorage.getItem('currentWorkspaceId') || 'ws_personal_test';
+        const mockWallets = getWorkspaceMockWallets(workspaceId);
+        setManagedWallets(mockWallets);
+      }
     } finally {
       setIsLoadingWallets(false);
     }
@@ -308,6 +321,11 @@ export default function AdminReportsPage() {
   };
 
   const getWorkspaceDisplayName = (): string => {
+    // Add client-side check for SSR compatibility
+    if (typeof window === 'undefined') {
+      return 'Loading Workspace...';
+    }
+    
     const workspaceId = localStorage.getItem('currentWorkspaceId');
     const workspaceNames: { [key: string]: string } = {
       'ws_xtc_company': 'XTC Company',
@@ -520,7 +538,7 @@ export default function AdminReportsPage() {
             <p style={{ margin: 0, color: '#4a5568' }}>
               Generate comprehensive P&L, transfer tracking, and wallet balance reports for tax and accounting purposes
             </p>
-            {localStorage.getItem('userEmail') && (
+            {typeof window !== 'undefined' && localStorage.getItem('userEmail') && (
               <div style={{
                 marginTop: '0.5rem',
                 padding: '0.5rem 1rem',
