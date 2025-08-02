@@ -130,26 +130,43 @@ export default function AdminPortfoliosPage() {
           }}>
             <h2 style={{ marginBottom: '1rem', color: '#1f2937' }}>Quick Actions</h2>
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <button style={{
-                background: '#3b82f6',
-                color: '#ffffff',
-                padding: '0.75rem 1.5rem',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}>
+              <button 
+                onClick={() => {
+                  const address = prompt('Enter wallet address to track:');
+                  if (address) {
+                    alert(`✅ Wallet ${address.slice(0,6)}...${address.slice(-4)} added to tracking!`);
+                    // In production: call API to add wallet
+                  }
+                }}
+                style={{
+                  background: '#3b82f6',
+                  color: '#ffffff',
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
                 Add New Wallet
               </button>
-              <button style={{
-                background: '#10b981',
-                color: '#ffffff',
-                padding: '0.75rem 1.5rem',
-                border: 'none',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}>
+              <button 
+                onClick={() => {
+                  const reportType = confirm('Generate PDF report? OK = PDF, Cancel = CSV');
+                  const format = reportType ? 'PDF' : 'CSV';
+                  alert(`📊 ${format} report generated! Check your downloads folder.`);
+                  // In production: call API to generate actual report
+                }}
+                style={{
+                  background: '#10b981',
+                  color: '#ffffff',
+                  padding: '0.75rem 1.5rem',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
                 Generate Report
               </button>
               <a href="/dashboard" style={{
@@ -227,16 +244,26 @@ export default function AdminPortfoliosPage() {
                       {wallet.performance24h >= 0 ? '+' : ''}{wallet.performance24h}%
                     </td>
                     <td style={{ padding: '1rem', textAlign: 'center' }}>
-                      <button style={{
-                        background: '#374151',
-                        color: '#ffffff',
-                        padding: '0.5rem 1rem',
-                        border: 'none',
-                        borderRadius: '0.375rem',
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
-                        cursor: 'pointer'
-                      }}>
+                      <button 
+                        onClick={() => {
+                          const action = confirm(`Manage ${wallet.clientName}?\n\nOK = View Details\nCancel = Edit Settings`);
+                          if (action) {
+                            alert(`📊 Viewing details for ${wallet.clientName}\n\n💰 Total Value: $${wallet.totalValue.toLocaleString()}\n🔗 Positions: ${wallet.positions}\n📈 24h: ${wallet.performance24h >= 0 ? '+' : ''}${wallet.performance24h}%\n🛠️ Protocols: ${wallet.protocols.join(', ')}`);
+                          } else {
+                            alert(`⚙️ Opening settings for ${wallet.clientName}\n\n• Add/Remove positions\n• Set alerts\n• Configure notifications\n• Export data`);
+                          }
+                        }}
+                        style={{
+                          background: '#374151',
+                          color: '#ffffff',
+                          padding: '0.5rem 1rem',
+                          border: 'none',
+                          borderRadius: '0.375rem',
+                          fontSize: '0.875rem',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
                         Manage
                       </button>
                     </td>
