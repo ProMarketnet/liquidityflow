@@ -106,34 +106,39 @@ export default function AdminPortfoliosPage() {
   return (
     <>
       <Head>
-        <title>Portfolio Management - LiquidFlow v3.0.{Date.now()}</title>
+        <title>Portfolio Overview - LiquidFlow</title>
       </Head>
       
-      {/* TIMESTAMP: {new Date().toISOString()} - Simple Portfolio Management */}
       <div style={{
         minHeight: '100vh',
         background: '#f8fafc',
         padding: '2rem 1rem'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          
-          {/* Header with Auth Status */}
-          <div style={{ marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h1 style={{ 
-                fontSize: '2.5rem', 
-                fontWeight: 'bold', 
-                color: '#1f2937',
-                margin: 0
-              }}>
-                Portfolio Management
-              </h1>
+        {/* Professional Navigation */}
+        <nav style={{
+          background: '#ffffff',
+          borderBottom: '2px solid #e5e7eb',
+          padding: '1rem 0',
+          marginBottom: '2rem',
+          borderRadius: '0.5rem'
+        }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>
+              🏢 LiquidFlow Admin
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+              <a href="/" style={{ color: '#059669', fontWeight: '600', textDecoration: 'none' }}>🏠 Home</a>
+              <a href="/admin/wallets" style={{ color: '#6b7280', fontWeight: '600', textDecoration: 'none' }}>💳 Manage Wallets</a>
+              <a href="/admin/reports" style={{ color: '#6b7280', fontWeight: '600', textDecoration: 'none' }}>📊 Trading Reports</a>
+              <a href="/admin/analytics" style={{ color: '#6b7280', fontWeight: '600', textDecoration: 'none' }}>📈 Analytics</a>
+              <a href="/dashboard" style={{ color: '#6b7280', fontWeight: '600', textDecoration: 'none' }}>🖥️ Dashboard</a>
+              <a href="/dashboard/pools" style={{ color: '#6b7280', fontWeight: '600', textDecoration: 'none' }}>🔍 Pool Lookup</a>
               
               {ready && (
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <>
                   {authenticated && user ? (
                     <>
-                      <span style={{ color: '#059669', fontWeight: '600' }}>
+                      <span style={{ color: '#059669', fontWeight: '600', fontSize: '0.9rem' }}>
                         ✅ {user.email?.address || user.wallet?.address?.slice(0, 6) + '...' + user.wallet?.address?.slice(-4)}
                       </span>
                       <button 
@@ -149,7 +154,7 @@ export default function AdminPortfoliosPage() {
                           fontSize: '0.9rem'
                         }}
                       >
-                        🚪 Sign Out
+                        🚪 Logout
                       </button>
                     </>
                   ) : (
@@ -158,89 +163,113 @@ export default function AdminPortfoliosPage() {
                       style={{
                         background: '#3b82f6',
                         color: '#ffffff',
-                        padding: '0.75rem 1.5rem',
+                        padding: '0.5rem 1rem',
                         border: 'none',
                         borderRadius: '0.375rem',
                         fontWeight: '600',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        fontSize: '0.9rem'
                       }}
                     >
                       🔑 Sign In
                     </button>
                   )}
-                </div>
+                </>
               )}
             </div>
-            
+          </div>
+        </nav>
+
+        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          
+          {/* Header */}
+          <div style={{ marginBottom: '2rem' }}>
+            <h1 style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: 'bold', 
+              color: '#1f2937',
+              marginBottom: '0.5rem'
+            }}>
+              Portfolio Overview
+            </h1>
             <p style={{ 
               color: '#6b7280', 
               fontSize: '1.1rem'
             }}>
-              {authenticated ? 'Managing your DeFi portfolios and positions' : 'Overview of sample DeFi portfolios'}
+              {authenticated ? 'Managing your DeFi portfolios and positions' : 'Sample DeFi portfolio overview'}
             </p>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Access Cards */}
           <div style={{ 
-            background: '#ffffff',
-            padding: '1.5rem',
-            borderRadius: '0.75rem',
-            marginBottom: '2rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '1.5rem',
+            marginBottom: '2rem'
           }}>
-            <h2 style={{ marginBottom: '1rem', color: '#1f2937' }}>Quick Actions</h2>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button 
-                onClick={() => handleAuthenticatedAction('Add New Wallet', () => {
-                  const address = prompt('Enter wallet address to track:');
-                  if (address) {
-                    alert(`✅ Wallet ${address.slice(0,6)}...${address.slice(-4)} added to your portfolio!`);
-                    // TODO: Add API call to save wallet to user's account
-                  }
-                })}
-                style={{
-                  background: '#3b82f6',
-                  color: '#ffffff',
-                  padding: '0.75rem 1.5rem',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
-              >
-                Add New Wallet
-              </button>
-              <button 
-                onClick={() => handleAuthenticatedAction('Generate Report', () => {
-                  const reportType = confirm('Generate PDF report? OK = PDF, Cancel = CSV');
-                  const format = reportType ? 'PDF' : 'CSV';
-                  alert(`📊 ${format} report generated for ${user?.email?.address || user?.wallet?.address}! Check your downloads.`);
-                  // TODO: Add API call to generate real report
-                })}
-                style={{
-                  background: '#10b981',
-                  color: '#ffffff',
-                  padding: '0.75rem 1.5rem',
-                  border: 'none',
-                  borderRadius: '0.5rem',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
-              >
-                Generate Report
-              </button>
-              <a href="/dashboard" style={{
-                background: '#8b5cf6',
-                color: '#ffffff',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '0.5rem',
-                fontWeight: '600',
-                textDecoration: 'none',
-                display: 'inline-block'
+            <a href="/admin/wallets" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: '#ffffff',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                border: '2px solid #f3f4f6',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
               }}>
-                View Dashboard
-              </a>
-            </div>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💳</div>
+                <h3 style={{ color: '#1f2937', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Wallet Management</h3>
+                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Add, remove, and manage all client wallets with different access levels</p>
+              </div>
+            </a>
+
+            <a href="/admin/reports" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: '#ffffff',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                border: '2px solid #f3f4f6',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📊</div>
+                <h3 style={{ color: '#1f2937', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Trading Reports</h3>
+                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Generate comprehensive P&L, transfer tracking, and wallet balance reports</p>
+              </div>
+            </a>
+
+            <a href="/admin/analytics" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: '#ffffff',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                border: '2px solid #f3f4f6',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>📈</div>
+                <h3 style={{ color: '#1f2937', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Platform Analytics</h3>
+                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>View comprehensive platform analytics and performance metrics</p>
+              </div>
+            </a>
+
+            <a href="/dashboard/pools" style={{ textDecoration: 'none' }}>
+              <div style={{ 
+                background: '#ffffff',
+                padding: '1.5rem',
+                borderRadius: '0.75rem',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                border: '2px solid #f3f4f6',
+                transition: 'all 0.2s',
+                cursor: 'pointer'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔍</div>
+                <h3 style={{ color: '#1f2937', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Pool Lookup</h3>
+                <p style={{ color: '#6b7280', fontSize: '0.9rem' }}>Look up any DEX pair on any DeFi protocol across all chains</p>
+              </div>
+            </a>
           </div>
 
           {/* Portfolios Table */}
