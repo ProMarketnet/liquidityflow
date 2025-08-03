@@ -1623,7 +1623,14 @@ export default function AdminReportsPage() {
                         </div>
                       ` : `<p>Key statistics not available</p>`}
                       
-                      <p style="font-size: 0.875rem; color: #16a34a; margin-top: 30px; padding: 15px; background: #dcfce7; border-radius: 8px;">
+                      <p style={{ 
+                        fontSize: '0.875rem', 
+                        color: '#16a34a', 
+                        marginTop: '30px', 
+                        padding: '15px', 
+                        background: '#dcfce7', 
+                        borderRadius: '8px' 
+                      }}>
                         <strong>✅ Professional Portfolio Analytics:</strong> This comprehensive report uses real blockchain data from Moralis API to provide institutional-grade portfolio analysis with detailed performance metrics, asset allocation, and risk statistics.
                       </p>
                     </div>
