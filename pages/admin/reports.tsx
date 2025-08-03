@@ -421,28 +421,233 @@ export default function AdminReportsPage() {
   };
 
   const exportToPDF = (wallet: WalletReport) => {
-    // In production, this would generate a PDF using libraries like jsPDF or Puppeteer
-    alert(`📄 Exporting ${wallet.clientName} P&L report to PDF...`);
+    try {
+      // Create comprehensive PDF content as HTML
+      const reportHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${wallet.clientName} - ${reportType.toUpperCase()} Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; }
+            .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0; }
+            .summary-card { padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center; }
+            .big-number { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; }
+            .positive { color: #16a34a; }
+            .negative { color: #dc2626; }
+            .neutral { color: #6b7280; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; font-size: 0.875rem; }
+            th { background-color: #f3f4f6; font-weight: bold; }
+            .chain-breakdown { margin: 30px 0; }
+            .footer { margin-top: 40px; text-align: center; font-size: 0.75rem; color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>📋 ${wallet.clientName} - ${reportType.toUpperCase()} Report</h1>
+            <p>Period: ${reportPeriod} | Address: ${wallet.address}</p>
+            <p>Generated: ${new Date().toLocaleString()}</p>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-card">
+              <div class="big-number ${wallet.totalPnL > 0 ? 'positive' : wallet.totalPnL < 0 ? 'negative' : 'neutral'}">
+                ${formatCurrency(wallet.totalPnL)}
+              </div>
+              <div>Total P&L</div>
+            </div>
+            <div class="summary-card">
+              <div class="big-number">${formatCurrency(wallet.currentBalance)}</div>
+              <div>Current Balance</div>
+            </div>
+            <div class="summary-card">
+              <div class="big-number">${formatCurrency(wallet.tradingVolume)}</div>
+              <div>Trading Volume</div>
+            </div>
+            <div class="summary-card">
+              <div class="big-number negative">${formatCurrency(wallet.fees)}</div>
+              <div>Total Fees</div>
+            </div>
+            <div class="summary-card">
+              <div class="big-number">${wallet.transactions.length}</div>
+              <div>Transfers (${wallet.transfersIn} in, ${wallet.transfersOut} out)</div>
+            </div>
+            <div class="summary-card">
+              <div class="big-number positive">${formatCurrency(wallet.realizedPnL)}</div>
+              <div>Realized P&L</div>
+            </div>
+          </div>
+
+          <div class="chain-breakdown">
+            <h3>🌐 Multi-Chain Breakdown</h3>
+            <table>
+              <thead>
+                <tr><th>Chain</th><th>P&L</th><th>Volume</th><th>Fees</th><th>Transactions</th></tr>
+              </thead>
+              <tbody>
+                ${wallet.chainBreakdown.map(chain => `
+                  <tr>
+                    <td>${chain.chainName}</td>
+                    <td class="${chain.pnl > 0 ? 'positive' : chain.pnl < 0 ? 'negative' : 'neutral'}">${formatCurrency(chain.pnl)}</td>
+                    <td>${formatCurrency(chain.volume)}</td>
+                    <td class="negative">${formatCurrency(chain.fees)}</td>
+                    <td>${chain.transactions}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <div>
+            <h3>📋 Recent Transactions</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th><th>Type</th><th>Token In</th><th>Token Out</th><th>USD Value</th><th>Gas Fee</th><th>Chain</th><th>Protocol</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${wallet.transactions.slice(0, 50).map(tx => `
+                  <tr>
+                    <td>${new Date(tx.timestamp).toLocaleDateString()}</td>
+                    <td>${tx.type}</td>
+                    <td>${tx.tokenIn} ${tx.amountIn}</td>
+                    <td>${tx.tokenOut} ${tx.amountOut}</td>
+                    <td>${formatCurrency(tx.usdValue)}</td>
+                    <td>${formatCurrency(tx.gasFee)}</td>
+                    <td>${tx.chain}</td>
+                    <td>${tx.protocol || 'N/A'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ${wallet.transactions.length > 50 ? `<p><em>Showing first 50 of ${wallet.transactions.length} transactions. Download CSV for complete data.</em></p>` : ''}
+          </div>
+
+          <div class="footer">
+            <p>Generated by LiquidityFlow Portfolio Management System</p>
+            <p>This report is for informational purposes only and should not be considered financial advice.</p>
+          </div>
+        </body>
+        </html>
+      `;
+
+      // Create blob and download
+      const blob = new Blob([reportHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${wallet.clientName.replace(/\s+/g, '_')}_${reportType}_report_${new Date().toISOString().split('T')[0]}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Show success message
+      alert(`📄 ${wallet.clientName} ${reportType.toUpperCase()} report exported successfully!\n\nFile: ${link.download}\n\nTip: You can print this HTML file to PDF from your browser.`);
+      
+    } catch (error) {
+      console.error('PDF export error:', error);
+      alert('❌ Error generating PDF report. Please try again.');
+    }
   };
 
   const exportToCSV = (wallet: WalletReport) => {
-    // In production, this would generate CSV data
-    const csvData = wallet.transactions.map(tx => ({
-      Date: new Date(tx.timestamp).toLocaleDateString(),
-      Type: tx.type,
-      'Token In': tx.tokenIn,
-      'Amount In': tx.amountIn,
-      'Token Out': tx.tokenOut,
-      'Amount Out': tx.amountOut,
-      'USD Value': tx.usdValue,
-      'Gas Fee': tx.gasFee,
-      Chain: tx.chain,
-      Protocol: tx.protocol || '',
-      Hash: tx.hash
-    }));
-    
-    console.log('CSV Data:', csvData);
-    alert(`📊 Exporting ${wallet.clientName} transactions to CSV...`);
+    try {
+      // Create comprehensive CSV data
+      const csvHeaders = [
+        'Date',
+        'Type', 
+        'Token In',
+        'Amount In',
+        'Token Out',
+        'Amount Out',
+        'USD Value',
+        'Gas Fee',
+        'Chain',
+        'Protocol',
+        'Transaction Hash'
+      ];
+
+      const csvRows = wallet.transactions.map(tx => [
+        new Date(tx.timestamp).toISOString(),
+        tx.type,
+        tx.tokenIn || '',
+        tx.amountIn.toString(),
+        tx.tokenOut || '',
+        tx.amountOut.toString(),
+        tx.usdValue.toString(),
+        tx.gasFee.toString(),
+        tx.chain,
+        tx.protocol || '',
+        tx.hash
+      ]);
+
+      // Add summary row at the top
+      const summaryRows = [
+        ['SUMMARY DATA'],
+        ['Report Type', reportType.toUpperCase()],
+        ['Client Name', wallet.clientName],
+        ['Address', wallet.address],
+        ['Report Period', reportPeriod],
+        ['Generated Date', new Date().toISOString()],
+        ['Total P&L', formatCurrency(wallet.totalPnL)],
+        ['Current Balance', formatCurrency(wallet.currentBalance)],
+        ['Trading Volume', formatCurrency(wallet.tradingVolume)],
+        ['Total Fees', formatCurrency(wallet.fees)],
+        ['Total Transactions', wallet.transactions.length.toString()],
+        ['Transfers In', wallet.transfersIn.toString()],
+        ['Transfers Out', wallet.transfersOut.toString()],
+        ['Realized P&L', formatCurrency(wallet.realizedPnL)],
+        [''],
+        ['CHAIN BREAKDOWN'],
+        ...wallet.chainBreakdown.map(chain => [
+          chain.chainName,
+          formatCurrency(chain.pnl),
+          formatCurrency(chain.volume),
+          formatCurrency(chain.fees),
+          chain.transactions.toString()
+        ]),
+        [''],
+        ['TRANSACTION DATA'],
+        csvHeaders
+      ];
+
+      // Combine all data
+      const allRows = [...summaryRows, ...csvRows];
+      
+      // Convert to CSV string
+      const csvContent = allRows.map(row => 
+        row.map(field => {
+          // Escape quotes and wrap in quotes if contains comma
+          const escaped = String(field).replace(/"/g, '""');
+          return escaped.includes(',') || escaped.includes('\n') || escaped.includes('"') 
+            ? `"${escaped}"` 
+            : escaped;
+        }).join(',')
+      ).join('\n');
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${wallet.clientName.replace(/\s+/g, '_')}_${reportType}_transactions_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Show success message
+      alert(`📊 ${wallet.clientName} transaction data exported successfully!\n\nFile: ${link.download}\nRecords: ${wallet.transactions.length} transactions\n\nIncludes: Summary data, chain breakdown, and complete transaction history.`);
+      
+    } catch (error) {
+      console.error('CSV export error:', error);
+      alert('❌ Error generating CSV report. Please try again.');
+    }
   };
 
   const formatCurrency = (amount: number) => {
