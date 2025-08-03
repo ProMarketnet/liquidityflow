@@ -46,6 +46,7 @@ interface ChainReport {
 
 export default function AdminReportsPage() {
   const [selectedWallet, setSelectedWallet] = useState<string>('all');
+  const [selectedWallets, setSelectedWallets] = useState<string[]>([]);
   const [reportPeriod, setReportPeriod] = useState<string>('30d');
   const [reportType, setReportType] = useState<string>('pnl');
   const [reports, setReports] = useState<WalletReport[]>([]);
@@ -222,6 +223,19 @@ export default function AdminReportsPage() {
   }, []);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      loadManagedWallets();
+    }
+  }, []);
+
+  // Auto-select all wallets when first loaded
+  useEffect(() => {
+    if (managedWallets.length > 0 && selectedWallets.length === 0) {
+      setSelectedWallets(managedWallets.map(w => w.id));
+    }
+  }, [managedWallets]);
+
+  useEffect(() => {
     if (managedWallets.length > 0) {
       loadReports();
     }
@@ -319,27 +333,31 @@ export default function AdminReportsPage() {
 
   const loadReports = async () => {
     if (managedWallets.length === 0) return;
+    if (selectedWallets.length === 0) {
+      alert('⚠️ Please select at least one wallet/pair to generate reports for.');
+      return;
+    }
     
     setIsLoading(true);
     try {
-      console.log(`📊 Loading reports for: ${selectedWallet} (${reportPeriod}, ${reportType})`);
+      console.log(`📊 Loading reports for ${selectedWallets.length} selected wallet(s): ${selectedWallets.join(', ')} (${reportPeriod}, ${reportType})`);
       
-      // Filter to only include managed wallets in reports
-      const availableWallets = selectedWallet === 'all' 
-        ? managedWallets 
-        : managedWallets.filter(w => w.address === selectedWallet);
+      // Filter to only include selected wallets in reports
+      const selectedWalletData = managedWallets.filter(w => selectedWallets.includes(w.id));
 
-      if (availableWallets.length === 0) {
-        console.warn('⚠️ No managed wallets found for selected criteria');
+      if (selectedWalletData.length === 0) {
+        console.warn('⚠️ No selected wallets found');
         setReports([]);
         return;
       }
 
-      // In production, this would call your reports API with managed wallet addresses
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      console.log(`📋 Generating reports for: ${selectedWalletData.map(w => w.clientName).join(', ')}`);
+
+      // In production, this would call your reports API with selected wallet addresses
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
       
-      // Generate reports only for managed wallets
-      const mockReports: WalletReport[] = availableWallets.map(wallet => ({
+      // Generate reports only for selected wallets
+      const mockReports: WalletReport[] = selectedWalletData.map(wallet => ({
         address: wallet.address,
         clientName: wallet.clientName,
         reportPeriod: reportPeriod,
@@ -420,134 +438,165 @@ export default function AdminReportsPage() {
     }
   };
 
+  // 🎯 CHECKBOX SELECTION FUNCTIONS
+  const handleWalletToggle = (walletId: string) => {
+    setSelectedWallets(prev => 
+      prev.includes(walletId) 
+        ? prev.filter(id => id !== walletId)
+        : [...prev, walletId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedWallets.length === managedWallets.length) {
+      setSelectedWallets([]);
+    } else {
+      setSelectedWallets(managedWallets.map(w => w.id));
+    }
+  };
+
+  const isAllSelected = selectedWallets.length === managedWallets.length && managedWallets.length > 0;
+  const isPartiallySelected = selectedWallets.length > 0 && selectedWallets.length < managedWallets.length;
+
   const exportToPDF = (wallet: WalletReport) => {
     try {
-      // Create comprehensive PDF content as HTML
-      const reportHtml = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>${wallet.clientName} - ${reportType.toUpperCase()} Report</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; }
-            .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0; }
-            .summary-card { padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center; }
-            .big-number { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; }
-            .positive { color: #16a34a; }
-            .negative { color: #dc2626; }
-            .neutral { color: #6b7280; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; font-size: 0.875rem; }
-            th { background-color: #f3f4f6; font-weight: bold; }
-            .chain-breakdown { margin: 30px 0; }
-            .footer { margin-top: 40px; text-align: center; font-size: 0.75rem; color: #6b7280; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>📋 ${wallet.clientName} - ${reportType.toUpperCase()} Report</h1>
-            <p>Period: ${reportPeriod} | Address: ${wallet.address}</p>
-            <p>Generated: ${new Date().toLocaleString()}</p>
-          </div>
+      // Create comprehensive PDF content as HTML with proper escaping
+      const escapeHtml = (text: string) => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      };
 
-          <div class="summary-grid">
-            <div class="summary-card">
-              <div class="big-number ${wallet.totalPnL > 0 ? 'positive' : wallet.totalPnL < 0 ? 'negative' : 'neutral'}">
-                ${formatCurrency(wallet.totalPnL)}
-              </div>
-              <div>Total P&L</div>
-            </div>
-            <div class="summary-card">
-              <div class="big-number">${formatCurrency(wallet.currentBalance)}</div>
-              <div>Current Balance</div>
-            </div>
-            <div class="summary-card">
-              <div class="big-number">${formatCurrency(wallet.tradingVolume)}</div>
-              <div>Trading Volume</div>
-            </div>
-            <div class="summary-card">
-              <div class="big-number negative">${formatCurrency(wallet.fees)}</div>
-              <div>Total Fees</div>
-            </div>
-            <div class="summary-card">
-              <div class="big-number">${wallet.transactions.length}</div>
-              <div>Transfers (${wallet.transfersIn} in, ${wallet.transfersOut} out)</div>
-            </div>
-            <div class="summary-card">
-              <div class="big-number positive">${formatCurrency(wallet.realizedPnL)}</div>
-              <div>Realized P&L</div>
-            </div>
-          </div>
+      const reportHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(wallet.clientName)} - ${reportType.toUpperCase()} Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 30px 0; }
+    .summary-card { padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center; }
+    .big-number { font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; }
+    .positive { color: #16a34a; }
+    .negative { color: #dc2626; }
+    .neutral { color: #6b7280; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; font-size: 0.875rem; }
+    th { background-color: #f3f4f6; font-weight: bold; }
+    .chain-breakdown { margin: 30px 0; }
+    .footer { margin-top: 40px; text-align: center; font-size: 0.75rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📋 ${escapeHtml(wallet.clientName)} - ${reportType.toUpperCase()} Report</h1>
+    <p>Period: ${reportPeriod} | Address: ${escapeHtml(wallet.address)}</p>
+    <p>Generated: ${new Date().toLocaleString()}</p>
+  </div>
 
-          <div class="chain-breakdown">
-            <h3>🌐 Multi-Chain Breakdown</h3>
-            <table>
-              <thead>
-                <tr><th>Chain</th><th>P&L</th><th>Volume</th><th>Fees</th><th>Transactions</th></tr>
-              </thead>
-              <tbody>
-                ${wallet.chainBreakdown.map(chain => `
-                  <tr>
-                    <td>${chain.chainName}</td>
-                    <td class="${chain.pnl > 0 ? 'positive' : chain.pnl < 0 ? 'negative' : 'neutral'}">${formatCurrency(chain.pnl)}</td>
-                    <td>${formatCurrency(chain.volume)}</td>
-                    <td class="negative">${formatCurrency(chain.fees)}</td>
-                    <td>${chain.transactions}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="big-number ${wallet.totalPnL > 0 ? 'positive' : wallet.totalPnL < 0 ? 'negative' : 'neutral'}">
+        ${formatCurrency(wallet.totalPnL)}
+      </div>
+      <div>Total P&L</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-number">${formatCurrency(wallet.currentBalance)}</div>
+      <div>Current Balance</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-number">${formatCurrency(wallet.tradingVolume)}</div>
+      <div>Trading Volume</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-number negative">${formatCurrency(wallet.fees)}</div>
+      <div>Total Fees</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-number">${wallet.transactions.length}</div>
+      <div>Transfers (${wallet.transfersIn} in, ${wallet.transfersOut} out)</div>
+    </div>
+    <div class="summary-card">
+      <div class="big-number positive">${formatCurrency(wallet.realizedPnL)}</div>
+      <div>Realized P&L</div>
+    </div>
+  </div>
 
-          <div>
-            <h3>📋 Recent Transactions</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th><th>Type</th><th>Token In</th><th>Token Out</th><th>USD Value</th><th>Gas Fee</th><th>Chain</th><th>Protocol</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${wallet.transactions.slice(0, 50).map(tx => `
-                  <tr>
-                    <td>${new Date(tx.timestamp).toLocaleDateString()}</td>
-                    <td>${tx.type}</td>
-                    <td>${tx.tokenIn} ${tx.amountIn}</td>
-                    <td>${tx.tokenOut} ${tx.amountOut}</td>
-                    <td>${formatCurrency(tx.usdValue)}</td>
-                    <td>${formatCurrency(tx.gasFee)}</td>
-                    <td>${tx.chain}</td>
-                    <td>${tx.protocol || 'N/A'}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-            ${wallet.transactions.length > 50 ? `<p><em>Showing first 50 of ${wallet.transactions.length} transactions. Download CSV for complete data.</em></p>` : ''}
-          </div>
+  <div class="chain-breakdown">
+    <h3>🌐 Multi-Chain Breakdown</h3>
+    <table>
+      <thead>
+        <tr><th>Chain</th><th>P&L</th><th>Volume</th><th>Fees</th><th>Transactions</th></tr>
+      </thead>
+      <tbody>
+        ${wallet.chainBreakdown.map(chain => `
+          <tr>
+            <td>${escapeHtml(chain.chainName)}</td>
+            <td class="${chain.pnl > 0 ? 'positive' : chain.pnl < 0 ? 'negative' : 'neutral'}">${formatCurrency(chain.pnl)}</td>
+            <td>${formatCurrency(chain.volume)}</td>
+            <td class="negative">${formatCurrency(chain.fees)}</td>
+            <td>${chain.transactions}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  </div>
 
-          <div class="footer">
-            <p>Generated by LiquidityFlow Portfolio Management System</p>
-            <p>This report is for informational purposes only and should not be considered financial advice.</p>
-          </div>
-        </body>
-        </html>
-      `;
+  <div>
+    <h3>📋 Recent Transactions</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th><th>Type</th><th>Token In</th><th>Token Out</th><th>USD Value</th><th>Gas Fee</th><th>Chain</th><th>Protocol</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${wallet.transactions.slice(0, 50).map(tx => `
+          <tr>
+            <td>${new Date(tx.timestamp).toLocaleDateString()}</td>
+            <td>${escapeHtml(tx.type)}</td>
+            <td>${escapeHtml(tx.tokenIn)} ${tx.amountIn}</td>
+            <td>${escapeHtml(tx.tokenOut)} ${tx.amountOut}</td>
+            <td>${formatCurrency(tx.usdValue)}</td>
+            <td>${formatCurrency(tx.gasFee)}</td>
+            <td>${escapeHtml(tx.chain)}</td>
+            <td>${escapeHtml(tx.protocol || 'N/A')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    ${wallet.transactions.length > 50 ? `<p><em>Showing first 50 of ${wallet.transactions.length} transactions. Download CSV for complete data.</em></p>` : ''}
+  </div>
+
+  <div class="footer">
+    <p>Generated by LiquidityFlow Portfolio Management System</p>
+    <p>This report is for informational purposes only and should not be considered financial advice.</p>
+  </div>
+</body>
+</html>`;
 
       // Create blob and download
-      const blob = new Blob([reportHtml], { type: 'text/html' });
+      const blob = new Blob([reportHtml], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `${wallet.clientName.replace(/\s+/g, '_')}_${reportType}_report_${new Date().toISOString().split('T')[0]}.html`;
+      
+      // Ensure the link is properly set up
+      link.style.display = 'none';
       document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      // Show success message
-      alert(`📄 ${wallet.clientName} ${reportType.toUpperCase()} report exported successfully!\n\nFile: ${link.download}\n\nTip: You can print this HTML file to PDF from your browser.`);
+      
+      // Force download
+      setTimeout(() => {
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // Show success message
+        alert(`📄 ${wallet.clientName} ${reportType.toUpperCase()} report exported successfully!\n\nFile: ${link.download}\n\nTip: Open the HTML file and print to PDF from your browser.`);
+      }, 100);
       
     } catch (error) {
       console.error('PDF export error:', error);
@@ -820,37 +869,138 @@ export default function AdminReportsPage() {
                     alert('⚠️ No managed wallets found. Please add wallets in Portfolio Management first.');
                     return;
                   }
+                  if (selectedWallets.length === 0) {
+                    alert('⚠️ Please select at least one wallet/pair to generate reports for.');
+                    return;
+                  }
                   setIsGenerating(true);
                   setTimeout(() => setIsGenerating(false), 2000);
                   loadReports();
                 }}
                 style={{
                   ...styles.button,
-                  opacity: isLoading || isGenerating || managedWallets.length === 0 ? 0.6 : 1,
-                  cursor: isLoading || isGenerating || managedWallets.length === 0 ? 'not-allowed' : 'pointer'
+                  opacity: isLoading || isGenerating || managedWallets.length === 0 || selectedWallets.length === 0 ? 0.6 : 1,
+                  cursor: isLoading || isGenerating || managedWallets.length === 0 || selectedWallets.length === 0 ? 'not-allowed' : 'pointer'
                 }}
-                disabled={isLoading || isGenerating || managedWallets.length === 0}
+                disabled={isLoading || isGenerating || managedWallets.length === 0 || selectedWallets.length === 0}
               >
-                {isGenerating ? '⏳ Generating...' : '📈 Generate Report'}
+                {isGenerating ? '⏳ Generating...' : `📈 Generate Report${selectedWallets.length > 1 ? 's' : ''} (${selectedWallets.length})`}
               </button>
             </div>
           </div>
 
-          {/* Connection Status Info */}
+          {/* Wallet Selection with Checkboxes */}
           {managedWallets.length > 0 && (
-            <div style={styles.walletInfo}>
-              <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e40af' }}>
-                🔗 Connected to Portfolio Management
-              </h4>
-              <p style={{ margin: 0, color: '#1e40af' }}>
-                Found {managedWallets.length} managed wallet{managedWallets.length !== 1 ? 's' : ''} available for reporting. 
-                {managedWallets.filter(w => w.status === 'critical').length > 0 && 
-                  ` ${managedWallets.filter(w => w.status === 'critical').length} wallet(s) need attention.`
-                }
-              </p>
-              <div style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: '#475569' }}>
-                <strong>Active Clients:</strong> {managedWallets.map(w => w.clientName).join(', ')}
+            <div style={{
+              background: '#f8fafc',
+              border: '2px solid #3b82f6',
+              borderRadius: '0.5rem',
+              padding: '1.5rem',
+              marginBottom: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h4 style={{ margin: 0, color: '#1e40af', fontSize: '1.125rem' }}>
+                  🎯 Select Wallets/Pairs for Reports
+                </h4>
+                <div>
+                  <button
+                    onClick={handleSelectAll}
+                    style={{
+                      background: isAllSelected ? '#dc2626' : '#16a34a',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.375rem',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    {isAllSelected ? '❌ Deselect All' : '✅ Select All'}
+                  </button>
+                </div>
               </div>
+              
+              <p style={{ margin: '0 0 1rem 0', color: '#1e40af', fontSize: '0.875rem' }}>
+                Found {managedWallets.length} managed wallet{managedWallets.length !== 1 ? 's' : ''} available. 
+                Selected: {selectedWallets.length} wallet{selectedWallets.length !== 1 ? 's' : ''}
+              </p>
+
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+                gap: '1rem',
+                marginTop: '1rem'
+              }}>
+                {managedWallets.map(wallet => (
+                  <div key={wallet.id} style={{
+                    background: selectedWallets.includes(wallet.id) ? '#dbeafe' : '#ffffff',
+                    border: selectedWallets.includes(wallet.id) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onClick={() => handleWalletToggle(wallet.id)}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedWallets.includes(wallet.id)}
+                        onChange={() => handleWalletToggle(wallet.id)}
+                        style={{ 
+                          width: '1.25rem', 
+                          height: '1.25rem',
+                          accentColor: '#3b82f6',
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ 
+                          fontWeight: 'bold', 
+                          fontSize: '1rem',
+                          color: selectedWallets.includes(wallet.id) ? '#1e40af' : '#374151',
+                          marginBottom: '0.25rem'
+                        }}>
+                          {wallet.clientName}
+                        </div>
+                        <div style={{ 
+                          fontSize: '0.75rem', 
+                          color: '#6b7280',
+                          fontFamily: 'Monaco, monospace'
+                        }}>
+                          {wallet.address}
+                        </div>
+                        <div style={{ 
+                          fontSize: '0.75rem', 
+                          color: wallet.status === 'critical' ? '#dc2626' : '#16a34a',
+                          marginTop: '0.25rem',
+                          fontWeight: 'bold'
+                        }}>
+                          {wallet.status === 'critical' ? '⚠️ Needs Attention' : '✅ Active'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {selectedWallets.length > 0 && (
+                <div style={{
+                  background: '#dcfce7',
+                  border: '1px solid #16a34a',
+                  borderRadius: '0.375rem',
+                  padding: '0.75rem',
+                  marginTop: '1rem'
+                }}>
+                  <div style={{ fontSize: '0.875rem', color: '#15803d', fontWeight: 'bold' }}>
+                    ✅ Ready to Generate Reports
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: '#15803d', marginTop: '0.25rem' }}>
+                    {selectedWallets.length} wallet{selectedWallets.length !== 1 ? 's' : ''} selected for {reportType.toUpperCase()} analysis over {reportPeriod}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
