@@ -280,233 +280,227 @@ export default function AdminReportsPage() {
 <head>
   <title>${wallet.clientName} Report</title>
   <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
       font-family: Arial, sans-serif; 
-      margin: 20px; 
+      padding: 20px; 
       line-height: 1.4;
-      font-size: 12px;
+      background: white;
     }
-    .header { 
-      text-align: center; 
-      margin-bottom: 25px; 
+    .header {
+      text-align: left;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
       border-bottom: 2px solid #e5e7eb;
-      padding-bottom: 15px;
     }
-    .header h1 { 
-      margin: 0; 
-      color: #1f2937; 
-      font-size: 24px;
-    }
-    .date-info {
-      background: #f3f4f6;
-      padding: 8px;
-      border-radius: 6px;
-      margin: 10px 0;
-      font-weight: bold;
-    }
-    .section {
-      margin-bottom: 20px;
-    }
-    .section-title {
-      background: #1f2937;
-      color: white;
-      padding: 8px 12px;
-      margin: 0 0 10px 0;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    .metric-card {
-      border: 1px solid #d1d5db;
-      padding: 12px;
-      border-radius: 6px;
-      background: #f9fafb;
-    }
-    .metric-label {
-      font-size: 11px;
-      color: #6b7280;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      font-weight: bold;
-    }
-    .metric-value {
-      font-size: 16px;
+    .header h1 {
+      font-size: 1.5rem;
       font-weight: bold;
       color: #1f2937;
+      margin-bottom: 0.5rem;
     }
-    .pnl-positive { color: #16a34a; }
-    .pnl-negative { color: #dc2626; }
-    table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin-bottom: 15px;
-      font-size: 11px;
+    .date-info {
+      background: #f1f5f9;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      font-family: Monaco, monospace;
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 0.5rem;
     }
-    th, td { 
-      border: 1px solid #d1d5db; 
-      padding: 8px; 
-      text-align: left; 
+    .address-info {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: #eff6ff;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
     }
-    th { 
-      background-color: #f3f4f6; 
-      font-weight: bold;
-    }
-    .summary-stats {
+    
+    /* Metrics Grid - 5 cards in responsive layout */
+    .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 15px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
     }
-    .stat-box {
+    .metric-card {
       text-align: center;
-      border: 1px solid #d1d5db;
-      padding: 10px;
-      border-radius: 6px;
-      background: #ffffff;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid;
     }
-    .stat-number {
-      font-size: 18px;
+    .metric-value {
+      font-size: 1.25rem;
       font-weight: bold;
-      margin-bottom: 4px;
+      margin-bottom: 0.25rem;
     }
-    .stat-label {
-      font-size: 10px;
-      color: #6b7280;
-      text-transform: uppercase;
+    .metric-label {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 0.25rem;
     }
-    .footer {
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid #e5e7eb;
-      font-size: 10px;
-      color: #6b7280;
-      text-align: center;
+    .metric-sublabel {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    
+    /* Card specific colors matching web page */
+    .card-starting { background: #f8fafc; border-color: #cbd5e1; }
+    .card-starting .metric-value { color: #475569; }
+    
+    .card-current { background: #f8fafc; border-color: #cbd5e1; }
+    .card-current .metric-value { color: #475569; }
+    
+    .card-pnl-positive { background: #f0fdf4; border-color: #bbf7d0; }
+    .card-pnl-positive .metric-value { color: #16a34a; }
+    
+    .card-pnl-negative { background: #fef2f2; border-color: #fecaca; }
+    .card-pnl-negative .metric-value { color: #dc2626; }
+    
+    .card-volume { background: #fefbf0; border-color: #fed7aa; }
+    .card-volume .metric-value { color: #ea580c; }
+    
+    .card-fees { background: #fef2f2; border-color: #fecaca; }
+    .card-fees .metric-value { color: #dc2626; }
+    
+    .card-trades { background: #f0f9ff; border-color: #bae6fd; }
+    .card-trades .metric-value { color: #0369a1; }
+    
+    /* Trading Analysis */
+    .trading-analysis {
+      background: #f8fafc;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 1rem;
+    }
+    .analysis-title {
+      margin-bottom: 1rem;
+      color: #1e293b;
+      font-size: 1.125rem;
+      font-weight: bold;
+    }
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    .analysis-card {
+      padding: 1rem;
+      border-radius: 0.375rem;
+      border: 1px solid;
+    }
+    .analysis-card-largest {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+    .analysis-card-average {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+    .analysis-label {
+      font-size: 0.875rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .analysis-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+    .analysis-desc {
+      font-size: 0.875rem;
+      color: #78716c;
+    }
+    .largest-label { color: #92400e; }
+    .largest-value { color: #d97706; }
+    .average-label { color: #166534; }
+    .average-value { color: #16a34a; }
+    
+    @media print {
+      body { margin: 0; padding: 15px; }
+      .metrics-grid { grid-template-columns: repeat(3, 1fr); }
+      .analysis-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>${pnlIcon} ${wallet.clientName}</h1>
+    <h1>${wallet.clientName}</h1>
     <div class="date-info">
-      📅 From: ${wallet.startDate} To: ${wallet.endDate} (${wallet.periodDays} days)
-    </div>
-    <p style="margin: 5px 0; color: #6b7280;">Generated: ${new Date().toLocaleDateString()} | Address: ${wallet.address}</p>
-  </div>
-
-  <!-- Performance Overview -->
-  <div class="section">
-    <h2 class="section-title">📊 Performance Overview</h2>
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <div class="metric-label">Starting Balance (${wallet.startDate})</div>
-        <div class="metric-value">$${wallet.startingBalance.toLocaleString()}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Current Balance (${wallet.endDate})</div>
-        <div class="metric-value">$${wallet.currentBalance.toLocaleString()}</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Net P&L</div>
-        <div class="metric-value ${wallet.netPnL >= 0 ? 'pnl-positive' : 'pnl-negative'}">
-          $${wallet.netPnL.toLocaleString()} (${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage}%)
-        </div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-label">Total Volume</div>
-        <div class="metric-value">$${wallet.totalTradingVolume.toLocaleString()}</div>
-      </div>
+      📅 <strong>From:</strong> ${wallet.startDate} <strong>To:</strong> ${wallet.endDate} (${wallet.periodDays} days)
     </div>
   </div>
 
-  <!-- Balance Progression -->
-  <table style="margin-top: 10px;">
-    <tr><th colspan="3">💰 Balance Progression During Period</th></tr>
-    <tr>
-      <td><strong>Period Start (${wallet.startDate})</strong></td>
-      <td>$${wallet.startingBalance.toLocaleString()}</td>
-      <td>📅 Beginning balance</td>
-    </tr>
-    <tr>
-      <td><strong>Period End (${wallet.endDate})</strong></td>
-      <td>$${wallet.currentBalance.toLocaleString()}</td>
-      <td>📅 Current balance</td>
-    </tr>
-    <tr style="background-color: ${wallet.netPnL >= 0 ? '#dcfce7' : '#fef2f2'};">
-      <td><strong>Net Change</strong></td>
-      <td class="${wallet.netPnL >= 0 ? 'pnl-positive' : 'pnl-negative'}">
-        ${wallet.netPnL >= 0 ? '+' : ''}$${wallet.netPnL.toLocaleString()} (${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage}%)
-      </td>
-      <td>${wallet.netPnL >= 0 ? '📈 Profit' : '📉 Loss'}</td>
-    </tr>
-  </table>
-
-  <!-- Trading Activity -->
-  <div class="section">
-    <h2 class="section-title">💹 Trading Activity</h2>
-    <div class="summary-stats">
-      <div class="stat-box">
-        <div class="stat-number">${wallet.numberOfTrades}</div>
-        <div class="stat-label">Total Trades</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">$${wallet.totalFeesPaid.toLocaleString()}</div>
-        <div class="stat-label">Fees Paid</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">$${wallet.averageTradeSize.toLocaleString()}</div>
-        <div class="stat-label">Avg Trade Size</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-number">$${wallet.largestTradeValue.toLocaleString()}</div>
-        <div class="stat-label">Largest Trade</div>
-      </div>
+  <!-- Main Metrics Grid - Exactly matching web page -->
+  <div class="metrics-grid">
+    <!-- Starting Balance -->
+    <div class="metric-card card-starting">
+      <div class="metric-value">$${wallet.startingBalance.toLocaleString()}</div>
+      <div class="metric-label">Starting Balance</div>
+      <div class="metric-sublabel">${wallet.periodDays} days ago</div>
     </div>
     
-    <table>
-      <tr><th colspan="2">🎯 Key Trading Statistics</th></tr>
-      <tr><td><strong>Largest Trade</strong></td><td>${wallet.largestTradeType} ${wallet.largestTradeSymbol} - $${wallet.largestTradeValue.toLocaleString()}</td></tr>
-      <tr><td><strong>Average Trade Size</strong></td><td>$${wallet.averageTradeSize.toLocaleString()}</td></tr>
-      <tr><td><strong>Total Fees Paid</strong></td><td>$${wallet.totalFeesPaid.toLocaleString()}</td></tr>
-      <tr><td><strong>Fee Rate</strong></td><td>${((wallet.totalFeesPaid / wallet.totalTradingVolume) * 100).toFixed(3)}% of volume</td></tr>
-    </table>
+    <!-- Current Balance -->
+    <div class="metric-card card-current">
+      <div class="metric-value">$${wallet.currentBalance.toLocaleString()}</div>
+      <div class="metric-label">Current Balance</div>
+      <div class="metric-sublabel">Today</div>
+    </div>
+    
+    <!-- Net P&L -->
+    <div class="metric-card ${wallet.netPnL >= 0 ? 'card-pnl-positive' : 'card-pnl-negative'}">
+      <div class="metric-value">${wallet.netPnL >= 0 ? '+' : ''}$${wallet.netPnL.toLocaleString()}</div>
+      <div class="metric-label">Net P&L</div>
+      <div class="metric-sublabel">(${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage.toFixed(2)}%)</div>
+    </div>
+    
+    <!-- Trading Volume -->
+    <div class="metric-card card-volume">
+      <div class="metric-value">$${wallet.totalTradingVolume.toLocaleString()}</div>
+      <div class="metric-label">Trading Volume</div>
+      <div class="metric-sublabel">${wallet.periodDays} days</div>
+    </div>
+    
+    <!-- Total Fees -->
+    <div class="metric-card card-fees">
+      <div class="metric-value">$${wallet.totalFeesPaid.toLocaleString()}</div>
+      <div class="metric-label">Total Fees Paid</div>
+      <div class="metric-sublabel">All transactions</div>
+    </div>
+    
+    <!-- Number of Trades -->
+    <div class="metric-card card-trades">
+      <div class="metric-value">${wallet.numberOfTrades}</div>
+      <div class="metric-label">Number of Trades</div>
+      <div class="metric-sublabel">Total executed</div>
+    </div>
   </div>
 
-  <!-- Portfolio Metrics -->
-  <div class="section">
-    <h2 class="section-title">📈 Portfolio Metrics</h2>
-    <table>
-      <tr><th>Metric</th><th>Value</th><th>Analysis</th></tr>
-      <tr>
-        <td><strong>Return on Investment</strong></td>
-        <td class="${wallet.netPnLPercentage >= 0 ? 'pnl-positive' : 'pnl-negative'}">${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage}%</td>
-        <td>${wallet.netPnLPercentage >= 0 ? '🟢 Profitable' : '🔴 Loss'}</td>
-      </tr>
-      <tr>
-        <td><strong>Trading Frequency</strong></td>
-        <td>${(wallet.numberOfTrades / wallet.periodDays).toFixed(1)} trades/day</td>
-        <td>${wallet.numberOfTrades / wallet.periodDays > 1 ? '🔥 Active Trader' : '📊 Conservative'}</td>
-      </tr>
-      <tr>
-        <td><strong>Volume Efficiency</strong></td>
-        <td>${(wallet.totalTradingVolume / wallet.currentBalance).toFixed(1)}x balance</td>
-        <td>${wallet.totalTradingVolume / wallet.currentBalance > 2 ? '⚡ High Activity' : '🐌 Low Activity'}</td>
-      </tr>
-      <tr>
-        <td><strong>Fee Impact</strong></td>
-        <td>${((wallet.totalFeesPaid / Math.abs(wallet.netPnL)) * 100).toFixed(1)}% of P&L</td>
-        <td>${(wallet.totalFeesPaid / Math.abs(wallet.netPnL)) < 0.1 ? '✅ Efficient' : '⚠️ High Impact'}</td>
-      </tr>
-    </table>
+  <!-- Trading Analysis - Exactly matching web page -->
+  <div class="trading-analysis">
+    <div class="analysis-title">📈 Trading Analysis</div>
+    
+    <div class="analysis-grid">
+      <!-- Largest Trade -->
+      <div class="analysis-card analysis-card-largest">
+        <div class="analysis-label largest-label">🏆 Largest Trade</div>
+        <div class="analysis-value largest-value">$${wallet.largestTradeValue.toLocaleString()}</div>
+        <div class="analysis-desc">${wallet.largestTradeType} • ${wallet.largestTradeSymbol}</div>
+      </div>
+      
+      <!-- Average Trade Size -->
+      <div class="analysis-card analysis-card-average">
+        <div class="analysis-label average-label">📊 Average Trade Size</div>
+        <div class="analysis-value average-value">$${wallet.averageTradeSize.toLocaleString()}</div>
+        <div class="analysis-desc">Across ${wallet.numberOfTrades} trades</div>
+      </div>
+    </div>
   </div>
 
-  <div class="footer">
-    <p><strong>📊 Professional Portfolio Analytics</strong> | Generated with real blockchain data via Moralis API</p>
-    <p>This report provides comprehensive trading analysis for institutional-grade portfolio management</p>
+  <!-- Address Info -->
+  <div class="address-info">
+    <strong>Address:</strong> ${wallet.address}
   </div>
 </body>
 </html>`;
@@ -531,7 +525,7 @@ export default function AdminReportsPage() {
 4. Select "More settings" → Paper size: A4
 5. Click "Save"
 
-✅ Your comprehensive ${wallet.clientName} report is ready!`);
+✅ Your ${wallet.clientName} report matches exactly what you see on screen!`);
     }, 500);
   };
 
