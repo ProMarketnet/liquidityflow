@@ -702,6 +702,287 @@ export default function AdminReportsPage() {
     }, 500);
   };
 
+  const openPrintView = (wallet: WalletReport) => {
+    const pnlColor = wallet.netPnL >= 0 ? '#16a34a' : '#dc2626';
+    const pnlIcon = wallet.netPnL >= 0 ? '📈' : '📉';
+    
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>${wallet.clientName} Report</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 20px; 
+      line-height: 1.4;
+      background: white;
+    }
+    .header {
+      text-align: left;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #e5e7eb;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+    .date-info {
+      background: #f1f5f9;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      font-family: Monaco, monospace;
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+    }
+    .address-info {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: #eff6ff;
+      border-radius: 0.25rem;
+      font-size: 0.875rem;
+    }
+    
+    /* Metrics Grid - 5 cards in responsive layout */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .metric-card {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid;
+    }
+    .metric-value {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+    .metric-label {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 0.25rem;
+    }
+    .metric-sublabel {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    
+    /* Card specific colors matching web page */
+    .card-starting { background: #f8fafc; border-color: #cbd5e1; }
+    .card-starting .metric-value { color: #475569; }
+    
+    .card-current { background: #f8fafc; border-color: #cbd5e1; }
+    .card-current .metric-value { color: #475569; }
+    
+    .card-pnl-positive { background: #f0fdf4; border-color: #bbf7d0; }
+    .card-pnl-positive .metric-value { color: #16a34a; }
+    
+    .card-pnl-negative { background: #fef2f2; border-color: #fecaca; }
+    .card-pnl-negative .metric-value { color: #dc2626; }
+    
+    .card-volume { background: #fefbf0; border-color: #fed7aa; }
+    .card-volume .metric-value { color: #ea580c; }
+    
+    .card-fees { background: #fef2f2; border-color: #fecaca; }
+    .card-fees .metric-value { color: #dc2626; }
+    
+    .card-trades { background: #f0f9ff; border-color: #bae6fd; }
+    .card-trades .metric-value { color: #0369a1; }
+    
+    /* Trading Analysis */
+    .trading-analysis {
+      background: #f8fafc;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 1rem;
+    }
+    .analysis-title {
+      margin-bottom: 1rem;
+      color: #1e293b;
+      font-size: 1.125rem;
+      font-weight: bold;
+    }
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+    .analysis-card {
+      padding: 1rem;
+      border-radius: 0.375rem;
+      border: 1px solid;
+    }
+    .analysis-card-largest {
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+    .analysis-card-average {
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+    .analysis-label {
+      font-size: 0.875rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .analysis-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 0.25rem;
+    }
+    .analysis-desc {
+      font-size: 0.875rem;
+      color: #78716c;
+    }
+    .largest-label { color: #92400e; }
+    .largest-value { color: #d97706; }
+    .average-label { color: #166534; }
+    .average-value { color: #16a34a; }
+    
+    @media print {
+      body { margin: 0; padding: 15px; }
+      .metrics-grid { grid-template-columns: repeat(3, 1fr); }
+      .analysis-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>${wallet.clientName}</h1>
+    <div class="date-info">
+      📅 <strong>From:</strong> ${wallet.startDate} <strong>To:</strong> ${wallet.endDate} (${wallet.periodDays} days)
+    </div>
+  </div>
+
+  <!-- Main Metrics Grid - Exactly matching web page -->
+  <div class="metrics-grid">
+    <!-- Starting Balance -->
+    <div class="metric-card card-starting">
+      <div class="metric-value">$${wallet.startingBalance.toLocaleString()}</div>
+      <div class="metric-label">Starting Balance</div>
+      <div class="metric-sublabel">${wallet.periodDays} days ago</div>
+    </div>
+    
+    <!-- Current Balance -->
+    <div class="metric-card card-current">
+      <div class="metric-value">$${wallet.currentBalance.toLocaleString()}</div>
+      <div class="metric-label">Current Balance</div>
+      <div class="metric-sublabel">Today</div>
+    </div>
+    
+    <!-- Net P&L -->
+    <div class="metric-card ${wallet.netPnL >= 0 ? 'card-pnl-positive' : 'card-pnl-negative'}">
+      <div class="metric-value">${wallet.netPnL >= 0 ? '+' : ''}$${wallet.netPnL.toLocaleString()}</div>
+      <div class="metric-label">Net P&L</div>
+      <div class="metric-sublabel">(${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage.toFixed(2)}%)</div>
+    </div>
+    
+    <!-- Trading Volume -->
+    <div class="metric-card card-volume">
+      <div class="metric-value">$${wallet.totalTradingVolume.toLocaleString()}</div>
+      <div class="metric-label">Trading Volume</div>
+      <div class="metric-sublabel">${wallet.periodDays} days</div>
+    </div>
+    
+    <!-- Total Fees -->
+    <div class="metric-card card-fees">
+      <div class="metric-value">$${wallet.totalFeesPaid.toLocaleString()}</div>
+      <div class="metric-label">Total Fees Paid</div>
+      <div class="metric-sublabel">All transactions</div>
+    </div>
+    
+    <!-- Number of Trades -->
+    <div class="metric-card card-trades">
+      <div class="metric-value">${wallet.numberOfTrades}</div>
+      <div class="metric-label">Number of Trades</div>
+      <div class="metric-sublabel">Total executed</div>
+    </div>
+  </div>
+
+  <!-- Trading Analysis - Exactly matching web page -->
+  <div class="trading-analysis">
+    <div class="analysis-title">📈 Trading Analysis</div>
+    
+    <div class="analysis-grid">
+      <!-- Largest Trade -->
+      <div class="analysis-card analysis-card-largest">
+        <div class="analysis-label largest-label">🏆 Largest Trade</div>
+        <div class="analysis-value largest-value">$${wallet.largestTradeValue.toLocaleString()}</div>
+        <div class="analysis-desc">${wallet.largestTradeType} • ${wallet.largestTradeSymbol}</div>
+      </div>
+      
+      <!-- Average Trade Size -->
+      <div class="analysis-card analysis-card-average">
+        <div class="analysis-label average-label">📊 Average Trade Size</div>
+        <div class="analysis-value average-value">$${wallet.averageTradeSize.toLocaleString()}</div>
+        <div class="analysis-desc">Across ${wallet.numberOfTrades} trades</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Address Info -->
+  <div class="address-info">
+    <strong>Address:</strong> ${wallet.address}
+  </div>
+</body>
+</html>`;
+
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(htmlContent);
+      newWindow.document.close();
+      newWindow.print();
+      newWindow.close();
+    }
+  };
+
+  const shareReport = (wallet: WalletReport) => {
+    const pnlIcon = wallet.netPnL >= 0 ? '📈' : '📉';
+    const shareText = `
+${pnlIcon} ${wallet.clientName}
+📅 Period: ${wallet.startDate} to ${wallet.endDate} (${wallet.periodDays} days)
+
+💰 PERFORMANCE SUMMARY:
+• Starting Balance: $${wallet.startingBalance.toLocaleString()}
+• Current Balance: $${wallet.currentBalance.toLocaleString()}  
+• Net P&L: ${wallet.netPnL >= 0 ? '+' : ''}$${wallet.netPnL.toLocaleString()} (${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage.toFixed(2)}%)
+
+📊 TRADING ACTIVITY:
+• Trading Volume: $${wallet.totalTradingVolume.toLocaleString()}
+• Total Fees: $${wallet.totalFeesPaid.toLocaleString()}
+• Number of Trades: ${wallet.numberOfTrades}
+• Largest Trade: $${wallet.largestTradeValue.toLocaleString()} ${wallet.largestTradeType}
+• Average Trade: $${wallet.averageTradeSize.toLocaleString()}
+
+🔗 Address: ${wallet.address}
+
+Generated by LiquidityFlow Analytics
+    `.trim();
+
+    navigator.clipboard.writeText(shareText).then(() => {
+      alert('📋 Report summary copied to clipboard!\n\nYou can now paste it in emails, messages, or documents.');
+    }).catch(() => {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('📋 Report summary copied to clipboard!');
+    });
+  };
+
   const exportToCSV = (wallet: WalletReport) => {
     const csvContent = `Metric,Value
 Address,${wallet.address}
@@ -989,7 +1270,29 @@ Average Trade Size,$${wallet.averageTradeSize}`;
                         📅 <strong>From:</strong> {wallet.startDate} <strong>To:</strong> {wallet.endDate} ({wallet.periodDays} days)
                       </div>
                     </div>
-                    <div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button 
+                        onClick={() => openPrintView(wallet)} 
+                        style={{ 
+                          ...styles.button, 
+                          background: '#3b82f6',
+                          fontSize: '0.875rem',
+                          padding: '0.5rem 1rem'
+                        }}
+                      >
+                        🖨️ Print View
+                      </button>
+                      <button 
+                        onClick={() => shareReport(wallet)} 
+                        style={{ 
+                          ...styles.button, 
+                          background: '#16a34a',
+                          fontSize: '0.875rem',
+                          padding: '0.5rem 1rem'
+                        }}
+                      >
+                        📤 Share
+                      </button>
                       <button 
                         onClick={() => exportToPDF(wallet)} 
                         style={{ ...styles.button, background: '#dc2626', marginRight: '0.5rem' }}
@@ -1060,7 +1363,7 @@ Average Trade Size,$${wallet.averageTradeSize}`;
                       <div style={{ fontSize: '0.75rem', color: '#888' }}>{wallet.periodDays} days</div>
                     </div>
                     
-                    {/* Total Fees Paid */}
+                    {/* Total Fees */}
                     <div style={{ textAlign: 'center', padding: '1rem', background: '#fef2f2', borderRadius: '0.5rem', border: '1px solid #fecaca' }}>
                       <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#dc2626' }}>
                         ${wallet.totalFeesPaid.toLocaleString()}
