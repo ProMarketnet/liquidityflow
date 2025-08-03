@@ -271,50 +271,268 @@ export default function AdminReportsPage() {
   };
 
   const exportToPDF = (wallet: WalletReport) => {
-    // Simple PDF export
-    const reportContent = `
+    const pnlColor = wallet.netPnL >= 0 ? '#16a34a' : '#dc2626';
+    const pnlIcon = wallet.netPnL >= 0 ? '📈' : '📉';
+    
+    const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
   <title>${wallet.clientName} Report</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .header { text-align: center; margin-bottom: 30px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f5f5f5; }
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 20px; 
+      line-height: 1.4;
+      font-size: 12px;
+    }
+    .header { 
+      text-align: center; 
+      margin-bottom: 25px; 
+      border-bottom: 2px solid #e5e7eb;
+      padding-bottom: 15px;
+    }
+    .header h1 { 
+      margin: 0; 
+      color: #1f2937; 
+      font-size: 24px;
+    }
+    .date-info {
+      background: #f3f4f6;
+      padding: 8px;
+      border-radius: 6px;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      background: #1f2937;
+      color: white;
+      padding: 8px 12px;
+      margin: 0 0 10px 0;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .metric-card {
+      border: 1px solid #d1d5db;
+      padding: 12px;
+      border-radius: 6px;
+      background: #f9fafb;
+    }
+    .metric-label {
+      font-size: 11px;
+      color: #6b7280;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    .metric-value {
+      font-size: 16px;
+      font-weight: bold;
+      color: #1f2937;
+    }
+    .pnl-positive { color: #16a34a; }
+    .pnl-negative { color: #dc2626; }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-bottom: 15px;
+      font-size: 11px;
+    }
+    th, td { 
+      border: 1px solid #d1d5db; 
+      padding: 8px; 
+      text-align: left; 
+    }
+    th { 
+      background-color: #f3f4f6; 
+      font-weight: bold;
+    }
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .stat-box {
+      text-align: center;
+      border: 1px solid #d1d5db;
+      padding: 10px;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+    .stat-number {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #6b7280;
+      text-transform: uppercase;
+    }
+    .footer {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 10px;
+      color: #6b7280;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>${wallet.clientName} Report</h1>
-    <p>Period: ${wallet.reportPeriod}</p>
-    <p><strong>From:</strong> ${wallet.startDate} <strong>To:</strong> ${wallet.endDate} (${wallet.periodDays} days)</p>
-    <p>Generated: ${new Date().toLocaleDateString()}</p>
+    <h1>${pnlIcon} ${wallet.clientName}</h1>
+    <div class="date-info">
+      📅 From: ${wallet.startDate} To: ${wallet.endDate} (${wallet.periodDays} days)
+    </div>
+    <p style="margin: 5px 0; color: #6b7280;">Generated: ${new Date().toLocaleDateString()} | Address: ${wallet.address}</p>
   </div>
-  
-  <table>
-    <tr><th>Metric</th><th>Value</th></tr>
-    <tr><td>Address</td><td>${wallet.address}</td></tr>
-    <tr><td>Report Period</td><td>${wallet.startDate} to ${wallet.endDate}</td></tr>
-    <tr><td>Total P&L</td><td>$${wallet.netPnL.toLocaleString()}</td></tr>
-    <tr><td>Current Balance</td><td>$${wallet.currentBalance.toLocaleString()}</td></tr>
-    <tr><td>Trading Volume</td><td>$${wallet.totalTradingVolume.toLocaleString()}</td></tr>
-    <tr><td>Total Fees</td><td>$${wallet.totalFeesPaid.toLocaleString()}</td></tr>
-    <tr><td>Total Transfers</td><td>${wallet.numberOfTrades}</td></tr>
+
+  <!-- Performance Overview -->
+  <div class="section">
+    <h2 class="section-title">📊 Performance Overview</h2>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Starting Balance (${wallet.startDate})</div>
+        <div class="metric-value">$${wallet.startingBalance.toLocaleString()}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Current Balance (${wallet.endDate})</div>
+        <div class="metric-value">$${wallet.currentBalance.toLocaleString()}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Net P&L</div>
+        <div class="metric-value ${wallet.netPnL >= 0 ? 'pnl-positive' : 'pnl-negative'}">
+          $${wallet.netPnL.toLocaleString()} (${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage}%)
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Total Volume</div>
+        <div class="metric-value">$${wallet.totalTradingVolume.toLocaleString()}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Balance Progression -->
+  <table style="margin-top: 10px;">
+    <tr><th colspan="3">💰 Balance Progression During Period</th></tr>
+    <tr>
+      <td><strong>Period Start (${wallet.startDate})</strong></td>
+      <td>$${wallet.startingBalance.toLocaleString()}</td>
+      <td>📅 Beginning balance</td>
+    </tr>
+    <tr>
+      <td><strong>Period End (${wallet.endDate})</strong></td>
+      <td>$${wallet.currentBalance.toLocaleString()}</td>
+      <td>📅 Current balance</td>
+    </tr>
+    <tr style="background-color: ${wallet.netPnL >= 0 ? '#dcfce7' : '#fef2f2'};">
+      <td><strong>Net Change</strong></td>
+      <td class="${wallet.netPnL >= 0 ? 'pnl-positive' : 'pnl-negative'}">
+        ${wallet.netPnL >= 0 ? '+' : ''}$${wallet.netPnL.toLocaleString()} (${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage}%)
+      </td>
+      <td>${wallet.netPnL >= 0 ? '📈 Profit' : '📉 Loss'}</td>
+    </tr>
   </table>
+
+  <!-- Trading Activity -->
+  <div class="section">
+    <h2 class="section-title">💹 Trading Activity</h2>
+    <div class="summary-stats">
+      <div class="stat-box">
+        <div class="stat-number">${wallet.numberOfTrades}</div>
+        <div class="stat-label">Total Trades</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">$${wallet.totalFeesPaid.toLocaleString()}</div>
+        <div class="stat-label">Fees Paid</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">$${wallet.averageTradeSize.toLocaleString()}</div>
+        <div class="stat-label">Avg Trade Size</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">$${wallet.largestTradeValue.toLocaleString()}</div>
+        <div class="stat-label">Largest Trade</div>
+      </div>
+    </div>
+    
+    <table>
+      <tr><th colspan="2">🎯 Key Trading Statistics</th></tr>
+      <tr><td><strong>Largest Trade</strong></td><td>${wallet.largestTradeType} ${wallet.largestTradeSymbol} - $${wallet.largestTradeValue.toLocaleString()}</td></tr>
+      <tr><td><strong>Average Trade Size</strong></td><td>$${wallet.averageTradeSize.toLocaleString()}</td></tr>
+      <tr><td><strong>Total Fees Paid</strong></td><td>$${wallet.totalFeesPaid.toLocaleString()}</td></tr>
+      <tr><td><strong>Fee Rate</strong></td><td>${((wallet.totalFeesPaid / wallet.totalTradingVolume) * 100).toFixed(3)}% of volume</td></tr>
+    </table>
+  </div>
+
+  <!-- Portfolio Metrics -->
+  <div class="section">
+    <h2 class="section-title">📈 Portfolio Metrics</h2>
+    <table>
+      <tr><th>Metric</th><th>Value</th><th>Analysis</th></tr>
+      <tr>
+        <td><strong>Return on Investment</strong></td>
+        <td class="${wallet.netPnLPercentage >= 0 ? 'pnl-positive' : 'pnl-negative'}">${wallet.netPnLPercentage >= 0 ? '+' : ''}${wallet.netPnLPercentage}%</td>
+        <td>${wallet.netPnLPercentage >= 0 ? '🟢 Profitable' : '🔴 Loss'}</td>
+      </tr>
+      <tr>
+        <td><strong>Trading Frequency</strong></td>
+        <td>${(wallet.numberOfTrades / wallet.periodDays).toFixed(1)} trades/day</td>
+        <td>${wallet.numberOfTrades / wallet.periodDays > 1 ? '🔥 Active Trader' : '📊 Conservative'}</td>
+      </tr>
+      <tr>
+        <td><strong>Volume Efficiency</strong></td>
+        <td>${(wallet.totalTradingVolume / wallet.currentBalance).toFixed(1)}x balance</td>
+        <td>${wallet.totalTradingVolume / wallet.currentBalance > 2 ? '⚡ High Activity' : '🐌 Low Activity'}</td>
+      </tr>
+      <tr>
+        <td><strong>Fee Impact</strong></td>
+        <td>${((wallet.totalFeesPaid / Math.abs(wallet.netPnL)) * 100).toFixed(1)}% of P&L</td>
+        <td>${(wallet.totalFeesPaid / Math.abs(wallet.netPnL)) < 0.1 ? '✅ Efficient' : '⚠️ High Impact'}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p><strong>📊 Professional Portfolio Analytics</strong> | Generated with real blockchain data via Moralis API</p>
+    <p>This report provides comprehensive trading analysis for institutional-grade portfolio management</p>
+  </div>
 </body>
 </html>`;
 
-    const blob = new Blob([reportContent], { type: 'text/html' });
+    const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${wallet.clientName.replace(/\s+/g, '_')}_report.html`;
+    link.download = `${wallet.clientName.replace(/\s+/g, '_')}_Report_${wallet.startDate}_to_${wallet.endDate}.html`;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    
-    alert('📄 Report exported! Open the HTML file and print to PDF.');
+
+    setTimeout(() => {
+      alert(`📄 Report downloaded! 
+
+🖨️ To save as PDF:
+1. Open the downloaded HTML file
+2. Press Ctrl+P (or Cmd+P on Mac)  
+3. Choose "Save as PDF"
+4. Select "More settings" → Paper size: A4
+5. Click "Save"
+
+✅ Your comprehensive ${wallet.clientName} report is ready!`);
+    }, 500);
   };
 
   const exportToCSV = (wallet: WalletReport) => {
