@@ -6,6 +6,10 @@ interface WalletReport {
   clientName: string;
   reportPeriod: string;
   
+  // Date Range
+  startDate: string;
+  endDate: string;
+  
   // Core P&L Metrics
   startingBalance: number;
   currentBalance: number;
@@ -35,6 +39,12 @@ export default function AdminReportsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedPairs, setSelectedPairs] = useState<string[]>([]);
+  const [availablePairs, setAvailablePairs] = useState([
+    { id: 'wxm_weth', name: 'WXM/WETH', address: '0xeB35698c801ff1fb2Ca5F79E496d95A38D3BDc35', chain: 'Arbitrum', protocol: 'Uniswap V3', tvl: 87500 },
+    { id: 'eth_usdc', name: 'ETH/USDC', address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2', chain: 'Arbitrum', protocol: 'Uniswap V3', tvl: 85670 },
+    { id: 'btc_weth', name: 'BTC/WETH', address: '0x1234567890abcdef1234567890abcdef12345678', chain: 'Ethereum', protocol: 'Uniswap V2', tvl: 156000 }
+  ]);
 
   // Simple inline styles
   const styles = {
@@ -116,74 +126,147 @@ export default function AdminReportsPage() {
   }, []);
 
   const generateReport = async () => {
+    if (selectedPairs.length === 0) {
+      alert('⚠️ Please select at least one trading pair to generate a report for.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      console.log('📊 Generating simple report...');
+      console.log(`📊 Generating reports for selected pairs: ${selectedPairs.join(', ')}`);
       
-      // Simple mock data
+      // Calculate date range based on selected period
+      const endDate = new Date();
+      const periodDays = reportPeriod === '7d' ? 7 : reportPeriod === '30d' ? 30 : reportPeriod === '90d' ? 90 : 365;
+      const startDate = new Date(endDate.getTime() - periodDays * 24 * 60 * 60 * 1000);
+      
+      const startDateStr = startDate.toISOString().slice(0, 10);
+      const endDateStr = endDate.toISOString().slice(0, 10);
+      
+      // Simple mock data based on selected pairs
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const mockReports: WalletReport[] = [
-        {
-          address: '0xeB35698c801ff1fb2Ca5F79E496d95A38D3BDc35',
-          clientName: 'WXM Pool Portfolio',
-          reportPeriod: reportPeriod,
-          
-          // Core P&L Metrics (based on user's example)
-          startingBalance: 95620.45,
-          currentBalance: 89457.09,
-          netPnL: -6163.36,
-          netPnLPercentage: -6.45,
-          
-          // Trading Activity
-          totalTradingVolume: 124500.00,
-          totalFeesPaid: 892.35,
-          numberOfTrades: 28,
-          
-          // Trade Analysis  
-          largestTradeValue: 15420.50,
-          largestTradeType: 'Buy',
-          largestTradeSymbol: 'WXM/WETH',
-          averageTradeSize: 4446.43, // 124500/28
-          
-          // Period
-          periodDays: reportPeriod === '7d' ? 7 : reportPeriod === '30d' ? 30 : reportPeriod === '90d' ? 90 : 365
-        },
-        {
-          address: '0x742d35Cc6635C0532925a3b8C0d2c35ad81C35C2',
-          clientName: 'ETH/USDC Trading Portfolio',
-          reportPeriod: reportPeriod,
-          
-          // Core P&L Metrics (profitable example)
-          startingBalance: 78250.00,
-          currentBalance: 85670.25,
-          netPnL: 7420.25,
-          netPnLPercentage: 9.48,
-          
-          // Trading Activity
-          totalTradingVolume: 198400.00,
-          totalFeesPaid: 456.78,
-          numberOfTrades: 42,
-          
-          // Trade Analysis
-          largestTradeValue: 22850.00,
-          largestTradeType: 'Sell',
-          largestTradeSymbol: 'ETH/USDC',
-          averageTradeSize: 4724.76, // 198400/42
-          
-          // Period
-          periodDays: reportPeriod === '7d' ? 7 : reportPeriod === '30d' ? 30 : reportPeriod === '90d' ? 90 : 365
+      const mockReports: WalletReport[] = selectedPairs.map(pairId => {
+        const pair = availablePairs.find(p => p.id === pairId);
+        
+        if (pairId === 'wxm_weth') {
+          return {
+            address: pair?.address || '',
+            clientName: `${pair?.name} Pool Portfolio`,
+            reportPeriod: reportPeriod,
+            
+            // Date Range
+            startDate: startDateStr,
+            endDate: endDateStr,
+            
+            // Core P&L Metrics (based on user's example)
+            startingBalance: 95620.45,
+            currentBalance: 89457.09,
+            netPnL: -6163.36,
+            netPnLPercentage: -6.45,
+            
+            // Trading Activity
+            totalTradingVolume: 124500.00,
+            totalFeesPaid: 892.35,
+            numberOfTrades: 28,
+            
+            // Trade Analysis  
+            largestTradeValue: 15420.50,
+            largestTradeType: 'Buy',
+            largestTradeSymbol: pair?.name || 'WXM/WETH',
+            averageTradeSize: 4446.43,
+            
+            // Period
+            periodDays: periodDays
+          };
+        } else if (pairId === 'eth_usdc') {
+          return {
+            address: pair?.address || '',
+            clientName: `${pair?.name} Trading Portfolio`,
+            reportPeriod: reportPeriod,
+            
+            // Date Range
+            startDate: startDateStr,
+            endDate: endDateStr,
+            
+            // Core P&L Metrics (profitable example)
+            startingBalance: 78250.00,
+            currentBalance: 85670.25,
+            netPnL: 7420.25,
+            netPnLPercentage: 9.48,
+            
+            // Trading Activity
+            totalTradingVolume: 198400.00,
+            totalFeesPaid: 456.78,
+            numberOfTrades: 42,
+            
+            // Trade Analysis
+            largestTradeValue: 22850.00,
+            largestTradeType: 'Sell',
+            largestTradeSymbol: pair?.name || 'ETH/USDC',
+            averageTradeSize: 4724.76,
+            
+            // Period
+            periodDays: periodDays
+          };
+        } else {
+          // BTC/WETH or other pairs
+          return {
+            address: pair?.address || '',
+            clientName: `${pair?.name} Portfolio`,
+            reportPeriod: reportPeriod,
+            
+            // Date Range
+            startDate: startDateStr,
+            endDate: endDateStr,
+            
+            // Core P&L Metrics
+            startingBalance: 145000.00,
+            currentBalance: 156890.75,
+            netPnL: 11890.75,
+            netPnLPercentage: 8.20,
+            
+            // Trading Activity
+            totalTradingVolume: 287300.00,
+            totalFeesPaid: 1245.60,
+            numberOfTrades: 35,
+            
+            // Trade Analysis
+            largestTradeValue: 35000.00,
+            largestTradeType: 'Buy',
+            largestTradeSymbol: pair?.name || 'BTC/WETH',
+            averageTradeSize: 8208.57,
+            
+            // Period
+            periodDays: periodDays
+          };
         }
-      ];
+      });
       
       setReports(mockReports);
-      console.log('✅ Simple report generated');
+      console.log(`✅ Generated ${mockReports.length} reports for selected pairs`);
     } catch (error) {
       console.error('❌ Error:', error);
       setHasError(true);
       setErrorMessage('Failed to generate report');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePairToggle = (pairId: string) => {
+    setSelectedPairs(prev => 
+      prev.includes(pairId) 
+        ? prev.filter(id => id !== pairId)
+        : [...prev, pairId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPairs.length === availablePairs.length) {
+      setSelectedPairs([]);
+    } else {
+      setSelectedPairs(availablePairs.map(p => p.id));
     }
   };
 
@@ -204,14 +287,16 @@ export default function AdminReportsPage() {
 </head>
 <body>
   <div class="header">
-    <h1>${wallet.clientName}</h1>
+    <h1>${wallet.clientName} Report</h1>
     <p>Period: ${wallet.reportPeriod}</p>
+    <p><strong>From:</strong> ${wallet.startDate} <strong>To:</strong> ${wallet.endDate} (${wallet.periodDays} days)</p>
     <p>Generated: ${new Date().toLocaleDateString()}</p>
   </div>
   
   <table>
     <tr><th>Metric</th><th>Value</th></tr>
     <tr><td>Address</td><td>${wallet.address}</td></tr>
+    <tr><td>Report Period</td><td>${wallet.startDate} to ${wallet.endDate}</td></tr>
     <tr><td>Total P&L</td><td>$${wallet.netPnL.toLocaleString()}</td></tr>
     <tr><td>Current Balance</td><td>$${wallet.currentBalance.toLocaleString()}</td></tr>
     <tr><td>Trading Volume</td><td>$${wallet.totalTradingVolume.toLocaleString()}</td></tr>
@@ -235,11 +320,21 @@ export default function AdminReportsPage() {
   const exportToCSV = (wallet: WalletReport) => {
     const csvContent = `Metric,Value
 Address,${wallet.address}
+Report Period,${wallet.startDate} to ${wallet.endDate}
+Period Days,${wallet.periodDays}
+Start Date,${wallet.startDate}
+End Date,${wallet.endDate}
 Total P&L,$${wallet.netPnL}
+P&L Percentage,${wallet.netPnLPercentage}%
+Starting Balance,$${wallet.startingBalance}
 Current Balance,$${wallet.currentBalance}
 Trading Volume,$${wallet.totalTradingVolume}
 Total Fees,$${wallet.totalFeesPaid}
-Total Transfers,${wallet.numberOfTrades}`;
+Number of Trades,${wallet.numberOfTrades}
+Largest Trade,$${wallet.largestTradeValue}
+Largest Trade Type,${wallet.largestTradeType}
+Largest Trade Symbol,${wallet.largestTradeSymbol}
+Average Trade Size,$${wallet.averageTradeSize}`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -314,14 +409,98 @@ Total Transfers,${wallet.numberOfTrades}`;
             
             <button
               onClick={generateReport}
-              disabled={isLoading}
+              disabled={isLoading || selectedPairs.length === 0}
               style={{
                 ...styles.button,
-                opacity: isLoading ? 0.6 : 1
+                opacity: isLoading || selectedPairs.length === 0 ? 0.6 : 1
               }}
             >
-              {isLoading ? '⏳ Loading...' : '📈 Generate Report'}
+              {isLoading ? '⏳ Loading...' : `📈 Generate Report (${selectedPairs.length})`}
             </button>
+          </div>
+
+          {/* Pair Selection */}
+          <div style={{
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '0.5rem',
+            padding: '1.5rem',
+            marginBottom: '2rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, color: '#1e293b' }}>🎯 Select Trading Pairs/Pools</h3>
+              <button
+                onClick={handleSelectAll}
+                style={{
+                  background: selectedPairs.length === availablePairs.length ? '#dc2626' : '#16a34a',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.25rem',
+                  padding: '0.5rem 1rem',
+                  fontSize: '0.875rem',
+                  cursor: 'pointer'
+                }}
+              >
+                {selectedPairs.length === availablePairs.length ? '❌ Deselect All' : '✅ Select All'}
+              </button>
+            </div>
+            
+            <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.875rem' }}>
+              Choose which trading pairs to include in your report. Selected: {selectedPairs.length}/{availablePairs.length}
+            </p>
+
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+              gap: '1rem' 
+            }}>
+              {availablePairs.map(pair => (
+                <div 
+                  key={pair.id} 
+                  onClick={() => handlePairToggle(pair.id)}
+                  style={{
+                    background: selectedPairs.includes(pair.id) ? '#dbeafe' : '#ffffff',
+                    border: selectedPairs.includes(pair.id) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                    borderRadius: '0.5rem',
+                    padding: '1rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedPairs.includes(pair.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handlePairToggle(pair.id);
+                      }}
+                      style={{ 
+                        width: '1.25rem', 
+                        height: '1.25rem',
+                        accentColor: '#3b82f6'
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ 
+                        fontWeight: 'bold', 
+                        fontSize: '1rem',
+                        color: selectedPairs.includes(pair.id) ? '#1e40af' : '#374151',
+                        marginBottom: '0.25rem'
+                      }}>
+                        {pair.name} <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 'normal' }}>on {pair.chain}</span>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'Monaco, monospace', marginBottom: '0.25rem' }}>
+                        {pair.address}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                        {pair.protocol} • TVL: ${pair.tvl.toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Loading State */}
@@ -340,7 +519,19 @@ Total Transfers,${wallet.numberOfTrades}`;
               {reports.map((wallet, index) => (
                 <div key={index} style={styles.card}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3>{wallet.clientName}</h3>
+                    <div>
+                      <h3 style={{ margin: '0 0 0.5rem 0' }}>{wallet.clientName}</h3>
+                      <div style={{ 
+                        fontSize: '0.875rem', 
+                        color: '#64748b',
+                        background: '#f1f5f9',
+                        padding: '0.5rem',
+                        borderRadius: '0.25rem',
+                        fontFamily: 'Monaco, monospace'
+                      }}>
+                        📅 <strong>From:</strong> {wallet.startDate} <strong>To:</strong> {wallet.endDate} ({wallet.periodDays} days)
+                      </div>
+                    </div>
                     <div>
                       <button 
                         onClick={() => exportToPDF(wallet)} 
