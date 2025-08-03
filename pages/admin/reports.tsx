@@ -414,19 +414,25 @@ export default function AdminReportsPage() {
           lowestBalance: totalTVL * 0.9,
           tradingVolume: totalTVL * 2, // Assume 2x TVL in volume
           fees: totalTVL * 0.003, // Assume 0.3% fees
-          transactions: pairs.map(pair => ({
-            hash: `0x${pair.id.slice(-8)}...`,
-            type: 'trade' as const,
-            timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-            tokenIn: pair.pairName.split('/')[1] || 'WETH',
-            tokenOut: pair.pairName.split('/')[0] || 'TOKEN',
-            amountIn: Math.random() * 1000,
-            amountOut: Math.random() * 10,
-            usdValue: Math.random() * 5000,
-            gasFee: Math.random() * 50,
-            chain: pair.chain,
-            protocol: pair.protocol
-          })),
+          transactions: pairs.flatMap(pair => {
+            // Generate multiple transactions per pair for the selected period
+            const days = reportPeriod === '7d' ? 7 : reportPeriod === '30d' ? 30 : reportPeriod === '90d' ? 90 : 365;
+            const transactionCount = Math.max(1, Math.floor(days / 5)); // ~1 transaction per 5 days
+            
+            return Array.from({ length: transactionCount }, (_, i) => ({
+              hash: `0x${pair.id.slice(-8)}${i.toString().padStart(3, '0')}...`,
+              type: (['trade', 'transfer_in', 'transfer_out'] as const)[Math.floor(Math.random() * 3)],
+              timestamp: new Date(Date.now() - (i + 1) * (days / transactionCount) * 24 * 60 * 60 * 1000).toISOString(),
+              tokenIn: Math.random() > 0.5 ? pair.pairName.split('/')[1] || 'WETH' : pair.pairName.split('/')[0] || 'TOKEN',
+              tokenOut: Math.random() > 0.5 ? pair.pairName.split('/')[0] || 'TOKEN' : pair.pairName.split('/')[1] || 'WETH',
+              amountIn: Math.random() * 1000,
+              amountOut: Math.random() * 100,
+              usdValue: Math.random() * 5000 + 100,
+              gasFee: Math.random() * 50 + 5,
+              chain: pair.chain,
+              protocol: pair.protocol
+            }));
+          }),
           chainBreakdown: Array.from(new Set(pairs.map(p => p.chain))).map(chain => {
             const chainPairs = pairs.filter(p => p.chain === chain);
             const chainTVL = chainPairs.reduce((sum, p) => sum + p.tvl, 0);
@@ -583,9 +589,21 @@ export default function AdminReportsPage() {
     th { background-color: #f3f4f6; font-weight: bold; }
     .chain-breakdown { margin: 30px 0; }
     .footer { margin-top: 40px; text-align: center; font-size: 0.75rem; color: #6b7280; }
+    .print-button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 20px; font-size: 1rem; }
+    .print-instructions { background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 15px; margin: 20px 0; }
+    @media print { .print-button, .print-instructions { display: none; } }
   </style>
 </head>
 <body>
+  <div class="print-instructions">
+    <h3>📄 How to Save as PDF:</h3>
+    <p><strong>Method 1:</strong> Click the "Print Report" button below, then select "Save as PDF" in the print dialog.</p>
+    <p><strong>Method 2:</strong> Press Ctrl+P (Windows) or Cmd+P (Mac), then choose "Save as PDF".</p>
+    <p><strong>Method 3:</strong> Right-click this page → Print → Save as PDF</p>
+  </div>
+  
+  <button class="print-button" onclick="window.print()">🖨️ Print Report / Save as PDF</button>
+
   <div class="header">
     <h1>📋 ${escapeHtml(wallet.clientName)} - ${reportType.toUpperCase()} Report</h1>
     <p>Period: ${reportPeriod} | Address: ${escapeHtml(wallet.address)}</p>
@@ -642,7 +660,11 @@ export default function AdminReportsPage() {
   </div>
 
   <div>
-    <h3>📋 Recent Transactions</h3>
+    <h3>📋 Complete Transaction History (${reportPeriod})</h3>
+    <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 15px;">
+      <strong>Note:</strong> This shows mock transaction data. In production, this would display real transaction history from Moralis API 
+      (<code>/wallets/{address}/history/erc20</code> and <code>/wallets/{address}/defi/positions</code>) for the selected ${reportPeriod} period.
+    </p>
     <table>
       <thead>
         <tr>
@@ -650,12 +672,12 @@ export default function AdminReportsPage() {
         </tr>
       </thead>
       <tbody>
-        ${wallet.transactions.slice(0, 50).map(tx => `
+        ${wallet.transactions.map(tx => `
           <tr>
             <td>${new Date(tx.timestamp).toLocaleDateString()}</td>
             <td>${escapeHtml(tx.type)}</td>
-            <td>${escapeHtml(tx.tokenIn)} ${tx.amountIn}</td>
-            <td>${escapeHtml(tx.tokenOut)} ${tx.amountOut}</td>
+            <td>${escapeHtml(tx.tokenIn)} ${tx.amountIn.toFixed(4)}</td>
+            <td>${escapeHtml(tx.tokenOut)} ${tx.amountOut.toFixed(4)}</td>
             <td>${formatCurrency(tx.usdValue)}</td>
             <td>${formatCurrency(tx.gasFee)}</td>
             <td>${escapeHtml(tx.chain)}</td>
@@ -664,7 +686,9 @@ export default function AdminReportsPage() {
         `).join('')}
       </tbody>
     </table>
-    ${wallet.transactions.length > 50 ? `<p><em>Showing first 50 of ${wallet.transactions.length} transactions. Download CSV for complete data.</em></p>` : ''}
+    <p style="font-size: 0.875rem; color: #6b7280; margin-top: 10px;">
+      <strong>Total Transactions:</strong> ${wallet.transactions.length} transactions found for ${reportPeriod} period
+    </p>
   </div>
 
   <div class="footer">
