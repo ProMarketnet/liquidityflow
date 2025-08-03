@@ -397,7 +397,7 @@ export default function AdminReportsPage() {
         console.log(`🔍 Fetching real transaction history for ${walletAddress}...`);
         
         // Fetch real transactions from our new API
-        let realTransactions = [];
+        let realTransactions: TransactionData[] = [];
         try {
           const days = reportPeriod === '7d' ? 7 : reportPeriod === '30d' ? 30 : reportPeriod === '90d' ? 90 : 365;
           const txResponse = await fetch('/api/wallet/transaction-history', {
