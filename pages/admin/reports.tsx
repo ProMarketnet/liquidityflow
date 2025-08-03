@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 
+interface TradingPair {
+  id: string;
+  pairAddress: string;
+  pairName: string; // e.g., "WXM/WETH", "ETH/USDC"
+  chain: string;
+  protocol: string; // e.g., "Uniswap V3", "PancakeSwap"
+  tvl: number;
+  volume24h: number;
+  apr: number;
+  sourceWallet: string; // Original wallet address this pair was found from
+  status: 'active' | 'inactive' | 'low_liquidity';
+}
+
 interface WalletReport {
   address: string;
   clientName: string;
@@ -46,7 +59,8 @@ interface ChainReport {
 
 export default function AdminReportsPage() {
   const [selectedWallet, setSelectedWallet] = useState<string>('all');
-  const [selectedWallets, setSelectedWallets] = useState<string[]>([]);
+  const [selectedPairs, setSelectedPairs] = useState<string[]>([]);
+  const [tradingPairs, setTradingPairs] = useState<TradingPair[]>([]);
   const [reportPeriod, setReportPeriod] = useState<string>('30d');
   const [reportType, setReportType] = useState<string>('pnl');
   const [reports, setReports] = useState<WalletReport[]>([]);
@@ -54,6 +68,7 @@ export default function AdminReportsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(true);
+  const [isLoadingPairs, setIsLoadingPairs] = useState(false);
 
   // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
   const styles = {
@@ -228,10 +243,17 @@ export default function AdminReportsPage() {
     }
   }, []);
 
-  // Auto-select all wallets when first loaded
+  // Auto-select all pairs when first loaded
   useEffect(() => {
-    if (managedWallets.length > 0 && selectedWallets.length === 0) {
-      setSelectedWallets(managedWallets.map(w => w.id));
+    if (tradingPairs.length > 0 && selectedPairs.length === 0) {
+      setSelectedPairs(tradingPairs.map(p => p.id));
+    }
+  }, [tradingPairs]);
+
+  // Load trading pairs when managed wallets are loaded
+  useEffect(() => {
+    if (managedWallets.length > 0) {
+      loadTradingPairs();
     }
   }, [managedWallets]);
 
@@ -333,80 +355,60 @@ export default function AdminReportsPage() {
 
   const loadReports = async () => {
     if (managedWallets.length === 0) return;
-    if (selectedWallets.length === 0) {
-      alert('⚠️ Please select at least one wallet/pair to generate reports for.');
+    if (selectedPairs.length === 0) {
+      alert('⚠️ Please select at least one trading pair to generate reports for.');
       return;
     }
     
     setIsLoading(true);
     try {
-      console.log(`📊 Loading reports for ${selectedWallets.length} selected wallet(s): ${selectedWallets.join(', ')} (${reportPeriod}, ${reportType})`);
+      console.log(`📊 Loading reports for ${selectedPairs.length} selected pair(s): ${selectedPairs.join(', ')} (${reportPeriod}, ${reportType})`);
       
-      // Filter to only include selected wallets in reports
-      const selectedWalletData = managedWallets.filter(w => selectedWallets.includes(w.id));
+      // Filter to only include selected trading pairs
+      const selectedPairData = tradingPairs.filter(p => selectedPairs.includes(p.id));
 
-      if (selectedWalletData.length === 0) {
-        console.warn('⚠️ No selected wallets found');
+      if (selectedPairData.length === 0) {
+        console.warn('⚠️ No selected trading pairs found');
         setReports([]);
         return;
       }
 
-      console.log(`📋 Generating reports for: ${selectedWalletData.map(w => w.clientName).join(', ')}`);
+      console.log(`📋 Generating reports for: ${selectedPairData.map(p => p.pairName).join(', ')}`);
 
-      // In production, this would call your reports API with selected wallet addresses
+      // In production, this would call your reports API with selected pair addresses
       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
       
-      // Generate reports only for selected wallets
-      const mockReports: WalletReport[] = selectedWalletData.map(wallet => ({
-        address: wallet.address,
-        clientName: wallet.clientName,
-        reportPeriod: reportPeriod,
-        totalPnL: wallet.id === '1' ? 15420.50 : wallet.id === '2' ? -2543.75 : wallet.id === '3' ? -8932.45 : wallet.id === '4' ? 12675.80 : 5432.10,
-        realizedPnL: wallet.id === '1' ? 8750.25 : wallet.id === '2' ? -1250.00 : wallet.id === '3' ? -5000.00 : wallet.id === '4' ? 7500.00 : 3000.00,
-        unrealizedPnL: wallet.id === '1' ? 6670.25 : wallet.id === '2' ? -1293.75 : wallet.id === '3' ? -3932.45 : wallet.id === '4' ? 5175.80 : 2432.10,
-        totalTransfers: wallet.id === '1' ? 25 : wallet.id === '2' ? 18 : wallet.id === '3' ? 12 : wallet.id === '4' ? 32 : 15,
-        transfersIn: wallet.id === '1' ? 15 : wallet.id === '2' ? 10 : wallet.id === '3' ? 7 : wallet.id === '4' ? 20 : 9,
-        transfersOut: wallet.id === '1' ? 10 : wallet.id === '2' ? 8 : wallet.id === '3' ? 5 : wallet.id === '4' ? 12 : 6,
-        currentBalance: wallet.id === '1' ? 245823.12 : wallet.id === '2' ? 123456.78 : wallet.id === '3' ? 87234.56 : wallet.id === '4' ? 456789.23 : 198765.43,
-        startingBalance: wallet.id === '1' ? 230402.62 : wallet.id === '2' ? 126000.53 : wallet.id === '3' ? 96167.01 : wallet.id === '4' ? 444113.43 : 193333.33,
-        highestBalance: wallet.id === '1' ? 252000.00 : wallet.id === '2' ? 135000.00 : wallet.id === '3' ? 98000.00 : wallet.id === '4' ? 470000.00 : 205000.00,
-        lowestBalance: wallet.id === '1' ? 225000.00 : wallet.id === '2' ? 118000.00 : wallet.id === '3' ? 82000.00 : wallet.id === '4' ? 440000.00 : 185000.00,
-        tradingVolume: wallet.id === '1' ? 125000.00 : wallet.id === '2' ? 89000.00 : wallet.id === '3' ? 45000.00 : wallet.id === '4' ? 275000.00 : 112000.00,
-        fees: wallet.id === '1' ? 892.35 : wallet.id === '2' ? 654.20 : wallet.id === '3' ? 321.15 : wallet.id === '4' ? 1234.56 : 567.89,
-        transactions: [
-          {
-            hash: `0x${wallet.id}abc123...`,
-            type: 'trade',
-            timestamp: '2024-01-20T14:30:00Z',
-            tokenIn: 'USDC',
-            tokenOut: 'ETH',
-            amountIn: 5000,
-            amountOut: 2.1,
-            usdValue: 5000,
-            gasFee: 12.50,
-            chain: 'Ethereum',
-            protocol: 'Uniswap V3'
-          }
-        ],
-        chainBreakdown: [
-          {
-            chainName: 'Ethereum',
-            chainLogo: '⟠',
-            pnl: wallet.id === '1' ? 12420.50 : wallet.id === '2' ? -1543.75 : wallet.id === '3' ? -6932.45 : wallet.id === '4' ? 9675.80 : 4432.10,
-            volume: wallet.id === '1' ? 95000.00 : wallet.id === '2' ? 65000.00 : wallet.id === '3' ? 32000.00 : wallet.id === '4' ? 200000.00 : 85000.00,
-            fees: wallet.id === '1' ? 675.25 : wallet.id === '2' ? 480.15 : wallet.id === '3' ? 240.10 : wallet.id === '4' ? 920.40 : 425.65,
-            transactions: wallet.id === '1' ? 18 : wallet.id === '2' ? 12 : wallet.id === '3' ? 8 : wallet.id === '4' ? 24 : 11
-          },
-          {
-            chainName: 'Solana',
-            chainLogo: '◎',
-            pnl: wallet.id === '1' ? 3000.00 : wallet.id === '2' ? -1000.00 : wallet.id === '3' ? -2000.00 : wallet.id === '4' ? 3000.00 : 1000.00,
-            volume: wallet.id === '1' ? 30000.00 : wallet.id === '2' ? 24000.00 : wallet.id === '3' ? 13000.00 : wallet.id === '4' ? 75000.00 : 27000.00,
-            fees: wallet.id === '1' ? 217.10 : wallet.id === '2' ? 174.05 : wallet.id === '3' ? 81.05 : wallet.id === '4' ? 314.16 : 142.24,
-            transactions: wallet.id === '1' ? 7 : wallet.id === '2' ? 6 : wallet.id === '3' ? 4 : wallet.id === '4' ? 8 : 4
-          }
-        ]
-      }));
+      // Generate reports for selected trading pairs (group by source wallet for now)
+      const walletGroups = selectedPairData.reduce((acc, pair) => {
+        if (!acc[pair.sourceWallet]) {
+          acc[pair.sourceWallet] = [];
+        }
+        acc[pair.sourceWallet].push(pair);
+        return acc;
+      }, {} as Record<string, TradingPair[]>);
+
+      const mockReports: WalletReport[] = Object.entries(walletGroups).map(([walletAddress, pairs], index) => {
+        const totalTVL = pairs.reduce((sum, p) => sum + p.tvl, 0);
+        return {
+          address: walletAddress,
+          clientName: managedWallets.find(w => w.address === walletAddress)?.clientName || 'Unknown Wallet',
+          reportPeriod: reportPeriod,
+          totalPnL: 0, // Placeholder, will be calculated
+          realizedPnL: 0, // Placeholder, will be calculated
+          unrealizedPnL: 0, // Placeholder, will be calculated
+          totalTransfers: 0, // Placeholder, will be calculated
+          transfersIn: 0, // Placeholder, will be calculated
+          transfersOut: 0, // Placeholder, will be calculated
+          currentBalance: 0, // Placeholder, will be calculated
+          startingBalance: 0, // Placeholder, will be calculated
+          highestBalance: 0, // Placeholder, will be calculated
+          lowestBalance: 0, // Placeholder, will be calculated
+          tradingVolume: 0, // Placeholder, will be calculated
+          fees: 0, // Placeholder, will be calculated
+          transactions: [], // Placeholder, will be populated
+          chainBreakdown: [] // Placeholder, will be populated
+        };
+      });
 
       setReports(mockReports);
       console.log('✅ Reports generated for managed wallets:', mockReports.length);
@@ -438,25 +440,79 @@ export default function AdminReportsPage() {
     }
   };
 
+  const loadTradingPairs = async () => {
+    if (managedWallets.length === 0) return;
+    
+    setIsLoadingPairs(true);
+    try {
+      console.log('🔄 Loading trading pairs from managed wallets...');
+      
+      // Use existing wallet-pools API to get DeFi positions 
+      const response = await fetch('/api/admin/wallet-pools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallets: managedWallets.map(w => ({ address: w.address, clientName: w.clientName }))
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
+
+      const poolData = await response.json();
+      console.log('📊 Pool data received:', poolData);
+
+      if (poolData.success && poolData.pools && Array.isArray(poolData.pools)) {
+        // Transform pool data into trading pairs
+        const pairs: TradingPair[] = poolData.pools
+          .filter((pool: any) => pool.value > 0) // Only include pools with value
+          .map((pool: any, index: number) => ({
+            id: `pair_${index}_${pool.address || pool.pair_address}`,
+            pairAddress: pool.address || pool.pair_address || pool.token_address,
+            pairName: pool.protocol_name || pool.pair_name || pool.token_symbol || 'Unknown Pair',
+            chain: pool.chain || 'Unknown',
+            protocol: pool.protocol || pool.platform || 'Unknown Protocol',
+            tvl: pool.value || 0,
+            volume24h: pool.volume_24h || 0,
+            apr: pool.apr || 0,
+            sourceWallet: pool.wallet_address || managedWallets[0]?.address || '',
+            status: pool.value > 1000 ? 'active' : pool.value > 100 ? 'low_liquidity' : 'inactive'
+          }));
+
+        console.log(`✅ Found ${pairs.length} trading pairs:`, pairs);
+        setTradingPairs(pairs);
+      } else {
+        console.warn('⚠️ No valid pool data found');
+        setTradingPairs([]);
+      }
+    } catch (error) {
+      console.error('❌ Error loading trading pairs:', error);
+      setTradingPairs([]);
+    } finally {
+      setIsLoadingPairs(false);
+    }
+  };
+
   // 🎯 CHECKBOX SELECTION FUNCTIONS
-  const handleWalletToggle = (walletId: string) => {
-    setSelectedWallets(prev => 
-      prev.includes(walletId) 
-        ? prev.filter(id => id !== walletId)
-        : [...prev, walletId]
+  const handlePairToggle = (pairId: string) => {
+    setSelectedPairs(prev => 
+      prev.includes(pairId) 
+        ? prev.filter(id => id !== pairId)
+        : [...prev, pairId]
     );
   };
 
   const handleSelectAll = () => {
-    if (selectedWallets.length === managedWallets.length) {
-      setSelectedWallets([]);
+    if (selectedPairs.length === tradingPairs.length) {
+      setSelectedPairs([]);
     } else {
-      setSelectedWallets(managedWallets.map(w => w.id));
+      setSelectedPairs(tradingPairs.map(p => p.id));
     }
   };
 
-  const isAllSelected = selectedWallets.length === managedWallets.length && managedWallets.length > 0;
-  const isPartiallySelected = selectedWallets.length > 0 && selectedWallets.length < managedWallets.length;
+  const isAllSelected = selectedPairs.length === tradingPairs.length && tradingPairs.length > 0;
+  const isPartiallySelected = selectedPairs.length > 0 && selectedPairs.length < tradingPairs.length;
 
   const exportToPDF = (wallet: WalletReport) => {
     try {
@@ -869,8 +925,12 @@ export default function AdminReportsPage() {
                     alert('⚠️ No managed wallets found. Please add wallets in Portfolio Management first.');
                     return;
                   }
-                  if (selectedWallets.length === 0) {
-                    alert('⚠️ Please select at least one wallet/pair to generate reports for.');
+                  if (tradingPairs.length === 0) {
+                    alert('⚠️ No trading pairs found. Please check that your managed wallets have active DeFi positions.');
+                    return;
+                  }
+                  if (selectedPairs.length === 0) {
+                    alert('⚠️ Please select at least one trading pair to generate reports for.');
                     return;
                   }
                   setIsGenerating(true);
@@ -879,18 +939,18 @@ export default function AdminReportsPage() {
                 }}
                 style={{
                   ...styles.button,
-                  opacity: isLoading || isGenerating || managedWallets.length === 0 || selectedWallets.length === 0 ? 0.6 : 1,
-                  cursor: isLoading || isGenerating || managedWallets.length === 0 || selectedWallets.length === 0 ? 'not-allowed' : 'pointer'
+                  opacity: isLoading || isGenerating || managedWallets.length === 0 || tradingPairs.length === 0 || selectedPairs.length === 0 ? 0.6 : 1,
+                  cursor: isLoading || isGenerating || managedWallets.length === 0 || tradingPairs.length === 0 || selectedPairs.length === 0 ? 'not-allowed' : 'pointer'
                 }}
-                disabled={isLoading || isGenerating || managedWallets.length === 0 || selectedWallets.length === 0}
+                disabled={isLoading || isGenerating || managedWallets.length === 0 || tradingPairs.length === 0 || selectedPairs.length === 0}
               >
-                {isGenerating ? '⏳ Generating...' : `📈 Generate Report${selectedWallets.length > 1 ? 's' : ''} (${selectedWallets.length})`}
+                {isGenerating ? '⏳ Generating...' : `📈 Generate Report${selectedPairs.length > 1 ? 's' : ''} (${selectedPairs.length})`}
               </button>
             </div>
           </div>
 
           {/* Wallet Selection with Checkboxes */}
-          {managedWallets.length > 0 && (
+          {tradingPairs.length > 0 && (
             <div style={{
               background: '#f8fafc',
               border: '2px solid #3b82f6',
@@ -922,8 +982,8 @@ export default function AdminReportsPage() {
               </div>
               
               <p style={{ margin: '0 0 1rem 0', color: '#1e40af', fontSize: '0.875rem' }}>
-                Found {managedWallets.length} managed wallet{managedWallets.length !== 1 ? 's' : ''} available. 
-                Selected: {selectedWallets.length} wallet{selectedWallets.length !== 1 ? 's' : ''}
+                Found {tradingPairs.length} trading pair{tradingPairs.length !== 1 ? 's' : ''} from managed wallets. 
+                Selected: {selectedPairs.length} pair{selectedPairs.length !== 1 ? 's' : ''}
               </p>
 
               <div style={{ 
@@ -932,10 +992,10 @@ export default function AdminReportsPage() {
                 gap: '1rem',
                 marginTop: '1rem'
               }}>
-                {managedWallets.map(wallet => (
-                  <div key={wallet.id} style={{
-                    background: selectedWallets.includes(wallet.id) ? '#dbeafe' : '#ffffff',
-                    border: selectedWallets.includes(wallet.id) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                {tradingPairs.map(pair => (
+                  <div key={pair.id} style={{
+                    background: selectedPairs.includes(pair.id) ? '#dbeafe' : '#ffffff',
+                    border: selectedPairs.includes(pair.id) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
                     borderRadius: '0.5rem',
                     padding: '1rem',
                     cursor: 'pointer',
@@ -944,10 +1004,10 @@ export default function AdminReportsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <input
                         type="checkbox"
-                        checked={selectedWallets.includes(wallet.id)}
+                        checked={selectedPairs.includes(pair.id)}
                         onChange={(e) => {
                           e.stopPropagation();
-                          handleWalletToggle(wallet.id);
+                          handlePairToggle(pair.id);
                         }}
                         style={{ 
                           width: '1.25rem', 
@@ -960,25 +1020,36 @@ export default function AdminReportsPage() {
                         <div style={{ 
                           fontWeight: 'bold', 
                           fontSize: '1rem',
-                          color: selectedWallets.includes(wallet.id) ? '#1e40af' : '#374151',
+                          color: selectedPairs.includes(pair.id) ? '#1e40af' : '#374151',
                           marginBottom: '0.25rem'
                         }}>
-                          {wallet.clientName}
+                          {pair.pairName} 
+                          <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 'normal', marginLeft: '0.5rem' }}>
+                            on {pair.chain}
+                          </span>
                         </div>
                         <div style={{ 
                           fontSize: '0.75rem', 
                           color: '#6b7280',
-                          fontFamily: 'Monaco, monospace'
+                          fontFamily: 'Monaco, monospace',
+                          marginBottom: '0.25rem'
                         }}>
-                          {wallet.address}
+                          {pair.pairAddress}
                         </div>
                         <div style={{ 
                           fontSize: '0.75rem', 
-                          color: wallet.status === 'critical' ? '#dc2626' : '#16a34a',
+                          color: '#6b7280',
+                          marginBottom: '0.25rem'
+                        }}>
+                          {pair.protocol} • TVL: ${pair.tvl.toLocaleString()}
+                        </div>
+                        <div style={{ 
+                          fontSize: '0.75rem', 
+                          color: pair.status === 'active' ? '#16a34a' : pair.status === 'low_liquidity' ? '#f59e0b' : '#dc2626',
                           marginTop: '0.25rem',
                           fontWeight: 'bold'
                         }}>
-                          {wallet.status === 'critical' ? '⚠️ Needs Attention' : '✅ Active'}
+                          {pair.status === 'active' ? '✅ Active' : pair.status === 'low_liquidity' ? '⚠️ Low Liquidity' : '❌ Inactive'}
                         </div>
                       </div>
                     </div>
@@ -986,7 +1057,7 @@ export default function AdminReportsPage() {
                 ))}
               </div>
 
-              {selectedWallets.length > 0 && (
+              {selectedPairs.length > 0 && (
                 <div style={{
                   background: '#dcfce7',
                   border: '1px solid #16a34a',
@@ -998,14 +1069,56 @@ export default function AdminReportsPage() {
                     ✅ Ready to Generate Reports
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#15803d', marginTop: '0.25rem' }}>
-                    {selectedWallets.length} wallet{selectedWallets.length !== 1 ? 's' : ''} selected for {reportType.toUpperCase()} analysis over {reportPeriod}
+                    {selectedPairs.length} trading pair{selectedPairs.length !== 1 ? 's' : ''} selected for {reportType.toUpperCase()} analysis over {reportPeriod}
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {managedWallets.length === 0 && !isLoadingWallets && (
+          {/* Loading States */}
+          {isLoadingWallets ? (
+            <div style={styles.card}>
+              <div style={styles.loading}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔗</div>
+                <h3>Connecting to Portfolio System...</h3>
+                <p>Loading managed wallets and their status.</p>
+              </div>
+            </div>
+          ) : isLoadingPairs ? (
+            <div style={styles.card}>
+              <div style={styles.loading}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚡</div>
+                <h3>Discovering Trading Pairs...</h3>
+                <p>Analyzing DeFi positions and finding active trading pairs from {managedWallets.length} managed wallet{managedWallets.length !== 1 ? 's' : ''}.</p>
+              </div>
+            </div>
+          ) : tradingPairs.length === 0 && managedWallets.length > 0 ? (
+            <div style={{
+              background: '#fef2f2',
+              border: '2px solid #ef4444',
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              marginBottom: '1rem'
+            }}>
+              <h4 style={{ margin: '0 0 0.5rem 0', color: '#dc2626' }}>
+                ⚠️ No Trading Pairs Found
+              </h4>
+              <p style={{ margin: '0 0 0.5rem 0', color: '#dc2626' }}>
+                No active trading pairs were detected from the managed wallets. This could mean:
+              </p>
+              <ul style={{ margin: '0.5rem 0', color: '#dc2626', paddingLeft: '1.5rem' }}>
+                <li>The wallets don't have active DeFi positions</li>
+                <li>The positions are below the minimum value threshold</li>
+                <li>API connectivity issues with Moralis</li>
+              </ul>
+              <p style={{ margin: 0, color: '#dc2626' }}>
+                👉 <a href="/admin/portfolios" style={{ color: '#dc2626', fontWeight: 'bold' }}>
+                  Check Active Pairs/Pools
+                </a> to verify your wallet positions.
+              </p>
+            </div>
+          ) : managedWallets.length === 0 && !isLoadingWallets ? (
             <div style={{
               background: '#fef2f2',
               border: '2px solid #ef4444',
@@ -1025,17 +1138,6 @@ export default function AdminReportsPage() {
                   Go to Portfolio Management
                 </a> to add client wallets first.
               </p>
-            </div>
-          )}
-
-          {/* Loading State */}
-          {isLoadingWallets ? (
-            <div style={styles.card}>
-              <div style={styles.loading}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔗</div>
-                <h3>Connecting to Portfolio System...</h3>
-                <p>Loading managed wallets and their status.</p>
-              </div>
             </div>
           ) : isLoading ? (
             <div style={styles.card}>
