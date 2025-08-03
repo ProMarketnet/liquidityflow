@@ -14,6 +14,18 @@ interface TradingPair {
   status: 'active' | 'inactive' | 'low_liquidity';
 }
 
+interface ManagedWallet {
+  id: string;
+  address: string;
+  clientName: string;
+  status: string;
+  addressType?: string;
+  supportedChains?: string[];
+  primaryChain?: string;
+  chainDetectionDate?: string;
+  detectionStatus?: string;
+}
+
 interface WalletReport {
   address: string;
   clientName: string;
@@ -59,17 +71,19 @@ interface ChainReport {
 }
 
 export default function AdminReportsPage() {
-  const [selectedWallet, setSelectedWallet] = useState<string>('all');
-  const [selectedPairs, setSelectedPairs] = useState<string[]>([]);
+  const [managedWallets, setManagedWallets] = useState<ManagedWallet[]>([]);
   const [tradingPairs, setTradingPairs] = useState<TradingPair[]>([]);
+  const [selectedPairs, setSelectedPairs] = useState<string[]>([]);
+  const [selectedWallet, setSelectedWallet] = useState<string>('all');
   const [reportPeriod, setReportPeriod] = useState<string>('30d');
-  const [reportType, setReportType] = useState<string>('pnl');
+  const [reportType, setReportType] = useState<string>('performance');
   const [reports, setReports] = useState<WalletReport[]>([]);
-  const [managedWallets, setManagedWallets] = useState<Array<{id: string; address: string; clientName: string; status: string}>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingWallets, setIsLoadingWallets] = useState(true);
   const [isLoadingPairs, setIsLoadingPairs] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // 🎨 INLINE STYLES FOR GUARANTEED VISIBILITY
   const styles = {
@@ -150,14 +164,21 @@ export default function AdminReportsPage() {
       borderRadius: '0.25rem',
       fontSize: '0.875rem',
       fontWeight: 'bold',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      marginLeft: '0.5rem'
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: '1.5rem',
+      marginBottom: '2rem'
     },
     card: {
       background: '#ffffff',
-      border: '3px solid #000000',
-      borderRadius: '1rem',
-      padding: '1.5rem',
-      marginBottom: '1rem'
+      border: '2px solid #e5e7eb',
+      borderRadius: '0.5rem',
+      padding: '1rem',
+      textAlign: 'center' as const
     },
     summaryGrid: {
       display: 'grid',
@@ -215,48 +236,60 @@ export default function AdminReportsPage() {
       borderRadius: '0.5rem',
       padding: '1rem',
       marginBottom: '1rem'
+    },
+    error: {
+      background: '#fef2f2',
+      border: '2px solid #dc2626',
+      borderRadius: '0.5rem',
+      padding: '1rem',
+      marginBottom: '1rem',
+      color: '#dc2626'
     }
   };
 
-  // 🔐 CHECK USER SESSION ON LOAD
+  // 🔐 SINGLE useEffect FOR INITIALIZATION
   useEffect(() => {
-    // Add client-side check for SSR compatibility
-    if (typeof window === 'undefined') {
-      return;
-    }
-    
-    const userEmail = localStorage.getItem('userEmail');
-    const currentWorkspaceId = localStorage.getItem('currentWorkspaceId');
-    
-    if (!userEmail) {
-      // Redirect to portfolio management to login with email
-      alert('🏢 Please login with your email first in Portfolio Management');
-      window.location.href = '/admin/portfolios';
-      return;
-    }
-    
-    loadManagedWallets();
-  }, []);
+    const initializeReports = async () => {
+      try {
+        // Add client-side check for SSR compatibility
+        if (typeof window === 'undefined') {
+          return;
+        }
+        
+        console.log('🔄 Initializing Trading Reports page...');
+        
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+          // Redirect to portfolio management to login with email
+          alert('🏢 Please login with your email first in Portfolio Management');
+          window.location.href = '/admin/portfolios';
+          return;
+        }
+        
+        await loadManagedWallets();
+      } catch (error) {
+        console.error('❌ Error initializing reports:', error);
+        setHasError(true);
+        setErrorMessage(error instanceof Error ? error.message : 'Unknown initialization error');
+      }
+    };
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      loadManagedWallets();
-    }
-  }, []);
+    initializeReports();
+  }, []); // Empty dependency array - only run once
 
-  // Auto-select all pairs when first loaded
+  // 🔐 SEPARATE useEffect FOR TRADING PAIRS (only when wallets change)
   useEffect(() => {
-    if (tradingPairs.length > 0 && selectedPairs.length === 0) {
-      setSelectedPairs(tradingPairs.map(p => p.id));
-    }
-  }, [tradingPairs]);
-
-  // Load trading pairs when managed wallets are loaded
-  useEffect(() => {
-    if (managedWallets.length > 0) {
+    if (managedWallets.length > 0 && !hasError) {
       loadTradingPairs();
     }
-  }, [managedWallets]);
+  }, [managedWallets.length]); // Only depend on length to avoid infinite loops
+
+  // 🔐 SEPARATE useEffect FOR AUTO-SELECTING PAIRS (only when pairs change)
+  useEffect(() => {
+    if (tradingPairs.length > 0 && selectedPairs.length === 0 && !hasError) {
+      setSelectedPairs(tradingPairs.map(p => p.id));
+    }
+  }, [tradingPairs.length]); // Only depend on length to avoid infinite loops
 
   useEffect(() => {
     if (managedWallets.length > 0) {
@@ -269,40 +302,20 @@ export default function AdminReportsPage() {
     
     setIsLoadingWallets(true);
     try {
-      console.log('🔍 Loading managed wallets from localStorage...');
-      
-      // Load from localStorage (same source as Wallet Management and Active Pairs/Pools)
-      const savedWallets = localStorage.getItem('managedWallets');
-      
-      if (savedWallets) {
-        const wallets = JSON.parse(savedWallets);
-        console.log(`✅ Loaded ${wallets.length} wallets from localStorage:`, wallets.map((w: any) => ({ name: w.clientName, address: w.address })));
+      console.log('📋 Loading managed wallets from localStorage...');
+      const stored = localStorage.getItem('managedWallets');
+      if (stored) {
+        const wallets = JSON.parse(stored);
         setManagedWallets(wallets);
+        console.log(`✅ Loaded ${wallets.length} managed wallets:`, wallets.map((w: any) => w.clientName));
       } else {
-        console.log('❌ No wallets found in localStorage');
-        // Set default wallets if none exist
-        const defaultWallets = [
-          {
-            id: '1',
-            address: '0x4f02bb03',
-            clientName: 'Your Connected Wallet',
-            accessType: 'view_only',
-            hasPrivateKey: false,
-            dateAdded: '2024-01-20T10:00:00Z',
-            lastActivity: '2024-01-20T18:30:00Z',
-            totalValue: 8.69,
-            status: 'active',
-            notes: 'Main admin wallet - connected via Privy'
-          }
-        ];
-        
-        // Save defaults to localStorage and set state
-        localStorage.setItem('managedWallets', JSON.stringify(defaultWallets));
-        setManagedWallets(defaultWallets);
-        console.log('✅ Created default wallet in localStorage');
+        console.log('📭 No managed wallets found in localStorage');
+        setManagedWallets([]);
       }
     } catch (error) {
-      console.error('❌ Error loading managed wallets from localStorage:', error);
+      console.error('❌ Error loading managed wallets:', error);
+      setHasError(true);
+      setErrorMessage(`Failed to load wallets: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setManagedWallets([]);
     } finally {
       setIsLoadingWallets(false);
@@ -526,58 +539,56 @@ export default function AdminReportsPage() {
     
     setIsLoadingPairs(true);
     try {
-      console.log('🔄 Loading trading pairs from managed wallets...');
-      
-      // Use existing wallet-pools API to get DeFi positions 
+      console.log('🔍 Loading trading pairs for reports from managed wallets...');
       const response = await fetch('/api/admin/wallet-pools', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          wallets: managedWallets.map(w => ({ address: w.address, clientName: w.clientName }))
+        body: JSON.stringify({ 
+          wallets: managedWallets.map(w => ({ 
+            address: w.address, 
+            clientName: w.clientName 
+          })) 
         })
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        throw new Error(`API response failed: ${response.status} ${response.statusText}`);
       }
 
       const poolData = await response.json();
-      console.log('📊 Pool data received:', poolData);
+      console.log('✅ Trading pairs data loaded:', poolData);
 
-      if (poolData.success && poolData.pools && Array.isArray(poolData.pools)) {
-        // Transform pool data into trading pairs
-        const pairs: TradingPair[] = poolData.pools
-          .filter((pool: any) => pool.totalValue > 0) // Only include pools with value
-          .map((pool: any, index: number) => {
-            // Auto-detect chain based on pool data or use smart detection
-            let detectedChain = 'Unknown';
-            if (pool.address && pool.address.startsWith('0x')) {
-              // This is likely Arbitrum based on our previous analysis
-              detectedChain = 'Arbitrum';
-            }
-            
-            return {
-              id: `pair_${index}_${pool.address || pool.pairAddress}`,
-              pairAddress: pool.address || pool.pairAddress,
-              pairName: pool.pair || `${pool.protocol} Pool` || 'Unknown Pair',
-              chain: detectedChain,
-              protocol: pool.protocol || 'Unknown Protocol',
-              tvl: pool.totalValue || 0,
-              volume24h: pool.volume24h || 0,
-              apr: pool.apr || pool.change24h || 0, // Use 24h change as proxy for now
-              sourceWallet: pool.address || managedWallets[0]?.address || '',
-              status: pool.totalValue > 1000 ? 'active' : pool.totalValue > 100 ? 'low_liquidity' : 'inactive'
-            };
-          });
+      // Transform pool data into trading pairs format
+      const pairs: TradingPair[] = poolData.pools
+        .filter((pool: any) => pool.totalValue > 0) // Only include pools with value
+        .map((pool: any, index: number) => {
+          // Smart chain detection for 0x addresses
+          let detectedChain = 'Unknown';
+          if (pool.address && pool.address.startsWith('0x')) {
+            detectedChain = 'Arbitrum'; // Based on previous analysis that our pools are on Arbitrum
+          }
 
-        console.log(`✅ Found ${pairs.length} trading pairs:`, pairs);
-        setTradingPairs(pairs);
-      } else {
-        console.warn('⚠️ No valid pool data found');
-        setTradingPairs([]);
-      }
+          return {
+            id: `pair_${index}_${pool.address || pool.pairAddress}`,
+            pairAddress: pool.address || pool.pairAddress,
+            pairName: pool.pair || `${pool.protocol} Pool` || 'Unknown Pair',
+            chain: detectedChain,
+            protocol: pool.protocol || 'Unknown Protocol',
+            tvl: pool.totalValue || 0,
+            volume24h: pool.volume24h || 0,
+            apr: pool.apr || pool.change24h || 0,
+            sourceWallet: pool.address || managedWallets[0]?.address || '', // Use the pool address as source
+            status: pool.totalValue > 1000 ? 'active' : pool.totalValue > 100 ? 'low_liquidity' : 'inactive'
+          };
+        });
+
+      setTradingPairs(pairs);
+      console.log(`✅ Loaded ${pairs.length} trading pairs for reports`);
+
     } catch (error) {
       console.error('❌ Error loading trading pairs:', error);
+      setHasError(true);
+      setErrorMessage(`Failed to load trading pairs: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setTradingPairs([]);
     } finally {
       setIsLoadingPairs(false);
@@ -973,6 +984,31 @@ export default function AdminReportsPage() {
     if (amount < 0) return styles.negative;
     return styles.neutral;
   };
+
+  // Show error state if there's an issue
+  if (hasError) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <div style={styles.error}>
+            <h2>⚠️ Reports Page Error</h2>
+            <p><strong>Error:</strong> {errorMessage}</p>
+            <p>Please try refreshing the page or contact support.</p>
+            <button 
+              style={styles.button} 
+              onClick={() => {
+                setHasError(false);
+                setErrorMessage('');
+                window.location.reload();
+              }}
+            >
+              🔄 Reload Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
