@@ -75,17 +75,9 @@ export default function AdminReportsPage() {
           setAvailablePairs(pairs);
           console.log('✅ Loaded pairs from managed wallets:', pairs);
         } else {
-          // Fallback: Use WXM address as example
-          setAvailablePairs([
-            {
-              id: 'wxm_pool',
-              name: 'WXM Pool',
-              address: '0xeB35698c801ff1fb2Ca5F79E496d95A38D3BDc35',
-              chain: 'Arbitrum',
-              protocol: 'Uniswap',
-              tvl: 87000
-            }
-          ]);
+          // NO FALLBACK MOCK DATA - If no managed wallets, show empty state
+          console.log('⚠️ No managed wallets found - user needs to add wallets first');
+          setAvailablePairs([]);
         }
       } catch (error) {
         console.error('❌ Error loading managed wallets:', error);
@@ -727,78 +719,150 @@ Average Trade Size,$${wallet.averageTradeSize}`;
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ margin: 0, color: '#1e293b' }}>🎯 Select Trading Pairs/Pools</h3>
-              <button
-                onClick={handleSelectAll}
-                style={{
-                  background: selectedPairs.length === availablePairs.length ? '#dc2626' : '#16a34a',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.25rem',
-                  padding: '0.5rem 1rem',
-                  fontSize: '0.875rem',
-                  cursor: 'pointer'
-                }}
-              >
-                {selectedPairs.length === availablePairs.length ? '❌ Deselect All' : '✅ Select All'}
-              </button>
-            </div>
-            
-            <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.875rem' }}>
-              Choose which trading pairs to include in your report. Selected: {selectedPairs.length}/{availablePairs.length}
-            </p>
-
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-              gap: '1rem' 
-            }}>
-              {availablePairs.map(pair => (
-                <div 
-                  key={pair.id} 
-                  onClick={() => handlePairToggle(pair.id)}
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => {
+                    console.log('🔄 Refreshing managed wallets...');
+                    const stored = localStorage.getItem('managedWallets');
+                    console.log('📊 Current localStorage managedWallets:', stored);
+                    if (stored) {
+                      const managedWallets = JSON.parse(stored);
+                      const pairs: TradingPair[] = managedWallets.map((wallet: any, index: number) => ({
+                        id: `wallet_${index}`,
+                        name: wallet.name || `Wallet ${index + 1}`,
+                        address: wallet.address,
+                        chain: wallet.primaryChain || wallet.supportedChains?.[0] || 'Ethereum',
+                        protocol: 'Multi-Chain',
+                        tvl: 0
+                      }));
+                      setAvailablePairs(pairs);
+                      console.log('✅ Refreshed pairs:', pairs);
+                      alert(`✅ Refreshed! Found ${pairs.length} managed wallet(s)`);
+                    } else {
+                      setAvailablePairs([]);
+                      alert('⚠️ No managed wallets found. Please add wallets in Wallet Management first.');
+                    }
+                  }}
                   style={{
-                    background: selectedPairs.includes(pair.id) ? '#dbeafe' : '#ffffff',
-                    border: selectedPairs.includes(pair.id) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                    borderRadius: '0.5rem',
-                    padding: '1rem',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '0.25rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    cursor: 'pointer'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedPairs.includes(pair.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        handlePairToggle(pair.id);
+                  🔄 Refresh Wallets
+                </button>
+                {availablePairs.length > 0 && (
+                  <button
+                    onClick={handleSelectAll}
+                    style={{
+                      background: selectedPairs.length === availablePairs.length ? '#dc2626' : '#16a34a',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.25rem',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {selectedPairs.length === availablePairs.length ? '❌ Deselect All' : '✅ Select All'}
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            {availablePairs.length > 0 ? (
+              <>
+                <p style={{ margin: '0 0 1rem 0', color: '#64748b', fontSize: '0.875rem' }}>
+                  Choose which trading pairs to include in your report. Selected: {selectedPairs.length}/{availablePairs.length}
+                </p>
+
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+                  gap: '1rem' 
+                }}>
+                  {availablePairs.map(pair => (
+                    <div 
+                      key={pair.id} 
+                      onClick={() => handlePairToggle(pair.id)}
+                      style={{
+                        background: selectedPairs.includes(pair.id) ? '#dbeafe' : '#ffffff',
+                        border: selectedPairs.includes(pair.id) ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+                        borderRadius: '0.5rem',
+                        padding: '1rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
                       }}
-                      style={{ 
-                        width: '1.25rem', 
-                        height: '1.25rem',
-                        accentColor: '#3b82f6'
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ 
-                        fontWeight: 'bold', 
-                        fontSize: '1rem',
-                        color: selectedPairs.includes(pair.id) ? '#1e40af' : '#374151',
-                        marginBottom: '0.25rem'
-                      }}>
-                        {pair.name} <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 'normal' }}>on {pair.chain}</span>
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'Monaco, monospace', marginBottom: '0.25rem' }}>
-                        {pair.address}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                        {pair.protocol} • TVL: ${pair.tvl.toLocaleString()}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedPairs.includes(pair.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handlePairToggle(pair.id);
+                          }}
+                          style={{ 
+                            width: '1.25rem', 
+                            height: '1.25rem',
+                            accentColor: '#3b82f6'
+                          }}
+                        />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ 
+                            fontWeight: 'bold', 
+                            fontSize: '1rem',
+                            color: selectedPairs.includes(pair.id) ? '#1e40af' : '#374151',
+                            marginBottom: '0.25rem'
+                          }}>
+                            {pair.name} <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: 'normal' }}>on {pair.chain}</span>
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280', fontFamily: 'Monaco, monospace', marginBottom: '0.25rem' }}>
+                            {pair.address}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+                            {pair.protocol} • Live Moralis Data
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            ) : (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '2rem',
+                background: '#fef3c7',
+                borderRadius: '0.5rem',
+                border: '1px solid #fbbf24'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📭</div>
+                <h4 style={{ margin: '0 0 0.5rem 0', color: '#92400e' }}>No Managed Wallets Found</h4>
+                <p style={{ margin: '0 0 1rem 0', color: '#78716c' }}>
+                  You need to add wallet addresses in <strong>Wallet Management</strong> before generating reports.
+                </p>
+                <a 
+                  href="/admin/wallets" 
+                  style={{
+                    display: 'inline-block',
+                    background: '#d97706',
+                    color: 'white',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '0.25rem',
+                    textDecoration: 'none',
+                    fontSize: '0.875rem',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  🔗 Go to Wallet Management
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Loading State */}
