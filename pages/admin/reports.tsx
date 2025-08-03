@@ -900,7 +900,7 @@ export default function AdminReportsPage() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h4 style={{ margin: 0, color: '#1e40af', fontSize: '1.125rem' }}>
-                  🎯 Select Wallets/Pairs for Reports
+                  🎯 Select Trading Pairs/Pools for Reports
                 </h4>
                 <div>
                   <button
@@ -940,14 +940,15 @@ export default function AdminReportsPage() {
                     padding: '1rem',
                     cursor: 'pointer',
                     transition: 'all 0.2s'
-                  }}
-                  onClick={() => handleWalletToggle(wallet.id)}
-                  >
+                  }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <input
                         type="checkbox"
                         checked={selectedWallets.includes(wallet.id)}
-                        onChange={() => handleWalletToggle(wallet.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          handleWalletToggle(wallet.id);
+                        }}
                         style={{ 
                           width: '1.25rem', 
                           height: '1.25rem',
